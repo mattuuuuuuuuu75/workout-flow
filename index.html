@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0B0F19" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>筋トレNOW スタジオ｜自宅IROTEC ＆ 出張ホテル対応</title>
+  <link rel="icon" type="image/png" href="./images/shoko_avatar.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-phase="IDLE">
+  <!-- ==================== 建設NOWニュース風 2段ヘッダー ==================== -->
+  <header class="site-header">
+    <!-- 1段目：ダークネイビー・ブランドバー (#0B0F19 + 下線オレンジ3px) -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="brand-logo" aria-label="筋トレNOW スタジオ">
+          <span class="brand-kintore">筋トレ</span><span class="brand-now">NOW</span><span class="brand-studio">スタジオ</span>
+        </div>
+
+        <!-- 🏠 自宅 ⇄ 🏨 出張ホテル 切り替えスイッチ -->
+        <div class="loc-toggle" id="locToggle" role="group" aria-label="トレーニング場所切り替え">
+          <button type="button" class="loc-btn active" data-loc="home" id="locHomeBtn">🏠 自宅</button>
+          <button type="button" class="loc-btn" data-loc="hotel" id="locHotelBtn">🏨 ホテル</button>
+        </div>
+      </div>
+
+      <div class="topbar-center">
+        <div class="session-progress-wrap" id="openTimelineBtn" title="タップで全行程リストを表示・ジャンプ">
+          <div class="session-progress-labels">
+            <span id="overallStepText">STEP 1 / --</span>
+            <span id="overallRemainText">残り 約40:00</span>
+          </div>
+          <div class="session-progress-bar" id="overallProgressBar"></div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button class="icon-btn" id="voiceToggleBtn" title="ショウコさん音声ガイド ON/OFF" aria-label="音声切り替え">
+          🎙️ <span class="btn-sublabel">ショウコON</span>
+        </button>
+        <button class="icon-btn" id="openPoolModalBtn" title="日替わりストレッチ＆YouTube動画管理" aria-label="動画管理">
+          🎬 <span class="btn-sublabel">動画</span>
+        </button>
+        <button class="icon-btn" id="openLogModalBtn" title="達成ログ＆股割り記録" aria-label="記録">
+          🏆 <span class="btn-sublabel" id="streakBadge">0回</span>
+        </button>
+        <button class="icon-btn" id="fullscreenBtn" title="全画面表示（スマホ横画面固定におすすめ）" aria-label="全画面">
+          ⛶
+        </button>
+      </div>
+    </div>
+
+    <!-- 2段目：安全オレンジ曜日ナビゲーション帯 (#EA580C) -->
+    <div class="orange-nav-bar">
+      <nav class="day-switcher" id="daySwitcher" aria-label="曜日メニュー切り替え">
+        <!-- JSで 月:胸 ｜ 火:背中 … 日:回復 を生成 -->
+      </nav>
+    </div>
+  </header>
+
+  <!-- ==================== メイン2カラム・コックピット (#F8FAFC) ==================== -->
+  <main class="cockpit">
+    <!-- 左ペイン：白カード記事スタイル（厳密フォーム図解 ＆ YouTubeプレイヤー） -->
+    <section class="stage-pane" id="stagePane">
+      <!-- YouTubeプレイヤーラッパー（単一インスタンス維持） -->
+      <div class="yt-stage-container" id="ytContainer">
+        <div id="ytPlayer"></div>
+        <div class="yt-top-overlay" id="ytTopOverlay">
+          <span class="yt-badge" id="ytBadge">PHASE 2: HIIT</span>
+          <span class="yt-safety-tip" id="ytSafetyTip">🛡️ 膝保護：屈伸・ジャンプが出たら上半身パンチやツイストに置換OK</span>
+        </div>
+        <button class="yt-unblock-btn hidden" id="ytUnblockBtn">
+          ▶ タップして動画を音声再生
+        </button>
+      </div>
+
+      <!-- ビジュアル・ファースト コーチボード（建設NOWニュース記事カード風） -->
+      <div class="coach-board" id="coachBoard">
+        <!-- 上段：建設NOWニュース名物「濃紺＋左極太オレンジ縦バー H2見出し」 -->
+        <div class="coach-board-top">
+          <div class="title-inline">
+            <span class="day-tag" id="dayTag">🏠 自宅｜月曜・胸</span>
+            <h1 class="workout-main-title" id="workoutMainTitle">チェストプレス（横グリップ）</h1>
+          </div>
+          <button class="demo-pip-btn" id="toggleDemoPipBtn" title="IROTEC 150V2 実演動画を小窓表示">
+            🎥 マシン実演小窓
+          </button>
+        </div>
+
+        <!-- 中段主役：純白背景シームレス大型フォーム図解イラスト ＆ 器具バッジ -->
+        <div class="visual-guide-frame" id="visualGuideFrame">
+          <img
+            id="exerciseGuideImg"
+            class="exercise-guide-img"
+            src="./images/exercises/irotec_chest_wide.jpg"
+            alt="フォーム図解イラスト"
+          />
+
+          <!-- 左上：使用場所・アタッチメント・ピン枚数がパッと見えるタグ -->
+          <div class="visual-hw-chips">
+            <span class="vhw-chip" id="hwPulley">チェストアーム</span>
+            <span class="vhw-chip vhw-attachment" id="hwAttachment">水平（横）グリップ</span>
+            <span class="vhw-chip vhw-pin" id="hwPinDisplay">ピン：6枚目 (27kg)</span>
+          </div>
+
+          <!-- 開始前のみ右下に重なるクイックスタートボタン -->
+          <div class="idle-floating-cta" id="idleHeroBanner">
+            <button class="hero-start-btn" id="heroStartBtn">
+              ▶ セッション開始（筋トレ・股割り・5分瞑想）
+            </button>
+          </div>
+        </div>
+
+        <!-- 下段：3ステップ動作チップ ＋ 建設NOWニュース「ショウコさん対話吹き出し」 -->
+        <div class="visual-bottom-deck">
+          <div class="action-steps-row" id="actionStepsRow">
+            <!-- JSで ①〜 ③〜 を生成 -->
+          </div>
+
+          <div class="shoko-caption-bar">
+            <div class="shoko-avatar" title="建設NOWニュース ショウコさん">
+              <img src="./images/shoko_avatar.png" alt="ショウコさん" class="shoko-avatar-img" />
+              <span class="shoko-avatar-name">ショウコ</span>
+            </div>
+            <div class="shoko-speech-bubble">
+              <p class="shoko-line-text" id="setupInstruction">
+                イラストのように肩甲骨を寄せて、胸の力で前へ押し出していきましょう！
+              </p>
+            </div>
+            <button class="replay-voice-btn" id="replayVoiceBtn" title="ショウコさんの音声を再生">
+              ▶ 音声再生
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右ペイン：サイドバー（濃紺注目タイマー枠 ＆ ピン位置メモ ＆ 操作ボタン） -->
+    <aside class="control-pane">
+      <!-- ① 建設NOWニュース右カラム風：濃紺コールアウト枠 (#152232) ＋ 白内枠タイマー -->
+      <div class="timer-callout-card" id="timerCard">
+        <div class="callout-top-meta">
+          <span class="phase-pill" id="phasePill">READY</span>
+          <div class="set-dots" id="setDots" aria-label="セット進行状況"></div>
+        </div>
+
+        <h2 class="current-step-title" id="currentStepTitle">読み込み中...</h2>
+        <p class="current-step-sub" id="currentStepSub">スタートを押すと40分間自動でガイドします</p>
+
+        <div class="timer-micro-header" id="timerStateLabel">\ READY・スタート待機中 /</div>
+
+        <div class="timer-white-inner">
+          <div class="timer-digits" id="timerDigits">40:00</div>
+          <div class="step-progress-track">
+            <div class="step-progress-fill" id="stepProgressFill"></div>
+          </div>
+          <div class="timer-quick-adjust">
+            <button class="tiny-btn" id="minus10Btn" title="残り時間を10秒減らす">-10秒</button>
+            <span class="wake-indicator" id="wakeIndicator">📱 スリープ防止待機</span>
+            <button class="tiny-btn" id="plus15Btn" title="時間を15秒延長する">+15秒</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② サイドバー小見出し付き白カード（左5pxオレンジ縦線） -->
+      <div class="context-panel">
+        <!-- 自宅IROTEC プレート枚数メモ -->
+        <div class="plate-selector" id="plateSelector">
+          <div class="widget-heading-row">
+            <span class="widget-heading-title">ピン位置メモ（自動保存）</span>
+            <span class="plate-kg-hint" id="plateKgHint">60 lbs / 約27.0 kg</span>
+          </div>
+          <div class="plate-stepper-row">
+            <button class="stepper-btn" id="plateMinusBtn" aria-label="1枚軽くする">－</button>
+            <div class="plate-count-box">
+              <span class="plate-num" id="plateCountNum">6</span>
+              <span class="plate-unit">枚目</span>
+            </div>
+            <button class="stepper-btn" id="platePlusBtn" aria-label="1枚重くする">＋</button>
+          </div>
+        </div>
+
+        <!-- 出張ホテルモード時の負荷調整ワンポイント -->
+        <div class="hotel-tip-box hidden" id="hotelTipBox">
+          <div class="widget-heading-row">
+            <span class="widget-heading-title">ホテル静音・負荷ポイント</span>
+          </div>
+          <p class="hotel-tip-text" id="hotelTipText">
+            反動を使わずゆっくり動かすことで、器具なしでもマシン並みに効きます。
+          </p>
+        </div>
+
+        <!-- 動画ステップ用コントロール -->
+        <div class="video-context-box hidden" id="videoContextBox">
+          <div class="widget-heading-row">
+            <span class="widget-heading-title" id="videoChannelTag">📺 YouTube 自動再生</span>
+            <a class="yt-external-link" id="ytExternalLink" href="#" target="_blank" rel="noopener">YouTubeで開く ↗</a>
+          </div>
+          <div class="video-action-row">
+            <button class="secondary-action-btn" id="shuffleStretchBtn">
+              🎲 別の股割り動画へ
+            </button>
+            <button class="secondary-action-btn" id="replayStepVideoBtn">
+              ↺ 先頭から再生
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ 次のステップ予告バー -->
+      <div class="next-up-bar" id="nextUpBar" title="タップで全行程リストを開く">
+        <span class="next-label">NEXT</span>
+        <span class="next-title" id="nextStepTitle">--</span>
+        <span class="next-list-icon">📋 全行程</span>
+      </div>
+
+      <!-- ④ 大型トランスポート操作ボタン（安全オレンジ主役ボタン） -->
+      <div class="transport-controls">
+        <button class="ctrl-btn" id="prevStepBtn" title="前のステップへ戻る" aria-label="前のステップ">
+          ⏮
+        </button>
+        <button class="ctrl-btn ctrl-primary" id="playPauseBtn" aria-label="再生・一時停止">
+          ▶ スタート
+        </button>
+        <button class="ctrl-btn" id="nextStepBtn" title="次のステップへスキップ" aria-label="次のステップ">
+          ⏭
+        </button>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ==================== モーダル1：全行程タイムライン ==================== -->
+  <div class="modal-backdrop hidden" id="timelineModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div>
+          <h3 id="timelineModalTitle">本日の40分タイムライン</h3>
+          <p class="modal-sub">任意のステップをタップすると、そこから即座に再生できます</p>
+        </div>
+        <button class="close-modal-btn" data-close="timelineModal">✕</button>
+      </div>
+      <div class="modal-body timeline-list" id="timelineList"></div>
+    </div>
+  </div>
+
+  <!-- ==================== モーダル2：日替わり股割り ＆ 仕上げ5分瞑想プール ==================== -->
+  <div class="modal-backdrop hidden" id="poolModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div>
+          <h3>🎬 日替わり股割りストレッチ ＆ 仕上げ5分瞑想プール</h3>
+          <p class="modal-sub">毎日自動でローテーション選出されます。お好みの動画をワンタップで固定・切替できます。</p>
+        </div>
+        <button class="close-modal-btn" data-close="poolModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="pool-section-block">
+          <h4 class="pool-section-heading">🧘 仕上げの5分間瞑想（毎日ラストに自動再生）</h4>
+          <div class="pool-grid" id="meditationPoolGrid"></div>
+        </div>
+
+        <div class="pool-section-block">
+          <h4 class="pool-section-heading">🤸 股割りストレッチ日替わりプール</h4>
+          <div class="pool-grid" id="stretchPoolGrid"></div>
+        </div>
+
+        <form class="add-video-form" id="addVideoForm">
+          <h4>＋ お気に入りのYouTube動画を股割りプールに追加</h4>
+          <div class="form-row">
+            <input type="text" id="customVideoUrl" placeholder="YouTubeのURL または 11文字ID (例: https://youtu.be/...)" required />
+            <input type="text" id="customVideoTitle" placeholder="タイトル・部位メモ (例: カエル足10分)" required />
+          </div>
+          <div class="form-row">
+            <label>開始秒（挨拶スキップ）<input type="number" id="customVideoStart" value="15" min="0" max="600" /></label>
+            <label>再生分数（分）<input type="number" id="customVideoMinutes" value="10" min="2" max="40" /></label>
+            <button type="submit" class="primary-sm-btn">プールに追加</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== モーダル3：完走 ＆ 股割り・Googleヘルス記録 ==================== -->
+  <div class="modal-backdrop hidden" id="logModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div>
+          <h3 id="logModalHeading">🏆 ワークアウト記録 ＆ 股割りトラッカー</h3>
+          <p class="modal-sub">週間スタンプ・開脚の進捗・Google Fit / Health Connect 記録用サマリー</p>
+        </div>
+        <button class="close-modal-btn" data-close="logModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="health-summary-box">
+          <h4>💚 Google ヘルス（Fitness）記録目安（本日の構成）</h4>
+          <div class="health-metrics-row">
+            <div class="h-metric"><span>筋力トレーニング</span><strong id="hmStrength">--分</strong></div>
+            <div class="h-metric"><span>HIIT・有酸素</span><strong id="hmCardio">--分</strong></div>
+            <div class="h-metric"><span>柔軟・ヨガ</span><strong id="hmFlex">--分</strong></div>
+            <div class="h-metric"><span>マインドフルネス瞑想</span><strong id="hmMeditation">5分</strong></div>
+          </div>
+        </div>
+
+        <div class="weekly-stamp-box">
+          <h4>📅 今週の継続スタンプ（自宅・ホテル合算）</h4>
+          <div class="stamp-row" id="weeklyStampRow"></div>
+        </div>
+
+        <div class="split-tracker-box">
+          <h4>🤸 今日の「股割り・開脚前屈」到達レベルを記録</h4>
+          <div class="split-level-btns" id="splitLevelBtns">
+            <button type="button" data-level="1">🌱 Lv.1 硬め・骨盤立て練習中</button>
+            <button type="button" data-level="2">🖐️ Lv.2 前屈で指先が床につく</button>
+            <button type="button" data-level="3">✋ Lv.3 手のひらが床につく</button>
+            <button type="button" data-level="4">💪 Lv.4 肘が床についた！</button>
+            <button type="button" data-level="5">🔥 Lv.5 胸・おでこペター達成！</button>
+          </div>
+          <div class="recent-logs" id="recentLogsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./data.js"></script>
+  <script src="./audio_manifest.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "筋トレNOW スタジオ｜40分ワークアウト",
+  "short_name": "筋トレNOW",
+  "description": "自宅IROTEC ＆ 出張ホテル対応・厳密フォーム図解・ショウコさん音声ガイド付き40分自動進行ワークアウト",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#F8FAFC",
+  "theme_color": "#0B0F19",
+  "icons": [
+    {
+      "src": "./images/shoko_avatar.png",
+      "sizes": "220x220",
+      "type": "image/png"
+    }
+  ]
+}

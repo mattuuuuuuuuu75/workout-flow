@@ -1,0 +1,1486 @@
+/* ============================================================================
+   筋トレNOW スタジオ v3 — 建設NOWニュース (construction-now.jp) デザインシステム
+   ============================================================================ */
+
+:root {
+  /* 建設NOWニュース 抽出カラートークン */
+  --bg-canvas: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --border-card: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --brand-topbar: #0b0f19;
+  --brand-navy-h2: #0f172a;
+  --brand-callout: #152232;
+  --brand-orange: #ea580c;
+  --brand-orange-dark: #c2410c;
+  --brand-amber: #fcbf49;
+  --brand-blue: #2563eb;
+  --brand-blue-bg: #eff6ff;
+  --brand-blue-border: #bfdbfe;
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+
+  /* フェーズ連動アクセント色 */
+  --accent: #ea580c;
+  --accent-soft: rgba(234, 88, 12, 0.12);
+
+  --col-work: #ea580c;       /* 本番セット：安全オレンジ */
+  --col-rest: #2563eb;       /* 休憩：DXブルー */
+  --col-setup: #d97706;      /* 準備：ヘルメットアンバー */
+  --col-hiit: #dc2626;       /* 有酸素・HIIT：クリムゾン */
+  --col-stretch: #0d9488;    /* 股割り・ヨガ：リラックスティール */
+  --col-meditation: #4f46e5; /* 5分瞑想：マインドフルネス・インディゴ */
+}
+
+body[data-phase="WORK"] {
+  --accent: var(--col-work);
+  --accent-soft: rgba(234, 88, 12, 0.12);
+}
+body[data-phase="REST"] {
+  --accent: var(--col-rest);
+  --accent-soft: rgba(37, 99, 235, 0.12);
+}
+body[data-phase="SETUP"],
+body[data-phase="PREP"] {
+  --accent: var(--col-setup);
+  --accent-soft: rgba(217, 119, 6, 0.12);
+}
+body[data-phase="HIIT"] {
+  --accent: var(--col-hiit);
+  --accent-soft: rgba(220, 38, 38, 0.12);
+}
+body[data-phase="STRETCH"] {
+  --accent: var(--col-stretch);
+  --accent-soft: rgba(13, 148, 136, 0.12);
+}
+body[data-phase="MEDITATION"] {
+  --accent: var(--col-meditation);
+  --accent-soft: rgba(79, 70, 229, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+  user-select: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ==================== 2段サイトヘッダー（建設NOWニュース完全踏襲） ==================== */
+.site-header {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  position: relative;
+  z-index: 20;
+}
+
+/* 1段目：超ダークネイビー・ブランドバー (#0B0F19) */
+.topbar {
+  height: 44px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--brand-topbar);
+  color: #f8fafc;
+  border-bottom: 3px solid var(--brand-orange);
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.brand-kintore {
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+.brand-now {
+  font-size: 1.14rem;
+  color: var(--brand-orange);
+  font-style: italic;
+  padding: 0 2px;
+}
+.brand-studio {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+/* 🏠 自宅 ⇄ 🏨 ホテル 切替ピル */
+.loc-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.loc-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.73rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.loc-btn:hover {
+  color: #ffffff;
+}
+.loc-btn.active {
+  background: var(--brand-orange);
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.topbar-center {
+  flex: 1;
+  max-width: 320px;
+  min-width: 115px;
+}
+.session-progress-wrap {
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+.session-progress-wrap:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.session-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.67rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  margin-bottom: 3px;
+}
+.session-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  gap: 2px;
+  overflow: hidden;
+}
+.seg-item {
+  height: 100%;
+  opacity: 0.34;
+}
+.seg-item.done {
+  opacity: 0.88;
+}
+.seg-item.current {
+  opacity: 1;
+  filter: brightness(1.18);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.icon-btn.muted {
+  opacity: 0.5;
+}
+
+/* 2段目：安全オレンジ・グローバル曜日ナビ帯 (#EA580C) */
+.orange-nav-bar {
+  height: 34px;
+  background: var(--brand-orange);
+  border-bottom: 2px solid var(--brand-orange-dark);
+  padding: 0 8px;
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.orange-nav-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.day-switcher {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.day-pill {
+  flex: 1;
+  min-width: 78px;
+  padding: 0 10px;
+  font-size: 0.77rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+  border-right: 1px solid rgba(255, 255, 255, 0.26);
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.day-pill:first-child {
+  border-left: 1px solid rgba(255, 255, 255, 0.26);
+}
+.day-pill:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+.day-pill.active {
+  background: rgba(11, 15, 25, 0.22);
+  color: #ffffff;
+  font-weight: 900;
+  border-bottom-color: #ffffff;
+}
+
+/* ==================== メインコックピット（2カラム記事＋サイドバー構造） ==================== */
+.cockpit {
+  height: calc(100dvh - 78px);
+  max-width: 1480px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.56fr) minmax(305px, 1fr);
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+/* 左カラム：白カード記事ステージ (#FFFFFF) */
+.stage-pane {
+  position: relative;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* YouTubeコンテナ */
+.yt-stage-container {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #000000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+.yt-stage-container iframe,
+#ytPlayer {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.stage-pane.mode-video .yt-stage-container {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 5;
+}
+.stage-pane.mode-video .coach-board {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* IROTEC実演小窓（PiP） */
+.stage-pane.show-demo-pip .yt-stage-container {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 9;
+  inset: 58px 14px auto auto;
+  width: min(42%, 310px);
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border-radius: 8px;
+  border: 3px solid var(--brand-orange);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
+}
+.stage-pane.show-demo-pip .yt-top-overlay {
+  display: none;
+}
+
+.yt-top-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 6;
+}
+.yt-badge {
+  background: var(--brand-navy-h2);
+  border-left: 5px solid var(--accent);
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 5px 11px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.yt-safety-tip {
+  background: rgba(15, 23, 42, 0.88);
+  color: var(--brand-amber);
+  font-size: 0.73rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yt-unblock-btn {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  z-index: 12;
+  padding: 15px 26px;
+  border-radius: 999px;
+  background: var(--brand-orange);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 900;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+}
+
+/* ==================== コーチボード（建設NOWニュース記事レイアウト） ==================== */
+.coach-board {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #ffffff;
+}
+
+/* 建設NOWニュース名物：濃紺 #0F172A ＋ 左端8px極太バー H2見出し帯 */
+.coach-board-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--brand-navy-h2);
+  border-left: 8px solid var(--accent);
+  border-radius: 4px;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+.title-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.day-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--brand-amber);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.workout-main-title {
+  font-size: clamp(0.94rem, 1.55vw, 1.18rem);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.demo-pip-btn {
+  padding: 5px 10px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.demo-pip-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.demo-pip-btn.active {
+  background: var(--brand-orange);
+  color: #ffffff;
+  border-color: var(--brand-orange);
+}
+
+/* 純白背景シームレス図解フレーム（#FFFFFF イラストが枠線なしで完全に溶け込む） */
+.visual-guide-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1.5px solid var(--border-card);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body[data-phase="WORK"] .visual-guide-frame {
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.14);
+}
+
+.exercise-guide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #ffffff;
+}
+
+.visual-hw-chips {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  pointer-events: none;
+}
+.vhw-chip {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  font-weight: 800;
+  background: rgba(248, 250, 252, 0.94);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+.vhw-chip.vhw-attachment {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #9a3412;
+}
+.vhw-chip.vhw-pin {
+  background: var(--brand-blue-bg);
+  border-color: var(--brand-blue-border);
+  color: #1d4ed8;
+}
+
+.idle-floating-cta {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 4;
+}
+.hero-start-btn {
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: var(--brand-orange);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.42);
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+.hero-start-btn:hover {
+  background: var(--brand-orange-dark);
+}
+.hero-start-btn:active {
+  transform: scale(0.96);
+}
+
+/* 下段：3ステップ動作チップ ＋ 建設NOWニュース「ショウコさん対話枠」 */
+.visual-bottom-deck {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.action-steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.action-step-chip {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-card);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: clamp(0.73rem, 1.05vw, 0.84rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+/* 建設NOWニュース完全再現：ショウコさんアイコン ＋ 吹き出し ＋ 青色音声再生ピル */
+.shoko-caption-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+}
+
+.shoko-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.shoko-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-strong);
+  background: #e2e8f0;
+  transition: all 0.18s ease;
+}
+.shoko-avatar.speaking .shoko-avatar-img {
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.28);
+  transform: scale(1.05);
+}
+.shoko-avatar-name {
+  font-size: 0.63rem;
+  font-weight: 900;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.shoko-speech-bubble {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 8px 11px;
+}
+.shoko-speech-bubble::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--bg-canvas);
+  border-left: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+  transform: translateY(-50%) rotate(45deg);
+}
+.shoko-line-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.38;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 建設NOWニュース .audio-jump-link 再現 */
+.replay-voice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--brand-blue-bg);
+  border: 1px solid var(--brand-blue-border);
+  color: var(--brand-blue);
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.replay-voice-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+/* ==================== 右カラム：サイドバー（濃紺コールアウト＋白ウィジェット） ==================== */
+.control-pane {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 9px;
+  overflow-y: auto;
+}
+
+/* ① 建設NOWニュース右カラム注目枠 (#152232) ＋ アンバー見出し ＋ 白内枠タイマー */
+.timer-callout-card {
+  background: var(--brand-callout);
+  border-radius: 10px;
+  padding: 11px 12px;
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.callout-top-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.phase-pill {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  background: var(--accent);
+  color: #ffffff;
+  letter-spacing: 0.03em;
+}
+.set-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #cbd5e1;
+}
+.set-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+}
+.set-dot.done {
+  background: var(--brand-amber);
+  opacity: 0.65;
+}
+.set-dot.active {
+  background: var(--brand-amber);
+  box-shadow: 0 0 8px rgba(252, 191, 73, 0.8);
+  transform: scale(1.2);
+}
+
+.current-step-title {
+  font-size: clamp(0.92rem, 1.4vw, 1.08rem);
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.26;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.current-step-sub {
+  font-size: 0.73rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timer-micro-header {
+  text-align: center;
+  font-size: 0.76rem;
+  font-weight: 900;
+  color: var(--brand-amber);
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.timer-white-inner {
+  background: #ffffff;
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 9px 11px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timer-digits {
+  font-size: clamp(2.35rem, 5.1vw, 3.8rem);
+  font-weight: 900;
+  color: var(--brand-navy-h2);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.step-progress-track {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.step-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.35s linear;
+}
+.timer-quick-adjust {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tiny-btn {
+  font-size: 0.71rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+}
+.tiny-btn:hover {
+  background: #e2e8f0;
+  color: var(--text-primary);
+}
+.wake-indicator {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* ② サイドバー小見出し付き白カード（建設NOWニュース 左5pxオレンジ縦線ウィジェット） */
+.context-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-left: 5px solid var(--brand-orange);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);
+}
+.widget-heading-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.widget-heading-title {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+.plate-kg-hint {
+  font-size: 0.75rem;
+  color: var(--brand-orange);
+  font-weight: 900;
+}
+
+.plate-stepper-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.stepper-btn {
+  width: 48px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+.stepper-btn:hover {
+  background: #e2e8f0;
+}
+.stepper-btn:active {
+  transform: scale(0.95);
+  background: var(--brand-orange);
+  color: #ffffff;
+  border-color: var(--brand-orange);
+}
+.plate-count-box {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.plate-num {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.plate-unit {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.hotel-tip-box {
+  display: flex;
+  flex-direction: column;
+}
+.hotel-tip-text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.video-context-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.yt-external-link {
+  font-size: 0.73rem;
+  color: var(--brand-blue);
+  text-decoration: none;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.yt-external-link:hover {
+  text-decoration: underline;
+}
+.video-action-row {
+  display: flex;
+  gap: 6px;
+}
+.secondary-action-btn {
+  flex: 1;
+  padding: 7px 8px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.secondary-action-btn:hover {
+  background: #e2e8f0;
+  border-color: var(--brand-orange);
+}
+
+/* ③ 次のステップ予告バー */
+.next-up-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  cursor: pointer;
+  font-size: 0.75rem;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+.next-up-bar:hover {
+  border-color: var(--brand-orange);
+  background: #fff7ed;
+}
+.next-label {
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--brand-navy-h2);
+  color: #ffffff;
+}
+.next-title {
+  flex: 1;
+  font-weight: 800;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.next-list-icon {
+  color: var(--brand-blue);
+  font-weight: 800;
+  font-size: 0.73rem;
+  white-space: nowrap;
+}
+
+/* ④ トランスポート操作ボタン */
+.transport-controls {
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  gap: 8px;
+}
+.ctrl-btn {
+  height: 46px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+}
+.ctrl-btn:hover {
+  background: var(--bg-subtle);
+}
+.ctrl-btn:active {
+  transform: scale(0.96);
+}
+.ctrl-primary {
+  background: var(--brand-orange);
+  color: #ffffff;
+  border-color: var(--brand-orange-dark);
+  font-size: 1.02rem;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.34);
+}
+.ctrl-primary:hover {
+  background: var(--brand-orange-dark);
+}
+
+/* ==================== モーダル共通（建設NOWニュース白カード仕様） ==================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(11, 15, 25, 0.68);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 14px;
+}
+.modal-sheet {
+  width: min(860px, 100%);
+  max-height: 90dvh;
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-header {
+  padding: 14px 18px;
+  background: var(--brand-navy-h2);
+  border-bottom: 3px solid var(--brand-orange);
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h3 {
+  font-size: 1rem;
+  font-weight: 900;
+}
+.modal-sub {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  margin-top: 3px;
+}
+.close-modal-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 900;
+}
+.close-modal-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.modal-body {
+  padding: 14px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg-canvas);
+}
+
+/* タイムラインリスト */
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  cursor: pointer;
+}
+.timeline-item:hover {
+  border-color: var(--brand-orange);
+  background: #fff7ed;
+}
+.timeline-item.active {
+  border-left: 5px solid var(--brand-orange);
+  border-color: var(--brand-orange);
+  background: #fff7ed;
+}
+.tl-idx {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: var(--text-muted);
+  width: 28px;
+}
+.tl-badge {
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+.tl-main {
+  flex: 1;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.tl-dur {
+  font-size: 0.76rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+/* 股割り＆瞑想プール */
+.pool-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pool-section-heading {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  padding-left: 10px;
+  border-left: 5px solid var(--brand-orange);
+}
+.pool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.pool-card {
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pool-card.selected {
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.2);
+}
+.pool-card-cat {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: var(--brand-orange);
+}
+.pool-card.meditation-card .pool-card-cat {
+  color: var(--col-meditation);
+}
+.pool-card.meditation-card.selected {
+  border-color: var(--col-meditation);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+.pool-card-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+.pool-card-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.pool-select-btn {
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--brand-blue-bg);
+  border: 1px solid var(--brand-blue-border);
+  color: var(--brand-blue);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.pool-card.selected .pool-select-btn {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  color: #ffffff;
+}
+.pool-card.meditation-card.selected .pool-select-btn {
+  background: var(--col-meditation);
+  border-color: var(--col-meditation);
+  color: #ffffff;
+}
+
+.add-video-form {
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-left: 5px solid var(--brand-orange);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.add-video-form h4 {
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.form-row input[type="text"],
+.form-row input[type="number"] {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+.form-row input[type="text"] {
+  flex: 1;
+  min-width: 180px;
+}
+.form-row input[type="number"] {
+  width: 70px;
+  margin-left: 6px;
+}
+.form-row label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.primary-sm-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: var(--brand-orange);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 0.8rem;
+}
+
+/* 完走＆記録モーダル */
+.health-summary-box,
+.weekly-stamp-box,
+.split-tracker-box {
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-left: 5px solid var(--brand-orange);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.health-summary-box h4,
+.weekly-stamp-box h4,
+.split-tracker-box h4 {
+  font-size: 0.85rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.health-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.h-metric {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.h-metric span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.h-metric strong {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--brand-orange);
+}
+
+.stamp-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.stamp-cell {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.stamp-cell.done {
+  border-color: var(--brand-orange);
+  background: #fff7ed;
+  color: var(--brand-orange-dark);
+}
+
+.split-level-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.split-level-btns button {
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-strong);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.split-level-btns button:hover,
+.split-level-btns button.saved {
+  border-color: var(--brand-orange);
+  background: var(--brand-orange);
+  color: #ffffff;
+}
+.recent-logs {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ==================== スマホ横画面（低ハイト: ~480px）最適化 ==================== */
+@media (max-height: 480px) and (orientation: landscape) {
+  .topbar {
+    height: 34px;
+    padding: 0 8px;
+    border-bottom-width: 2px;
+  }
+  .brand-studio,
+  .btn-sublabel {
+    display: none;
+  }
+  .orange-nav-bar {
+    height: 26px;
+  }
+  .day-pill {
+    font-size: 0.7rem;
+    min-width: 64px;
+    padding: 0 6px;
+  }
+  .cockpit {
+    height: calc(100dvh - 60px);
+    padding: 5px 6px;
+    gap: 6px;
+    grid-template-columns: 1.58fr 1fr;
+  }
+  .coach-board {
+    padding: 5px 7px;
+    gap: 4px;
+  }
+  .coach-board-top {
+    padding: 4px 8px;
+  }
+  .workout-main-title {
+    font-size: 0.86rem;
+  }
+  .action-step-chip {
+    padding: 4px 6px;
+    font-size: 0.67rem;
+  }
+  .shoko-caption-bar {
+    padding: 3px 7px;
+    gap: 6px;
+  }
+  .shoko-avatar-img {
+    width: 30px;
+    height: 30px;
+  }
+  .shoko-avatar-name {
+    display: none;
+  }
+  .shoko-speech-bubble {
+    padding: 4px 8px;
+  }
+  .shoko-line-text {
+    font-size: 0.71rem;
+    -webkit-line-clamp: 1;
+  }
+  .replay-voice-btn {
+    padding: 4px 8px;
+    font-size: 0.68rem;
+  }
+  .hero-start-btn {
+    padding: 8px 14px;
+    font-size: 0.78rem;
+  }
+
+  .control-pane {
+    gap: 4px;
+  }
+  .timer-callout-card {
+    padding: 6px 8px;
+    gap: 3px;
+  }
+  .current-step-sub {
+    display: none;
+  }
+  .timer-micro-header {
+    font-size: 0.68rem;
+  }
+  .timer-white-inner {
+    padding: 5px 8px;
+    gap: 3px;
+  }
+  .timer-digits {
+    font-size: 2rem;
+  }
+  .context-panel {
+    padding: 5px 8px;
+  }
+  .stepper-btn {
+    height: 28px;
+    width: 38px;
+    font-size: 1rem;
+  }
+  .plate-num {
+    font-size: 1.15rem;
+  }
+  .next-up-bar {
+    padding: 4px 8px;
+  }
+  .ctrl-btn {
+    height: 34px;
+    font-size: 0.88rem;
+  }
+}
+
+/* ==================== 縦画面（スマホ縦持ち時フォールバック） ==================== */
+@media (max-width: 760px) and (orientation: portrait) {
+  html, body {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px;
+  }
+  .topbar-center {
+    order: 3;
+    max-width: 100%;
+    width: 100%;
+    flex-basis: 100%;
+  }
+  .cockpit {
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+  .visual-guide-frame {
+    aspect-ratio: 16 / 9;
+  }
+  .action-steps-row {
+    grid-template-columns: 1fr;
+  }
+  .stage-pane.mode-video {
+    aspect-ratio: 16 / 9;
+  }
+  .health-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

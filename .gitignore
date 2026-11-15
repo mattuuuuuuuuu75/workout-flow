@@ -1,0 +1,8 @@
+audio_cache/
+node_modules/
+.env
+.env.*
+*.pem
+*key*.json
+__pycache__/
+*.tmp
