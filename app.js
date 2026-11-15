@@ -1,6 +1,6 @@
 // ============================================================================
-// 筋トレNOW スタジオ v4 — 朝一スマート・コーチング仕様
-// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × PixelWatch睡眠HRV連動 × 漸進負荷ナビ × 時短切替）
+// 筋トレNOW スタジオ v4.1 — 朝一スマート・コーチング ＆ 重量×回数・動画タイマー完全同期仕様
+// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × PixelWatch睡眠HRV連動 × 重量×回数ダブルプログレッション × 動画チャプター最適化）
 // ============================================================================
 
 (function () {
@@ -14,6 +14,8 @@
     durationMode: 'flow40_duration_mode_v1',
     durationModeDate: 'flow40_duration_mode_date_v1',
     plates: 'flow40_irotec_plates_v1',
+    repsMap: 'flow40_reps_map_v1',
+    sessionSetReps: 'flow40_session_set_reps_v1',
     rpeMap: 'flow40_rpe_map_v1',
     morningCond: 'flow40_morning_cond_v1',
     customStretches: 'flow40_custom_stretches_v1',
@@ -29,6 +31,20 @@
   function getTodayJst() {
     return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
   }
+
+  // 自宅IROTECマシン12種目のメタ辞書を構築
+  const HOME_PLATE_EXERCISES = {};
+  Object.values(DATA.homePlans || {}).forEach((plan) => {
+    (plan.blocks || []).forEach((b) => {
+      if (b.type === 'machine' && b.id && !b.hidePlates) {
+        HOME_PLATE_EXERCISES[b.id] = {
+          id: b.id,
+          title: b.title,
+          defaultPlates: b.defaultPlates || 5
+        };
+      }
+    });
+  });
 
   function consumeSyncKeyFromUrl() {
     let foundKey = '';
@@ -53,6 +69,41 @@
     return foundKey || (localStorage.getItem(STORAGE_KEYS.syncKey) || '').trim();
   }
 
+  function loadJson(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  function saveJson(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch (_) {}
+  }
+
+  function loadBool(key, fallback) {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : raw === 'true';
+  }
+
+  function loadTodaySessionSetReps() {
+    const saved = loadJson(STORAGE_KEYS.sessionSetReps, null);
+    if (saved && saved.date === getTodayJst() && saved.sets && typeof saved.sets === 'object') {
+      return saved.sets;
+    }
+    return {};
+  }
+
+  function saveTodaySessionSetReps(setsObj) {
+    saveJson(STORAGE_KEYS.sessionSetReps, {
+      date: getTodayJst(),
+      sets: setsObj || {}
+    });
+  }
+
   // -------------------- State --------------------
   const state = {
     locationMode: resolveInitialLocation(), // 'home' | 'hotel'
@@ -69,6 +120,8 @@
     voiceEnabled: loadBool(STORAGE_KEYS.voiceEnabled, true),
     showDemoPip: false,
     plateMap: loadJson(STORAGE_KEYS.plates, {}),
+    repsMap: loadJson(STORAGE_KEYS.repsMap, {}),
+    todaySetReps: loadTodaySessionSetReps(),
     rpeMap: loadJson(STORAGE_KEYS.rpeMap, {}),
     morningCondition: loadJson(STORAGE_KEYS.morningCond, null),
     customStretches: loadJson(STORAGE_KEYS.customStretches, []),
@@ -85,6 +138,9 @@
     shokoAudio: new Audio(),
     ytPlayer: null,
     ytReady: false,
+    ytStepFailed: false,
+    videoStepSeekVerified: false,
+    lastAutoAdvancedStep: null,
     pendingVideoLoad: null
   };
 
@@ -154,13 +210,20 @@
     overloadBanner: document.getElementById('overloadBanner'),
     overloadText: document.getElementById('overloadText'),
     overloadAcceptBtn: document.getElementById('overloadAcceptBtn'),
+    twinStepperGrid: document.getElementById('twinStepperGrid'),
+    plateStepperWrap: document.getElementById('plateStepperWrap'),
     plateMinusBtn: document.getElementById('plateMinusBtn'),
     platePlusBtn: document.getElementById('platePlusBtn'),
     plateCountNum: document.getElementById('plateCountNum'),
+    repsStepperWrap: document.getElementById('repsStepperWrap'),
+    repsMinusBtn: document.getElementById('repsMinusBtn'),
+    repsPlusBtn: document.getElementById('repsPlusBtn'),
+    repsCountNum: document.getElementById('repsCountNum'),
 
     rpeFeedbackBox: document.getElementById('rpeFeedbackBox'),
     rpeHeadingTitle: document.getElementById('rpeHeadingTitle'),
     rpeStreakHint: document.getElementById('rpeStreakHint'),
+    repQuickRow: document.getElementById('repQuickRow'),
     rpeBtnRow: document.getElementById('rpeBtnRow'),
 
     hotelTipBox: document.getElementById('hotelTipBox'),
@@ -198,6 +261,8 @@
     hmCardio: document.getElementById('hmCardio'),
     hmFlex: document.getElementById('hmFlex'),
     hmMeditation: document.getElementById('hmMeditation'),
+    sessionWeightsEditor: document.getElementById('sessionWeightsEditor'),
+    sessionWeightsList: document.getElementById('sessionWeightsList'),
     manualSaveSessionBtn: document.getElementById('manualSaveSessionBtn'),
     manualSaveMeditationBtn: document.getElementById('manualSaveMeditationBtn'),
     logSyncFeedback: document.getElementById('logSyncFeedback'),
@@ -229,7 +294,6 @@
     const params = new URLSearchParams(window.location.search);
     const qMode = params.get('mode') || params.get('dur');
     if (qMode === 'full' || qMode === 'short' || qMode === 'care') return qMode;
-    // 同じ日のリロードなら選択維持、翌朝になったら標準「通常フル」へリセット
     const savedDate = localStorage.getItem(STORAGE_KEYS.durationModeDate);
     const savedMode = localStorage.getItem(STORAGE_KEYS.durationMode);
     if (savedDate === getTodayJst() && (savedMode === 'short' || savedMode === 'care')) {
@@ -244,7 +308,6 @@
     if (qDay !== null && DATA.homePlans[Number(qDay)]) {
       return Number(qDay);
     }
-    // JSTの曜日を採用
     const jstDay = new Date(Date.now() + 9 * 3600 * 1000).getUTCDay();
     return jstDay;
   }
@@ -254,26 +317,6 @@
       return DATA.hotelPlans[dayKey];
     }
     return DATA.homePlans[dayKey];
-  }
-
-  function loadJson(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : fallback;
-    } catch (_) {
-      return fallback;
-    }
-  }
-
-  function saveJson(key, val) {
-    try {
-      localStorage.setItem(key, JSON.stringify(val));
-    } catch (_) {}
-  }
-
-  function loadBool(key, fallback) {
-    const raw = localStorage.getItem(key);
-    return raw === null ? fallback : raw === 'true';
   }
 
   function formatMMSS(sec) {
@@ -295,7 +338,7 @@
     if (exId && typeof state.plateMap[exId] === 'number') {
       return state.plateMap[exId];
     }
-    return defaultPlates || 5;
+    return defaultPlates || HOME_PLATE_EXERCISES[exId]?.defaultPlates || 5;
   }
 
   function formatPlateDetail(plates) {
@@ -304,8 +347,110 @@
     return { lbs, kg, text: `${lbs} lbs / 約${kg} kg` };
   }
 
+  function getRepsForExercise(exId, defaultReps = 10) {
+    if (exId && Number.isFinite(Number(state.repsMap[exId])) && Number(state.repsMap[exId]) > 0) {
+      return Math.round(Number(state.repsMap[exId]));
+    }
+    const rpeReps = Number(state.rpeMap[exId]?.lastReps);
+    if (Number.isFinite(rpeReps) && rpeReps > 0) {
+      return Math.round(rpeReps);
+    }
+    return defaultReps;
+  }
+
+  function getTodaySetRepsList(exId) {
+    if (!exId || !state.todaySetReps[exId] || typeof state.todaySetReps[exId] !== 'object') {
+      return [];
+    }
+    const entries = Object.entries(state.todaySetReps[exId])
+      .map(([k, v]) => [Number(k), Math.round(Number(v))])
+      .filter(([k, v]) => Number.isFinite(k) && k >= 1 && Number.isFinite(v) && v >= 1 && v <= 100)
+      .sort((a, b) => a[0] - b[0]);
+    return entries.map(([, v]) => v);
+  }
+
+  function getRecordedSetRep(exId, setIndex) {
+    if (!exId || !setIndex) return null;
+    const v = Number(state.todaySetReps[exId]?.[setIndex]);
+    return Number.isFinite(v) && v > 0 ? Math.round(v) : null;
+  }
+
+  function setRecordedSetRep(exId, setIndex, repsVal) {
+    if (!exId || !setIndex) return;
+    if (!state.todaySetReps[exId] || typeof state.todaySetReps[exId] !== 'object') {
+      state.todaySetReps[exId] = {};
+    }
+    state.todaySetReps[exId][setIndex] = Math.max(1, Math.min(60, Math.round(repsVal)));
+    saveTodaySessionSetReps(state.todaySetReps);
+  }
+
+  function normalizeSetRepsCore(val) {
+    if (!val) return '';
+    if (Array.isArray(val)) {
+      return val
+        .map((n) => Math.round(Number(n)))
+        .filter((n) => Number.isFinite(n) && n > 0)
+        .join('/');
+    }
+    return String(val).replace(/回$/u, '').trim();
+  }
+
+  function formatRepsDisplay(exId, defaultReps = 10) {
+    const todaySets = getTodaySetRepsList(exId);
+    if (todaySets.length >= 2) {
+      return `${todaySets.join('/')}回`;
+    }
+    if (todaySets.length === 1) {
+      return `${todaySets[0]}回`;
+    }
+    const prevSetStr = normalizeSetRepsCore(
+      state.rpeMap[exId]?.lastSetReps || state.rpeMap[exId]?.setRepsText
+    );
+    if (prevSetStr && prevSetStr.includes('/')) {
+      return `${prevSetStr}回`;
+    }
+    return `${getRepsForExercise(exId, defaultReps)}回`;
+  }
+
+  function hasSubTenReps(exId) {
+    if (!exId) return false;
+    const todaySets = getTodaySetRepsList(exId);
+    if (todaySets.length > 0) {
+      return todaySets.some((n) => n < 10);
+    }
+    const prevSetStr = normalizeSetRepsCore(
+      state.rpeMap[exId]?.lastSetReps || state.rpeMap[exId]?.setRepsText
+    );
+    if (prevSetStr) {
+      const nums = prevSetStr
+        .split('/')
+        .map((x) => Number(x.trim()))
+        .filter((n) => Number.isFinite(n) && n > 0);
+      if (nums.some((n) => n < 10)) return true;
+    }
+    return getRepsForExercise(exId, 10) < 10;
+  }
+
   function cleanExerciseShortTitle(title) {
     return String(title || '').replace(/^[①②③④⑤]\s*/, '');
+  }
+
+  function resolveVideoTiming(srcObj, { allowShortCut = false } = {}) {
+    const startSec = Math.max(0, Math.round(Number(srcObj.startSeconds) || 0));
+    const fullEnd =
+      Number(srcObj.endSeconds) > startSec
+        ? Math.round(Number(srcObj.endSeconds))
+        : startSec + Math.max(30, Math.round(Number(srcObj.durationSeconds) || 300));
+    const chosenEnd =
+      allowShortCut && Number(srcObj.shortEndSeconds) > startSec
+        ? Math.min(fullEnd, Math.round(Number(srcObj.shortEndSeconds)))
+        : fullEnd;
+    const durationSec = Math.max(20, chosenEnd - startSec);
+    return {
+      startSeconds: startSec,
+      endSeconds: chosenEnd,
+      durationSeconds: durationSec
+    };
   }
 
   // -------------------- 日替わり股割り ＆ 5分瞑想ローテーション選出 --------------------
@@ -365,7 +510,7 @@
           title: '🌅 朝一リカバリー深呼吸 ＆ 肩・骨盤ゆらし',
           image: './images/exercises/warmup_shoulder_roll.jpg',
           actionSteps: ['① 鼻から4秒かけて深く吸う', '② 口から6秒かけて脱力しながら吐く', '③ 肩と股関節をやさしく揺らす'],
-          subtitle: '無理に追い込まず、朝の関節ケアと自律神経リセットに特化した15分編成です。',
+          subtitle: '無理に追い込まず、朝の関節ケアと自律神経リセットに特化したケア編成です。',
           setupNote: '今朝は身体を労わる15分ケア編成です。深い呼吸で全身に酸素を巡らせましょう。',
           durationSeconds: 35,
           pulley: 'ヨガマット / ベッド可',
@@ -376,6 +521,7 @@
       ];
 
       if (stretchObj) {
+        const vt = resolveVideoTiming(stretchObj, { allowShortCut: false });
         careSteps.push({
           kind: 'video',
           isDailyStretch: true,
@@ -388,10 +534,12 @@
           subtitle: `${stretchObj.channel}｜${stretchObj.focus}`,
           channel: stretchObj.channel,
           videoId: stretchObj.videoId,
-          startSeconds: stretchObj.startSeconds || 0,
-          durationSeconds: Math.min(stretchObj.durationSeconds, 540),
+          startSeconds: vt.startSeconds,
+          endSeconds: vt.endSeconds,
+          durationSeconds: vt.durationSeconds,
           safetyTip: '🤸 朝はまだ筋肉が硬めなので、痛気持ちいい6〜7割の伸びで呼吸を続けます',
-          speechText: `それでは股割り・柔軟ケアに入りましょう。朝一番の身体をやさしく目覚めさせるように、息を吐きながら伸ばしていきますよ。`
+          speechText:
+            'それでは股割り・柔軟ケアに入りましょう。朝一番の身体をやさしく目覚めさせるように、息を吐きながら伸ばしていきますよ。'
         });
       }
 
@@ -412,6 +560,7 @@
       });
 
       if (medObj) {
+        const mt = resolveVideoTiming(medObj, { allowShortCut: false });
         careSteps.push({
           kind: 'video',
           isDailyStretch: false,
@@ -424,12 +573,13 @@
           subtitle: `${medObj.channel}｜${medObj.focus}`,
           channel: medObj.channel,
           videoId: medObj.videoId,
-          startSeconds: medObj.startSeconds || 0,
-          durationSeconds: medObj.durationSeconds,
+          startSeconds: mt.startSeconds,
+          endSeconds: mt.endSeconds,
+          durationSeconds: mt.durationSeconds,
           safetyTip: '🧘 5分間瞑想：目を閉じて肩の力を抜き、ゆっくりと自然な呼吸に意識を向けます',
           speechText:
             medObj.speech ||
-            '仕上げの5分間は、瞑想タイムです。ゆっくりと深い呼吸を続けながら、穏やかな時間をお過ごしください。'
+            '仕上げの5分間は、マイ瞑想音楽、の時間です。ゆっくりと深い呼吸を続けながら、穏やかな時間をお過ごしください。'
         });
       }
       return careSteps;
@@ -455,15 +605,12 @@
     let shortNonMachineVideoCount = 0;
 
     plan.blocks.forEach((block, blockIdx) => {
-      // 時短20分モードの最適化フィルタ
       if (isShort) {
         if (hasMachineBlocks) {
-          // 筋トレ日はHIIT動画とその直前のマット移動トランジションをスキップし、2セット集中＋股割り6分＋瞑想5分へ直結
           if (block.type === 'video') return;
           const nextBlock = plan.blocks[blockIdx + 1];
           if (block.type === 'transition' && nextBlock && nextBlock.type === 'video') return;
         } else {
-          // 水・土・日の動画中心日はメイン動画1本(最大6分)＋開脚(最大5分)＋瞑想5分に凝縮
           if (block.type === 'video') {
             shortNonMachineVideoCount += 1;
             if (shortNonMachineVideoCount > 1 && plan.blocks.some((b) => b.type === 'daily_stretch')) {
@@ -492,10 +639,12 @@
           cues: block.cues || [],
           speechText: block.speech || `${block.title}。${block.setupNote || ''}`
         };
-        if (lastFinishedMachine && !lastFinishedMachine.hidePlates) {
+        if (lastFinishedMachine) {
           stepObj.prevExerciseId = lastFinishedMachine.id;
           stepObj.prevExerciseTitle = lastFinishedMachine.title;
           stepObj.prevDefaultPlates = lastFinishedMachine.defaultPlates;
+          stepObj.prevHidePlates = Boolean(lastFinishedMachine.hidePlates);
+          stepObj.prevTotalSets = lastFinishedMachine.totalSets || lastFinishedMachine.sets || 3;
         }
         lastFinishedMachine = null;
         steps.push(stepObj);
@@ -523,7 +672,7 @@
             defaultPlates: block.defaultPlates,
             pulley: block.pulley,
             attachment: block.attachment,
-            demoRange: block.demoRange || [30, 60],
+            demoRange: block.demoRange || [122, 132],
             setupNote: block.setupNote,
             cues: block.cues || [],
             speechText:
@@ -541,7 +690,7 @@
               hidePlates: Boolean(block.hidePlates),
               title: `${block.title}（休憩）`,
               image: block.image || './images/exercises/irotec_chest_wide.jpg',
-              actionSteps: ['① 深い呼吸で酸素を送る', `② 次は セット ${s + 1} / ${totalSets}`, '③ 手応えメモも1タップ記録OK'],
+              actionSteps: ['① 深い呼吸で酸素を送る', `② 次は セット ${s + 1} / ${totalSets}`, '③ 回数＆手応えも1タップ記録OK'],
               subtitle: `次は セット ${s + 1} / ${totalSets}`,
               setIndex: s,
               totalSets,
@@ -549,14 +698,14 @@
               defaultPlates: block.defaultPlates,
               pulley: block.pulley,
               attachment: block.attachment,
-              demoRange: block.demoRange || [30, 60],
+              demoRange: block.demoRange || [122, 132],
               setupNote: restVoices[(s - 1) % restVoices.length],
               cues: block.cues || [],
               speechText: restVoices[(s - 1) % restVoices.length]
             });
           }
         }
-        lastFinishedMachine = block;
+        lastFinishedMachine = { ...block, totalSets };
       } else if (block.type === 'video') {
         lastFinishedMachine = null;
         const isRelaxOrStretch =
@@ -567,7 +716,7 @@
           block.phase.includes('RESET') ||
           block.phase.includes('SPLIT') ||
           block.phase.includes('HIP');
-        const vidDur = isShort ? Math.min(block.durationSeconds, 360) : block.durationSeconds;
+        const vt = resolveVideoTiming(block, { allowShortCut: isShort });
         steps.push({
           kind: 'video',
           isDailyStretch: false,
@@ -579,8 +728,9 @@
           subtitle: `${block.channel}｜${block.note || ''}`,
           channel: block.channel,
           videoId: block.videoId,
-          startSeconds: block.startSeconds || 0,
-          durationSeconds: vidDur,
+          startSeconds: vt.startSeconds,
+          endSeconds: vt.endSeconds,
+          durationSeconds: vt.durationSeconds,
           safetyTip: isRelaxOrStretch
             ? '🧘 呼吸を止めず、膝に違和感がある角度は無理せず緩めてキープ'
             : '🛡️ 膝保護：スクワット・ジャンプが出たら上半身パンチやツイストに置換OK',
@@ -588,7 +738,11 @@
         });
       } else if (block.type === 'daily_stretch' && stretchObj) {
         lastFinishedMachine = null;
-        const stretchDur = isShort ? Math.min(stretchObj.durationSeconds, 360) : stretchObj.durationSeconds;
+        const vt = resolveVideoTiming(stretchObj, { allowShortCut: isShort });
+        const shortLabel =
+          isShort && vt.durationSeconds < stretchObj.durationSeconds
+            ? `（時短約${Math.round(vt.durationSeconds / 60)}分）`
+            : '（日替わり選出）';
         steps.push({
           kind: 'video',
           isDailyStretch: true,
@@ -596,18 +750,20 @@
           stretchId: stretchObj.id,
           themePhase: 'STRETCH',
           phaseLabel: block.phase,
-          badge: `${stretchObj.badge}${isShort ? '（時短6分）' : '（日替わり選出）'}`,
+          badge: `${stretchObj.badge}${shortLabel}`,
           title: stretchObj.title,
           subtitle: `${stretchObj.channel}｜${stretchObj.focus}`,
           channel: stretchObj.channel,
           videoId: stretchObj.videoId,
-          startSeconds: stretchObj.startSeconds || 0,
-          durationSeconds: stretchDur,
+          startSeconds: vt.startSeconds,
+          endSeconds: vt.endSeconds,
+          durationSeconds: vt.durationSeconds,
           safetyTip: '🤸 股割りタイム：痛気持ちいい7割の伸びで、吐く息ごとに力を抜きます',
           speechText: `本日の股割りストレッチは、${stretchObj.category}、のメニューです！息をふーっと吐きながら、気持ちよく伸ばしていきましょうね。`
         });
       } else if (block.type === 'daily_meditation' && medObj) {
         lastFinishedMachine = null;
+        const mt = resolveVideoTiming(medObj, { allowShortCut: false });
         steps.push({
           kind: 'video',
           isDailyStretch: false,
@@ -620,8 +776,9 @@
           subtitle: `${medObj.channel}｜${medObj.focus}`,
           channel: medObj.channel,
           videoId: medObj.videoId,
-          startSeconds: medObj.startSeconds || 0,
-          durationSeconds: medObj.durationSeconds,
+          startSeconds: mt.startSeconds,
+          endSeconds: mt.endSeconds,
+          durationSeconds: mt.durationSeconds,
           safetyTip: '🧘 5分間瞑想：目を閉じて肩の力を抜き、ゆっくりと自然な呼吸に意識を向けます',
           speechText:
             medObj.speech ||
@@ -775,11 +932,19 @@
     }
   });
 
-  // -------------------- YouTube IFrame API --------------------
+  // -------------------- YouTube IFrame API & Locked Timer Sync --------------------
   function initYouTubeApi() {
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     document.head.appendChild(tag);
+  }
+
+  function autoAdvanceFromVideo(stepRef) {
+    if (!state.isRunning) return;
+    if (state.steps[state.currentIndex] !== stepRef) return;
+    if (state.lastAutoAdvancedStep === stepRef) return;
+    state.lastAutoAdvancedStep = stepRef;
+    advanceStep(1);
   }
 
   window.onYouTubeIframeAPIReady = function () {
@@ -810,14 +975,30 @@
         onStateChange: (ev) => {
           const step = state.steps[state.currentIndex];
           if (!step) return;
+
           if (ev.data === window.YT.PlayerState.PLAYING) {
             el.ytUnblockBtn.classList.add('hidden');
+            state.ytStepFailed = false;
+
+            // 初回再生時：YouTubeの視聴履歴による途中再生ジャンプを防止し、正確なstartSecondsを強制保証
+            if (step.kind === 'video' && !state.videoStepSeekVerified) {
+              state.videoStepSeekVerified = true;
+              const expectedStart = step.startSeconds || 0;
+              const cur = state.ytPlayer.getCurrentTime ? state.ytPlayer.getCurrentTime() : expectedStart;
+              if (cur < expectedStart - 1.5 || cur > expectedStart + 6) {
+                try {
+                  state.ytPlayer.seekTo(expectedStart, true);
+                } catch (_) {}
+              }
+            }
           }
+
           if (ev.data === window.YT.PlayerState.ENDED && step.kind === 'video' && state.isRunning) {
-            advanceStep(1);
+            autoAdvanceFromVideo(step);
           }
         },
         onError: () => {
+          state.ytStepFailed = true;
           el.ytUnblockBtn.classList.add('hidden');
         }
       }
@@ -827,16 +1008,19 @@
   function syncYouTubeForStep(step, autoPlayNow) {
     clearInterval(state.demoLoopHandle);
     el.ytUnblockBtn.classList.add('hidden');
+    state.ytStepFailed = false;
+    state.videoStepSeekVerified = false;
 
     const run = () => {
       if (!state.ytPlayer || typeof state.ytPlayer.loadVideoById !== 'function') return;
 
       if (step.kind === 'video') {
-        const endSec = (step.startSeconds || 0) + step.durationSeconds + 5;
+        const startSec = step.startSeconds || 0;
+        const endSec = step.endSeconds || startSec + step.durationSeconds;
         if (autoPlayNow) {
           state.ytPlayer.loadVideoById({
             videoId: step.videoId,
-            startSeconds: step.startSeconds || 0,
+            startSeconds: startSec,
             endSeconds: endSec
           });
           state.ytPlayer.unMute();
@@ -853,11 +1037,12 @@
         } else {
           state.ytPlayer.cueVideoById({
             videoId: step.videoId,
-            startSeconds: step.startSeconds || 0
+            startSeconds: startSec,
+            endSeconds: endSec
           });
         }
       } else {
-        const [dStart, dEnd] = step.demoRange || [30, 58];
+        const [dStart, dEnd] = step.demoRange || [122, 132];
         if (state.showDemoPip && state.locationMode === 'home') {
           state.ytPlayer.mute();
           state.ytPlayer.loadVideoById({
@@ -868,10 +1053,10 @@
           state.demoLoopHandle = setInterval(() => {
             if (!state.ytPlayer || !state.showDemoPip) return;
             const cur = state.ytPlayer.getCurrentTime ? state.ytPlayer.getCurrentTime() : 0;
-            if (cur >= dEnd || cur < dStart - 2) {
+            if (cur >= dEnd - 0.2 || cur < dStart - 1.5) {
               state.ytPlayer.seekTo(dStart, true);
             }
-          }, 1000);
+          }, 500);
         } else {
           try {
             state.ytPlayer.mute();
@@ -992,43 +1177,87 @@
     });
   }
 
-  function resolveRpeTargetForStep(step) {
-    if (!step || state.locationMode !== 'home') return null;
-    if (step.kind === 'rest' && step.exerciseId && !step.hidePlates) {
+  function resolveActiveExerciseTarget(step) {
+    if (!step || step.kind === 'video') return null;
+
+    if (step.exerciseId) {
       return {
         exerciseId: step.exerciseId,
         title: step.title.replace(/（休憩）$/, ''),
-        defaultPlates: step.defaultPlates
+        defaultPlates: step.defaultPlates || 5,
+        hidePlates: Boolean(step.hidePlates || state.locationMode === 'hotel'),
+        setIndex: step.setIndex || 1,
+        totalSets: step.totalSets || 3,
+        isLiveSet: true
       };
     }
-    if (step.kind === 'work' && step.exerciseId && !step.hidePlates && step.setIndex === step.totalSets) {
+
+    if (state.locationMode === 'home') {
+      const upcoming = state.steps
+        .slice(state.currentIndex + 1)
+        .find((s) => s.exerciseId && !s.hidePlates);
+      if (upcoming) {
+        return {
+          exerciseId: upcoming.exerciseId,
+          title: upcoming.title,
+          defaultPlates: upcoming.defaultPlates || 5,
+          hidePlates: false,
+          setIndex: 1,
+          totalSets: upcoming.totalSets || 3,
+          isLiveSet: false
+        };
+      }
+    }
+    return null;
+  }
+
+  function resolveRpeTargetForStep(step) {
+    if (!step) return null;
+    if (step.kind === 'rest' && step.exerciseId) {
+      return {
+        exerciseId: step.exerciseId,
+        title: step.title.replace(/（休憩）$/, ''),
+        defaultPlates: step.defaultPlates || 5,
+        hidePlates: Boolean(step.hidePlates || state.locationMode === 'hotel'),
+        setIndex: step.setIndex || 1,
+        totalSets: step.totalSets || 3
+      };
+    }
+    if (step.kind === 'work' && step.exerciseId && step.setIndex === step.totalSets) {
       return {
         exerciseId: step.exerciseId,
         title: step.title,
-        defaultPlates: step.defaultPlates
+        defaultPlates: step.defaultPlates || 5,
+        hidePlates: Boolean(step.hidePlates || state.locationMode === 'hotel'),
+        setIndex: step.setIndex || 1,
+        totalSets: step.totalSets || 3
       };
     }
     if ((step.kind === 'setup' || step.kind === 'transition') && step.prevExerciseId) {
       return {
         exerciseId: step.prevExerciseId,
         title: step.prevExerciseTitle || step.prevExerciseId,
-        defaultPlates: step.prevDefaultPlates || 5
+        defaultPlates: step.prevDefaultPlates || 5,
+        hidePlates: Boolean(step.prevHidePlates || state.locationMode === 'hotel'),
+        setIndex: step.prevTotalSets || 3,
+        totalSets: step.prevTotalSets || 3
       };
     }
     return null;
   }
 
-  function renderOverloadAndRpe(step, activePlateStep) {
-    // 1. 漸進性過負荷（ピン＋1枚提案）バナー
+  function renderOverloadAndRpe(step, activeTarget) {
+    // 1. 漸進性過負荷（ピン＋1枚提案）バナー — 10回以上クリア＆2連続「余裕」時のみ解禁
     if (el.overloadBanner) {
       el.overloadBanner.classList.add('hidden');
-      if (activePlateStep && state.locationMode === 'home' && !activePlateStep.hidePlates) {
-        const exId = activePlateStep.exerciseId;
+      if (activeTarget && !activeTarget.hidePlates && state.locationMode === 'home') {
+        const exId = activeTarget.exerciseId;
         const rpe = state.rpeMap[exId] || {};
-        const curPlates = getPlatesForExercise(exId, activePlateStep.defaultPlates);
+        const curPlates = getPlatesForExercise(exId, activeTarget.defaultPlates);
         const todayIso = getTodayJst();
         if (
           Number(rpe.easyStreak || 0) >= 2 &&
+          !hasSubTenReps(exId) &&
           rpe.lastUpgradeDate !== todayIso &&
           curPlates < DATA.maxPlates
         ) {
@@ -1037,13 +1266,13 @@
           el.overloadBanner.classList.remove('hidden');
           el.overloadBanner.dataset.exerciseId = exId;
           el.overloadBanner.dataset.nextPlates = String(nextPlates);
-          el.overloadBanner.dataset.exerciseName = activePlateStep.title;
-          el.overloadText.textContent = `🚀 前回${rpe.easyStreak}連続「余裕😊」！${curPlates}→${nextPlates}枚目(${nextDet.kg}kg)へ上げますか？`;
+          el.overloadBanner.dataset.exerciseName = activeTarget.title;
+          el.overloadText.textContent = `🚀 10回クリア＆${rpe.easyStreak}連続「余裕😊」！${curPlates}→${nextPlates}枚目(${nextDet.kg}kg)へ上げますか？`;
         }
       }
     }
 
-    // 2. 手応えワンタップ（休憩中・最終セット・直後の移行中に表示）
+    // 2. セット別回数1タップ ＆ 手応えワンタップ（休憩中・最終セット・直後の移行中に表示）
     if (el.rpeFeedbackBox) {
       const target = resolveRpeTargetForStep(step);
       if (!target) {
@@ -1053,30 +1282,59 @@
         el.rpeFeedbackBox.dataset.exerciseId = target.exerciseId;
         el.rpeFeedbackBox.dataset.exerciseName = target.title;
         el.rpeFeedbackBox.dataset.defaultPlates = String(target.defaultPlates || 5);
+        el.rpeFeedbackBox.dataset.setIndex = String(target.setIndex || 1);
+        el.rpeFeedbackBox.dataset.hidePlates = target.hidePlates ? '1' : '0';
 
         const shortName = cleanExerciseShortTitle(target.title);
-        el.rpeHeadingTitle.textContent =
-          step.kind === 'setup' || step.kind === 'transition'
-            ? `直前「${shortName}」の手応えは？`
-            : `「${shortName}」の手応えメモ`;
-
-        const rpeInfo = state.rpeMap[target.exerciseId] || {};
-        const todayIso = getTodayJst();
-        const ratedToday = rpeInfo.lastRatedDate === todayIso ? rpeInfo.lastRpe : null;
-
-        el.rpeBtnRow.querySelectorAll('.rpe-btn').forEach((btn) => {
-          btn.classList.toggle('selected', Boolean(ratedToday && btn.dataset.rpe === ratedToday));
-        });
-
-        const streak = Number(rpeInfo.easyStreak || 0);
-        if (streak >= 2) {
-          el.rpeStreakHint.textContent = '🔥 次回＋1枚UP提案ON！';
-        } else if (streak === 1) {
-          el.rpeStreakHint.textContent = '✨ あと1回「余裕」で＋1枚提案';
-        } else if (ratedToday) {
-          el.rpeStreakHint.textContent = '✓ 本日の手応え記録済';
+        if (step.kind === 'setup' || step.kind === 'transition') {
+          el.rpeHeadingTitle.textContent = `直前「${shortName}」最終Set回数＆手応え`;
         } else {
-          el.rpeStreakHint.textContent = '余裕2連続で次回＋1枚提案';
+          el.rpeHeadingTitle.textContent = `Set ${target.setIndex} の回数 ＆ 手応えワンタップ`;
+        }
+
+        // このセットの記録済み回数ハイライト
+        const setRepVal = getRecordedSetRep(target.exerciseId, target.setIndex);
+        if (el.repQuickRow) {
+          el.repQuickRow.querySelectorAll('.rep-pill').forEach((pill) => {
+            pill.classList.toggle('selected', setRepVal !== null && Number(pill.dataset.reps) === setRepVal);
+          });
+        }
+
+        const isHomeWeightEx = !target.hidePlates && Boolean(HOME_PLATE_EXERCISES[target.exerciseId]);
+        if (el.rpeBtnRow) {
+          el.rpeBtnRow.classList.toggle('hidden', !isHomeWeightEx);
+        }
+
+        const todaySets = getTodaySetRepsList(target.exerciseId);
+        const setLogTxt = todaySets.length ? `本日: ${todaySets.join('/')}回` : '';
+
+        if (isHomeWeightEx) {
+          const rpeInfo = state.rpeMap[target.exerciseId] || {};
+          const todayIso = getTodayJst();
+          const ratedToday = rpeInfo.lastRatedDate === todayIso ? rpeInfo.lastRpe : null;
+
+          el.rpeBtnRow.querySelectorAll('.rpe-btn').forEach((btn) => {
+            btn.classList.toggle('selected', Boolean(ratedToday && btn.dataset.rpe === ratedToday));
+          });
+
+          const streak = Number(rpeInfo.easyStreak || 0);
+          if (hasSubTenReps(target.exerciseId)) {
+            el.rpeStreakHint.textContent = setLogTxt
+              ? `🎯 ${setLogTxt}（10回達成まで現重量維持）`
+              : `🎯 前回${getRepsForExercise(target.exerciseId)}回 — 10回達成を目指しましょう`;
+          } else if (streak >= 2) {
+            el.rpeStreakHint.textContent = setLogTxt ? `${setLogTxt}｜🔥次回＋1枚提案ON` : '🔥 次回＋1枚UP提案ON！';
+          } else if (streak === 1) {
+            el.rpeStreakHint.textContent = setLogTxt ? `${setLogTxt}｜✨あと1回余裕でUP` : '✨ あと1回「余裕」で＋1枚提案';
+          } else if (setLogTxt) {
+            el.rpeStreakHint.textContent = `✓ ${setLogTxt}`;
+          } else if (ratedToday) {
+            el.rpeStreakHint.textContent = '✓ 本日の手応え記録済';
+          } else {
+            el.rpeStreakHint.textContent = '10回×余裕2連続で＋1枚提案';
+          }
+        } else {
+          el.rpeStreakHint.textContent = setLogTxt || '回数をタップで記録';
         }
       }
     }
@@ -1122,20 +1380,26 @@
       el.hwPulley.textContent = step.pulley || 'マット / 準備';
       el.hwAttachment.textContent = step.attachment || '--';
 
-      if (step.exerciseId && !step.hidePlates) {
+      if (step.exerciseId && !step.hidePlates && state.locationMode === 'home') {
         const plates = getPlatesForExercise(step.exerciseId, step.defaultPlates);
         const detail = formatPlateDetail(plates);
+        const repsDisp = formatRepsDisplay(step.exerciseId, 10);
         el.hwPinDisplay.classList.remove('hidden');
-        el.hwPinDisplay.textContent = `ピン：上から ${plates} 枚目 (約${detail.kg}kg)`;
+        el.hwPinDisplay.textContent = `ピン：上から ${plates} 枚目 (約${detail.kg}kg) × ${repsDisp}`;
+      } else if (step.exerciseId) {
+        const repsDisp = formatRepsDisplay(step.exerciseId, 12);
+        el.hwPinDisplay.classList.remove('hidden');
+        el.hwPinDisplay.textContent = `目標・記録回数：${repsDisp}`;
       } else {
         const upcomingMachine = state.steps
           .slice(state.currentIndex + 1)
-          .find((s) => s.exerciseId && !s.hidePlates);
+          .find((s) => s.exerciseId && !s.hidePlates && state.locationMode === 'home');
         if (upcomingMachine) {
           const plates = getPlatesForExercise(upcomingMachine.exerciseId, upcomingMachine.defaultPlates);
           const detail = formatPlateDetail(plates);
+          const repsDisp = formatRepsDisplay(upcomingMachine.exerciseId, 10);
           el.hwPinDisplay.classList.remove('hidden');
-          el.hwPinDisplay.textContent = `次ピン：${plates} 枚目 (約${detail.kg}kg)`;
+          el.hwPinDisplay.textContent = `次ピン：${plates} 枚目 (約${detail.kg}kg) × ${repsDisp}`;
         } else {
           el.hwPinDisplay.classList.add('hidden');
         }
@@ -1191,12 +1455,15 @@
       el.timerStateLabel.textContent = microMap[step.themePhase] || '\\ ACTIVE /';
     }
 
+    // 動画ステップ時はボタン意味も直感的にガイド
+    if (el.minus10Btn && el.plus15Btn) {
+      el.minus10Btn.title = isVideoStep ? '動画を10秒先へ進める' : '残り時間を10秒減らす';
+      el.plus15Btn.title = isVideoStep ? '動画を15秒巻き戻す' : '時間を15秒延長する';
+    }
+
     updateTimerUI();
 
-    const activePlateStep =
-      step.exerciseId && !step.hidePlates
-        ? step
-        : state.steps.slice(state.currentIndex + 1).find((s) => s.exerciseId && !s.hidePlates);
+    const activeTarget = resolveActiveExerciseTarget(step);
 
     el.plateSelector.classList.add('hidden');
     el.hotelTipBox.classList.add('hidden');
@@ -1214,13 +1481,39 @@
         el.shuffleStretchBtn.textContent = '🎲 別の股割り動画へ';
       }
       if (el.rpeFeedbackBox) el.rpeFeedbackBox.classList.add('hidden');
-    } else if (activePlateStep) {
+    } else if (activeTarget) {
       el.plateSelector.classList.remove('hidden');
-      const pCount = getPlatesForExercise(activePlateStep.exerciseId, activePlateStep.defaultPlates);
-      const pDetail = formatPlateDetail(pCount);
-      el.plateCountNum.textContent = pCount;
-      el.plateKgHint.textContent = pDetail.text;
-      renderOverloadAndRpe(step, activePlateStep);
+      const defReps = activeTarget.hidePlates ? 12 : 10;
+      const curSetRecorded = activeTarget.isLiveSet
+        ? getRecordedSetRep(activeTarget.exerciseId, activeTarget.setIndex)
+        : null;
+      const shownReps = curSetRecorded !== null ? curSetRecorded : getRepsForExercise(activeTarget.exerciseId, defReps);
+
+      if (el.repsCountNum) el.repsCountNum.textContent = String(shownReps);
+
+      if (activeTarget.hidePlates) {
+        el.plateStepperWrap?.classList.add('hidden');
+        el.twinStepperGrid?.classList.add('reps-only');
+        if (el.plateHeadingTitle) {
+          el.plateHeadingTitle.textContent = `回数メモ（Set ${activeTarget.setIndex}/${activeTarget.totalSets}）`;
+        }
+        el.plateKgHint.textContent = formatRepsDisplay(activeTarget.exerciseId, defReps);
+      } else {
+        el.plateStepperWrap?.classList.remove('hidden');
+        el.twinStepperGrid?.classList.remove('reps-only');
+        const pCount = getPlatesForExercise(activeTarget.exerciseId, activeTarget.defaultPlates);
+        const pDetail = formatPlateDetail(pCount);
+        el.plateCountNum.textContent = String(pCount);
+        if (el.plateHeadingTitle) {
+          el.plateHeadingTitle.textContent = state.syncKey
+            ? '重量 ＆ 回数メモ（Notion同期）'
+            : '重量 ＆ 回数メモ（端末保存）';
+        }
+        const repsDisp = formatRepsDisplay(activeTarget.exerciseId, 10);
+        el.plateKgHint.textContent = `約${pDetail.kg} kg × ${repsDisp}`;
+      }
+
+      renderOverloadAndRpe(step, activeTarget);
     } else {
       const rpeTarget = resolveRpeTargetForStep(step);
       if (rpeTarget) {
@@ -1359,13 +1652,16 @@
       speakShoko(step.speechText);
       syncYouTubeForStep(step, true);
       prefetchSessionVoices();
-    } else {
-      if (step.kind === 'video' && state.ytPlayer && state.ytPlayer.playVideo) {
+    } else if (step.kind === 'video' && state.ytReady && state.ytPlayer) {
+      const pState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
+      if (pState === window.YT.PlayerState.PAUSED || pState === window.YT.PlayerState.BUFFERING) {
         state.ytPlayer.unMute();
         state.ytPlayer.playVideo();
       } else {
         syncYouTubeForStep(step, true);
       }
+    } else {
+      syncYouTubeForStep(step, true);
     }
 
     clearInterval(state.timerHandle);
@@ -1387,9 +1683,56 @@
 
   function tick() {
     if (!state.isRunning) return;
-    state.remainingSec -= 1;
-
     const step = state.steps[state.currentIndex];
+    if (!step) return;
+
+    // 動画ステップ時はYouTube実再生秒数とスタジオタイマーを完全ロック同期（バッファ・一時停止中のズレを防止）
+    if (
+      step.kind === 'video' &&
+      state.ytReady &&
+      state.ytPlayer &&
+      !state.ytStepFailed &&
+      window.YT &&
+      window.YT.PlayerState &&
+      typeof state.ytPlayer.getPlayerState === 'function'
+    ) {
+      const pState = state.ytPlayer.getPlayerState();
+      const startSec = step.startSeconds || 0;
+      const endSec = step.endSeconds || startSec + step.durationSeconds;
+
+      if (pState === window.YT.PlayerState.PLAYING) {
+        const cur = typeof state.ytPlayer.getCurrentTime === 'function' ? state.ytPlayer.getCurrentTime() : startSec;
+        if (cur >= endSec - 0.3) {
+          autoAdvanceFromVideo(step);
+          return;
+        }
+        const nextRemain = Math.max(1, Math.ceil(endSec - cur));
+        if (
+          step.themePhase !== 'MEDITATION' &&
+          nextRemain !== state.remainingSec &&
+          nextRemain > 0 &&
+          nextRemain <= 3
+        ) {
+          playBeep(880, 95, 0.07);
+        }
+        state.remainingSec = nextRemain;
+        state.stepTotalSec = Math.max(state.stepTotalSec, endSec - startSec);
+        updateTimerUI();
+        return;
+      }
+
+      if (pState === window.YT.PlayerState.ENDED) {
+        autoAdvanceFromVideo(step);
+        return;
+      }
+
+      // バッファリング中・自動再生許可待ち中はタイマーを減らさず待機
+      updateTimerUI();
+      return;
+    }
+
+    // マシン・準備・オフライン時の標準カウントダウン
+    state.remainingSec -= 1;
 
     if (step.switchHalfway && state.remainingSec === Math.floor(state.stepTotalSec / 2)) {
       playBeep(987.77, 130, 0.14);
@@ -1446,20 +1789,46 @@
 
     const weightsMap = {};
     const weightParts = [];
-    if (state.locationMode === 'home' && state.durationMode !== 'care' && Array.isArray(plan.blocks)) {
+    if (state.durationMode !== 'care' && Array.isArray(plan.blocks)) {
       plan.blocks.forEach((b) => {
-        if (b.type === 'machine' && b.id && !b.hidePlates) {
+        if (b.type !== 'machine' || !b.id) return;
+        const shortTitle = b.title.replace(/（.*?）/g, (m) =>
+          m.includes('横') ? '(横)' : m.includes('縦') ? '(縦)' : ''
+        );
+
+        if (state.locationMode === 'home' && !b.hidePlates) {
           const p = getPlatesForExercise(b.id, b.defaultPlates);
           const det = formatPlateDetail(p);
+          const reps = getRepsForExercise(b.id, 10);
+          const setReps = getTodaySetRepsList(b.id);
+          const setRepsStr = setReps.length >= 2 ? setReps.join('/') : String(reps);
           const rpeObj = state.rpeMap[b.id] || {};
           const todayRpe = rpeObj.lastRatedDate === getTodayJst() ? rpeObj.lastRpe : undefined;
-          weightsMap[b.id] = { title: b.title, plates: p, kg: Number(det.kg), rpe: todayRpe };
-          const shortTitle = b.title.replace(/（.*?）/g, (m) =>
-            m.includes('横') ? '(横)' : m.includes('縦') ? '(縦)' : ''
-          );
+          weightsMap[b.id] = {
+            title: b.title,
+            plates: p,
+            kg: Number(det.kg),
+            reps,
+            setReps: setReps.length ? setReps : undefined,
+            rpe: todayRpe,
+            rpeInfo: {
+              ...rpeObj,
+              lastReps: reps,
+              lastSetReps: setReps.length ? setReps.join('/') : rpeObj.lastSetReps || ''
+            }
+          };
           const rpeIcon =
             todayRpe === 'easy' ? '😊' : todayRpe === 'good' ? '👍' : todayRpe === 'hard' ? '🔥' : '';
-          weightParts.push(`${shortTitle}: ${p}枚(${det.kg}kg)${rpeIcon}`);
+          weightParts.push(`${shortTitle}: ${p}枚(${det.kg}kg)×${setRepsStr}回${rpeIcon}`);
+        } else {
+          // 自重・ホテル種目でも回数が記録されていればログ文字列に含める
+          const setReps = getTodaySetRepsList(b.id);
+          const hasExplicitReps = state.repsMap[b.id] !== undefined || setReps.length > 0;
+          if (hasExplicitReps) {
+            const reps = getRepsForExercise(b.id, 12);
+            const setRepsStr = setReps.length >= 2 ? setReps.join('/') : String(reps);
+            weightParts.push(`${shortTitle}: ${setRepsStr}回`);
+          }
         }
       });
     }
@@ -1491,7 +1860,6 @@
       badges.forEach((b) => {
         b.textContent = '端末ローカル保存のみ（未連携）';
       });
-      if (el.plateHeadingTitle) el.plateHeadingTitle.textContent = 'ピン位置メモ（端末保存）';
       if (el.syncModalDetail) {
         el.syncModalDetail.textContent =
           'Notion「🏃 健康ダッシュボード」上部の専用ワンクリックリンクから開くと、スマホ・PC・タブレット間で自動同期が有効になります。';
@@ -1533,7 +1901,6 @@
         b.textContent = '✅ Notion クラウド同期ON';
         b.classList.add('connected');
       });
-      if (el.plateHeadingTitle) el.plateHeadingTitle.textContent = 'ピン位置メモ（Notion自動同期）';
       if (el.syncModalDetail) {
         const lastTxt = state.lastSyncedAt ? `（最終同期: ${state.lastSyncedAt}）` : '';
         el.syncModalDetail.textContent = `Notion「🏃 健康ダッシュボード」および全端末と自動同期中です${lastTxt}。`;
@@ -1593,7 +1960,7 @@
       state.syncStatus = 'connected';
       updateSyncUI();
       return data;
-    } catch (err) {
+    } catch (_) {
       if (method === 'POST' && allowQueue) {
         enqueuePendingSync(endpoint, payload);
       }
@@ -1636,13 +2003,23 @@
       saveJson(STORAGE_KEYS.morningCond, data.morningCondition);
     }
 
-    // 1. IROTEC ピン枚数 ＆ 漸進性過負荷RPEマージ
+    // 1. IROTEC ピン枚数 ＆ 回数 ＆ 漸進性過負荷RPEマージ
     if (data.plates && typeof data.plates === 'object') {
       state.plateMap = { ...state.plateMap, ...data.plates };
       saveJson(STORAGE_KEYS.plates, state.plateMap);
     }
+    if (data.repsMap && typeof data.repsMap === 'object') {
+      state.repsMap = { ...state.repsMap, ...data.repsMap };
+      saveJson(STORAGE_KEYS.repsMap, state.repsMap);
+    }
     if (data.rpeMap && typeof data.rpeMap === 'object') {
       state.rpeMap = { ...state.rpeMap, ...data.rpeMap };
+      Object.entries(data.rpeMap).forEach(([exId, info]) => {
+        if (info && Number.isFinite(Number(info.lastReps)) && Number(info.lastReps) > 0 && !state.repsMap[exId]) {
+          state.repsMap[exId] = Math.round(Number(info.lastReps));
+        }
+      });
+      saveJson(STORAGE_KEYS.repsMap, state.repsMap);
       saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
     }
 
@@ -1681,6 +2058,7 @@
     renderMorningCondition();
     renderCurrentStep();
     if (!el.logModal.classList.contains('hidden')) {
+      renderSessionWeightsEditor();
       renderWeeklyStamps();
       renderSplitHistory();
     }
@@ -1717,11 +2095,13 @@
       meditationMin: metrics.meditationMin,
       meditationDone: true,
       weightsSummary: metrics.weightsSummary,
+      weightsMap: metrics.weightsMap,
       splitLevel: existing?.splitLevel || null,
       splitMemo: existing?.splitMemo || ''
     });
     updateStreakBadge();
     renderWeeklyStamps();
+    renderSplitHistory();
 
     const res = await relayRequest('/api/session', 'POST', {
       date: todayIso,
@@ -1745,8 +2125,8 @@
     if (res) {
       updateSyncUI(
         fromManualBtn
-          ? '✅ 朝一ワークアウト＆5分瞑想をNotion「健康ダッシュボード」とマインドフルネスログへ記録しました！'
-          : '🎉 Notion「健康ダッシュボード」＆5分瞑想ログへ自動保存しました！下の開脚レベル・柔軟メモも記録できます。'
+          ? '✅ 重量×回数＆5分瞑想をNotion「健康ダッシュボード」とウェイトマスタへ記録しました！'
+          : '🎉 Notion「健康ダッシュボード」＆5分瞑想ログへ自動保存しました！下の重量×回数・開脚レベルも微調整できます。'
       );
     }
   }
@@ -1796,33 +2176,101 @@
     syncFullSessionToCloud({ fromManualBtn: false });
   }
 
-  // -------------------- Plate Adjustment & Progressive Overload RPE --------------------
+  // -------------------- 重量×回数 ＆ 漸進性過負荷（ダブルプログレッション） --------------------
+  function syncExerciseWeightAndReps(exId, exName, defaultPlates, { immediate = false } = {}) {
+    if (!exId || !HOME_PLATE_EXERCISES[exId]) return;
+
+    const curPlates = getPlatesForExercise(exId, defaultPlates || HOME_PLATE_EXERCISES[exId].defaultPlates);
+    const curReps = getRepsForExercise(exId, 10);
+    const todaySets = getTodaySetRepsList(exId);
+
+    const prevRpe = state.rpeMap[exId] || {};
+    const subTen = hasSubTenReps(exId);
+    const updatedRpe = {
+      ...prevRpe,
+      lastReps: curReps,
+      lastSetReps: todaySets.length ? todaySets.join('/') : prevRpe.lastSetReps || '',
+      easyStreak: subTen ? 0 : Number(prevRpe.easyStreak || 0)
+    };
+    state.rpeMap[exId] = updatedRpe;
+    saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
+
+    if (!state.syncKey) return;
+
+    const sendFn = () => {
+      relayRequest('/api/plates', 'POST', {
+        exerciseId: exId,
+        plates: curPlates,
+        reps: curReps,
+        setReps: todaySets.length ? todaySets : undefined,
+        exerciseName: exName || HOME_PLATE_EXERCISES[exId].title,
+        rpeInfo: updatedRpe
+      });
+    };
+
+    clearTimeout(state.plateSyncTimers[exId]);
+    if (immediate) {
+      sendFn();
+    } else {
+      state.plateSyncTimers[exId] = setTimeout(sendFn, 500);
+    }
+  }
+
   function adjustPlates(delta) {
     const step = state.steps[state.currentIndex];
-    const targetStep =
-      step.exerciseId && !step.hidePlates
-        ? step
-        : state.steps.slice(state.currentIndex + 1).find((s) => s.exerciseId && !s.hidePlates);
-    if (!targetStep) return;
+    const target = resolveActiveExerciseTarget(step);
+    if (!target || target.hidePlates) return;
 
-    const exId = targetStep.exerciseId;
-    const cur = getPlatesForExercise(exId, targetStep.defaultPlates);
+    const exId = target.exerciseId;
+    const cur = getPlatesForExercise(exId, target.defaultPlates);
     const next = Math.max(1, Math.min(DATA.maxPlates, cur + delta));
     state.plateMap[exId] = next;
     saveJson(STORAGE_KEYS.plates, state.plateMap);
     renderCurrentStep();
 
-    if (state.syncKey) {
-      clearTimeout(state.plateSyncTimers[exId]);
-      state.plateSyncTimers[exId] = setTimeout(() => {
-        relayRequest('/api/plates', 'POST', {
-          exerciseId: exId,
-          plates: next,
-          exerciseName: targetStep.title,
-          rpeInfo: state.rpeMap[exId] || undefined
-        });
-      }, 650);
+    syncExerciseWeightAndReps(exId, target.title, target.defaultPlates);
+  }
+
+  function adjustReps(delta) {
+    const step = state.steps[state.currentIndex];
+    const target = resolveActiveExerciseTarget(step);
+    if (!target) return;
+
+    const exId = target.exerciseId;
+    const defReps = target.hidePlates ? 12 : 10;
+    const baseVal =
+      target.isLiveSet && getRecordedSetRep(exId, target.setIndex) !== null
+        ? getRecordedSetRep(exId, target.setIndex)
+        : getRepsForExercise(exId, defReps);
+
+    const nextReps = Math.max(1, Math.min(50, baseVal + delta));
+    state.repsMap[exId] = nextReps;
+    saveJson(STORAGE_KEYS.repsMap, state.repsMap);
+
+    if (target.isLiveSet) {
+      setRecordedSetRep(exId, target.setIndex, nextReps);
     }
+
+    renderCurrentStep();
+    syncExerciseWeightAndReps(exId, target.title, target.defaultPlates);
+  }
+
+  function recordQuickSetReps(repsNum) {
+    if (!el.rpeFeedbackBox) return;
+    const exId = el.rpeFeedbackBox.dataset.exerciseId;
+    const exName = el.rpeFeedbackBox.dataset.exerciseName || exId;
+    const defPlates = Number(el.rpeFeedbackBox.dataset.defaultPlates || 5);
+    const setIndex = Number(el.rpeFeedbackBox.dataset.setIndex || 1);
+    const cleanReps = Math.max(1, Math.min(50, Math.round(Number(repsNum) || 10)));
+    if (!exId) return;
+
+    setRecordedSetRep(exId, setIndex, cleanReps);
+    state.repsMap[exId] = cleanReps;
+    saveJson(STORAGE_KEYS.repsMap, state.repsMap);
+
+    playBeep(cleanReps >= 10 ? 987.77 : 783.99, 75, 0.08);
+    renderCurrentStep();
+    syncExerciseWeightAndReps(exId, exName, defPlates);
   }
 
   function acceptOverloadUpgrade() {
@@ -1834,14 +2282,21 @@
 
     const todayIso = getTodayJst();
     state.plateMap[exId] = nextPlates;
+    state.repsMap[exId] = 10;
+    delete state.todaySetReps[exId];
+    saveTodaySessionSetReps(state.todaySetReps);
+
     const updatedRpe = {
       ...(state.rpeMap[exId] || {}),
       easyStreak: 0,
       lastUpgradeDate: todayIso,
-      lastRpe: 'good'
+      lastRpe: 'good',
+      lastReps: 10,
+      lastSetReps: ''
     };
     state.rpeMap[exId] = updatedRpe;
     saveJson(STORAGE_KEYS.plates, state.plateMap);
+    saveJson(STORAGE_KEYS.repsMap, state.repsMap);
     saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
 
     ensureAudioUnlocked();
@@ -1849,14 +2304,7 @@
     speakShoko('ナイスチャレンジです！ピンを1枚上げて、丁寧なフォームで効かせていきましょう！');
     renderCurrentStep();
 
-    if (state.syncKey) {
-      relayRequest('/api/plates', 'POST', {
-        exerciseId: exId,
-        plates: nextPlates,
-        exerciseName: exName,
-        rpeInfo: updatedRpe
-      });
-    }
+    syncExerciseWeightAndReps(exId, exName, nextPlates, { immediate: true });
   }
 
   function recordExerciseRpe(rpeValue) {
@@ -1868,10 +2316,14 @@
 
     const todayIso = getTodayJst();
     const prev = state.rpeMap[exId] || {};
-    // 同日中の押し直しでストリークが二重加算されないよう基準値を保持
     const baseStreak =
       prev.baseStreakDate === todayIso ? Number(prev.baseStreak || 0) : Number(prev.easyStreak || 0);
-    const nextEasyStreak = rpeValue === 'easy' ? baseStreak + 1 : 0;
+    // 10回未満の種目は「余裕」を押しても重量据え置き（ダブルプログレッション保護）
+    const canCountEasy = rpeValue === 'easy' && !hasSubTenReps(exId);
+    const nextEasyStreak = canCountEasy ? baseStreak + 1 : 0;
+
+    const curReps = getRepsForExercise(exId, 10);
+    const todaySets = getTodaySetRepsList(exId);
 
     const updatedRpe = {
       ...prev,
@@ -1879,7 +2331,9 @@
       easyStreak: nextEasyStreak,
       baseStreak,
       baseStreakDate: todayIso,
-      lastRatedDate: todayIso
+      lastRatedDate: todayIso,
+      lastReps: curReps,
+      lastSetReps: todaySets.length ? todaySets.join('/') : prev.lastSetReps || ''
     };
     state.rpeMap[exId] = updatedRpe;
     saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
@@ -1887,18 +2341,7 @@
     playBeep(rpeValue === 'easy' ? 1046.5 : 880, 80, 0.08);
     renderCurrentStep();
 
-    const curPlates = getPlatesForExercise(exId, defPlates);
-    if (state.syncKey) {
-      clearTimeout(state.plateSyncTimers[exId]);
-      state.plateSyncTimers[exId] = setTimeout(() => {
-        relayRequest('/api/plates', 'POST', {
-          exerciseId: exId,
-          plates: curPlates,
-          exerciseName: exName,
-          rpeInfo: updatedRpe
-        });
-      }, 400);
-    }
+    syncExerciseWeightAndReps(exId, exName, defPlates);
   }
 
   // -------------------- Shuffle Daily Stretch / Meditation --------------------
@@ -2075,6 +2518,140 @@
     });
   }
 
+  function renderSessionWeightsEditor() {
+    if (!el.sessionWeightsEditor || !el.sessionWeightsList) return;
+    const plan = getActivePlan(state.selectedDay);
+    const machineBlocks =
+      state.durationMode !== 'care' && Array.isArray(plan.blocks)
+        ? plan.blocks.filter((b) => b.type === 'machine' && b.id)
+        : [];
+
+    if (!machineBlocks.length) {
+      el.sessionWeightsEditor.classList.add('hidden');
+      el.sessionWeightsList.innerHTML = '';
+      return;
+    }
+
+    el.sessionWeightsEditor.classList.remove('hidden');
+    el.sessionWeightsList.innerHTML = '';
+
+    machineBlocks.forEach((b) => {
+      const isWeightEx = state.locationMode === 'home' && !b.hidePlates;
+      const defReps = isWeightEx ? 10 : 12;
+      const plates = isWeightEx ? getPlatesForExercise(b.id, b.defaultPlates) : 0;
+      const det = isWeightEx ? formatPlateDetail(plates) : null;
+      const reps = getRepsForExercise(b.id, defReps);
+      const todaySets = getTodaySetRepsList(b.id);
+      const setStr = todaySets.length >= 2 ? todaySets.join('/') : '';
+      const subTen = isWeightEx && hasSubTenReps(b.id);
+
+      const row = document.createElement('div');
+      row.className = 'swe-row';
+
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'swe-title';
+      titleDiv.textContent = b.title;
+      if (subTen) {
+        const badge = document.createElement('span');
+        badge.className = 'swe-badge-hold';
+        badge.textContent = '🎯 10回挑戦中';
+        titleDiv.appendChild(badge);
+      }
+
+      const controls = document.createElement('div');
+      controls.className = 'swe-controls';
+
+      // 重量ミニステッパー（自宅IROTEC種目）
+      if (isWeightEx) {
+        const wStep = document.createElement('div');
+        wStep.className = 'swe-mini-step';
+        wStep.innerHTML = `
+          <button type="button" class="swe-mini-btn" data-act="p-minus" aria-label="1枚減らす">－</button>
+          <span class="swe-mini-val">${plates}枚(${det.kg}kg)</span>
+          <button type="button" class="swe-mini-btn" data-act="p-plus" aria-label="1枚増やす">＋</button>
+        `;
+        wStep.querySelector('[data-act="p-minus"]').addEventListener('click', () => {
+          state.plateMap[b.id] = Math.max(1, plates - 1);
+          saveJson(STORAGE_KEYS.plates, state.plateMap);
+          syncExerciseWeightAndReps(b.id, b.title, b.defaultPlates);
+          renderCurrentStep();
+          renderSessionWeightsEditor();
+        });
+        wStep.querySelector('[data-act="p-plus"]').addEventListener('click', () => {
+          state.plateMap[b.id] = Math.min(DATA.maxPlates, plates + 1);
+          saveJson(STORAGE_KEYS.plates, state.plateMap);
+          syncExerciseWeightAndReps(b.id, b.title, b.defaultPlates);
+          renderCurrentStep();
+          renderSessionWeightsEditor();
+        });
+        controls.appendChild(wStep);
+      }
+
+      // 回数ミニステッパー
+      const rStep = document.createElement('div');
+      rStep.className = 'swe-mini-step';
+      rStep.innerHTML = `
+        <button type="button" class="swe-mini-btn" data-act="r-minus" aria-label="1回減らす">－</button>
+        <span class="swe-mini-val reps-val">${reps}回</span>
+        <button type="button" class="swe-mini-btn" data-act="r-plus" aria-label="1回増やす">＋</button>
+      `;
+      rStep.querySelector('[data-act="r-minus"]').addEventListener('click', () => {
+        const nextR = Math.max(1, reps - 1);
+        state.repsMap[b.id] = nextR;
+        saveJson(STORAGE_KEYS.repsMap, state.repsMap);
+        syncExerciseWeightAndReps(b.id, b.title, b.defaultPlates);
+        renderCurrentStep();
+        renderSessionWeightsEditor();
+      });
+      rStep.querySelector('[data-act="r-plus"]').addEventListener('click', () => {
+        const nextR = Math.min(50, reps + 1);
+        state.repsMap[b.id] = nextR;
+        saveJson(STORAGE_KEYS.repsMap, state.repsMap);
+        syncExerciseWeightAndReps(b.id, b.title, b.defaultPlates);
+        renderCurrentStep();
+        renderSessionWeightsEditor();
+      });
+      controls.appendChild(rStep);
+
+      // セット別回数メモ入力（例: 10/9/8/7）
+      const setInp = document.createElement('input');
+      setInp.type = 'text';
+      setInp.className = 'swe-set-input';
+      setInp.placeholder = 'Set別: 10/9/8';
+      setInp.title = 'セットごとの回数を 10/9/8 のように入力できます';
+      setInp.value = setStr;
+      setInp.addEventListener('change', () => {
+        const raw = setInp.value.trim();
+        if (!raw) {
+          delete state.todaySetReps[b.id];
+          saveTodaySessionSetReps(state.todaySetReps);
+        } else {
+          const nums = raw
+            .split(/[\/,\s、]+/)
+            .map((x) => Math.round(Number(x)))
+            .filter((n) => Number.isFinite(n) && n >= 1 && n <= 60);
+          if (nums.length) {
+            state.todaySetReps[b.id] = {};
+            nums.forEach((n, i) => {
+              state.todaySetReps[b.id][i + 1] = n;
+            });
+            saveTodaySessionSetReps(state.todaySetReps);
+            state.repsMap[b.id] = nums[nums.length - 1];
+            saveJson(STORAGE_KEYS.repsMap, state.repsMap);
+          }
+        }
+        syncExerciseWeightAndReps(b.id, b.title, b.defaultPlates);
+        renderCurrentStep();
+        renderSessionWeightsEditor();
+      });
+      controls.appendChild(setInp);
+
+      row.appendChild(titleDiv);
+      row.appendChild(controls);
+      el.sessionWeightsList.appendChild(row);
+    });
+  }
+
   function openLogModal(justFinished = false) {
     el.logModalHeading.textContent = justFinished
       ? '🎉 朝一ルーティン完走！お疲れ様でした！'
@@ -2085,6 +2662,8 @@
     el.hmCardio.textContent = `${m.cardioMin} 分`;
     el.hmFlex.textContent = `${m.flexMin} 分`;
     el.hmMeditation.textContent = `${m.meditationMin} 分`;
+
+    renderSessionWeightsEditor();
 
     const todayRec = state.logs.find((l) => l.date === getTodayJst());
     el.splitLevelBtns.querySelectorAll('button').forEach((b) => {
@@ -2159,9 +2738,10 @@
             const locIcon = l.locationMode === 'hotel' ? '🏨' : '🏠';
             const durIcon = l.durationMode === 'short' ? '⚡時短 ' : l.durationMode === 'care' ? '🧘ケア ' : '';
             const medTag = l.meditationDone ? ' ・ 🧘瞑想済' : '';
+            const wTag = l.weightsSummary ? ` ・ 🏋️${l.weightsSummary}` : '';
             const splitTag = l.splitLevel ? ` ・ <strong>${levelLabels[l.splitLevel]}</strong>` : '';
             const memoTag = l.splitMemo ? ` ・ 💬${l.splitMemo}` : '';
-            return `<div>📅 ${l.date} ${locIcon}${durIcon}（${l.theme || '実践'}）${medTag}${splitTag}${memoTag}</div>`;
+            return `<div>📅 ${l.date} ${locIcon}${durIcon}（${l.theme || '実践'}）${wTag}${medTag}${splitTag}${memoTag}</div>`;
           })
           .join('')
       : '<div>まだ記録がありません。セッション完走または上の記録ボタンから残せます！</div>';
@@ -2203,10 +2783,48 @@
     el.nextStepBtn.addEventListener('click', () => advanceStep(1));
 
     el.minus10Btn.addEventListener('click', () => {
+      const step = state.steps[state.currentIndex];
+      if (
+        step &&
+        step.kind === 'video' &&
+        state.ytReady &&
+        state.ytPlayer &&
+        !state.ytStepFailed &&
+        typeof state.ytPlayer.getCurrentTime === 'function'
+      ) {
+        const endSec = step.endSeconds || (step.startSeconds || 0) + step.durationSeconds;
+        const cur = state.ytPlayer.getCurrentTime() || step.startSeconds || 0;
+        const target = Math.min(endSec - 1, cur + 10);
+        state.videoStepSeekVerified = true;
+        state.ytPlayer.seekTo(target, true);
+        state.remainingSec = Math.max(1, Math.ceil(endSec - target));
+        updateTimerUI();
+        return;
+      }
       state.remainingSec = Math.max(1, state.remainingSec - 10);
       updateTimerUI();
     });
+
     el.plus15Btn.addEventListener('click', () => {
+      const step = state.steps[state.currentIndex];
+      if (
+        step &&
+        step.kind === 'video' &&
+        state.ytReady &&
+        state.ytPlayer &&
+        !state.ytStepFailed &&
+        typeof state.ytPlayer.getCurrentTime === 'function'
+      ) {
+        const endSec = step.endSeconds || (step.startSeconds || 0) + step.durationSeconds;
+        const cur = state.ytPlayer.getCurrentTime() || step.startSeconds || 0;
+        const target = Math.max(0, cur - 15);
+        state.videoStepSeekVerified = true;
+        state.ytPlayer.seekTo(target, true);
+        state.remainingSec = Math.max(1, Math.ceil(endSec - target));
+        state.stepTotalSec = Math.max(state.stepTotalSec, state.remainingSec);
+        updateTimerUI();
+        return;
+      }
       state.remainingSec += 15;
       state.stepTotalSec = Math.max(state.stepTotalSec, state.remainingSec);
       updateTimerUI();
@@ -2215,8 +2833,17 @@
     el.plateMinusBtn.addEventListener('click', () => adjustPlates(-1));
     el.platePlusBtn.addEventListener('click', () => adjustPlates(1));
 
+    if (el.repsMinusBtn) el.repsMinusBtn.addEventListener('click', () => adjustReps(-1));
+    if (el.repsPlusBtn) el.repsPlusBtn.addEventListener('click', () => adjustReps(1));
+
     if (el.overloadAcceptBtn) {
       el.overloadAcceptBtn.addEventListener('click', acceptOverloadUpgrade);
+    }
+
+    if (el.repQuickRow) {
+      el.repQuickRow.querySelectorAll('.rep-pill').forEach((pill) => {
+        pill.addEventListener('click', () => recordQuickSetReps(pill.dataset.reps));
+      });
     }
 
     if (el.rpeBtnRow) {
@@ -2243,9 +2870,15 @@
     el.shuffleStretchBtn.addEventListener('click', () => shuffleCurrentPoolVideo());
     el.replayStepVideoBtn.addEventListener('click', () => {
       const step = state.steps[state.currentIndex];
-      if (step && step.kind === 'video' && state.ytPlayer) {
-        state.ytPlayer.seekTo(step.startSeconds || 0, true);
-        state.ytPlayer.playVideo();
+      if (step && step.kind === 'video') {
+        state.videoStepSeekVerified = true;
+        state.remainingSec = step.durationSeconds;
+        state.stepTotalSec = step.durationSeconds;
+        updateTimerUI();
+        if (state.ytReady && state.ytPlayer && state.ytPlayer.seekTo) {
+          state.ytPlayer.seekTo(step.startSeconds || 0, true);
+          if (state.isRunning) state.ytPlayer.playVideo();
+        }
       }
     });
 
@@ -2355,6 +2988,7 @@
         channel: 'Custom YouTube',
         videoId: vid,
         startSeconds: startSec,
+        endSeconds: startSec + mins * 60,
         durationSeconds: mins * 60,
         focus: 'カスタム登録したお気に入りストレッチ動画です。'
       };

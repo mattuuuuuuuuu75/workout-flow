@@ -9,7 +9,7 @@
   <title>筋トレNOW スタジオ｜自宅IROTEC ＆ 出張ホテル対応</title>
   <link rel="icon" type="image/png" href="./images/shoko_avatar.png" />
   <link rel="manifest" href="./manifest.json" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=4.1" />
 </head>
 <body data-phase="IDLE">
   <!-- ==================== 建設NOWニュース風 2段ヘッダー ==================== -->
@@ -190,31 +190,51 @@
 
       <!-- ② サイドバー小見出し付き白カード（左5pxオレンジ縦線） -->
       <div class="context-panel">
-        <!-- 自宅IROTEC プレート枚数メモ ＆ 漸進性過負荷ナビ -->
+        <!-- 自宅IROTEC 重量（ピン枚数）＆ 回数（レップ数）メモ ＋ 漸進性過負荷ナビ -->
         <div class="plate-selector" id="plateSelector">
           <div class="widget-heading-row">
-            <span class="widget-heading-title" id="plateHeadingTitle">ピン位置メモ（Notion同期）</span>
-            <span class="plate-kg-hint" id="plateKgHint">60 lbs / 約27.0 kg</span>
+            <span class="widget-heading-title" id="plateHeadingTitle">重量 ＆ 回数メモ（Notion同期）</span>
+            <span class="plate-kg-hint" id="plateKgHint">27.0 kg × 10回</span>
           </div>
           <div class="overload-banner hidden" id="overloadBanner">
             <span class="overload-text" id="overloadText">🚀 前回2連続「余裕😊」！＋1枚UP候補です</span>
             <button type="button" class="overload-accept-btn" id="overloadAcceptBtn">＋1枚挑戦</button>
           </div>
-          <div class="plate-stepper-row">
-            <button class="stepper-btn" id="plateMinusBtn" aria-label="1枚軽くする">－</button>
-            <div class="plate-count-box">
-              <span class="plate-num" id="plateCountNum">6</span>
-              <span class="plate-unit">枚目</span>
+          <div class="twin-stepper-grid" id="twinStepperGrid">
+            <div class="plate-stepper-row" id="plateStepperWrap">
+              <button class="stepper-btn" id="plateMinusBtn" aria-label="1枚軽くする">－</button>
+              <div class="plate-count-box">
+                <span class="plate-num" id="plateCountNum">6</span>
+                <span class="plate-unit">枚目</span>
+              </div>
+              <button class="stepper-btn" id="platePlusBtn" aria-label="1枚重くする">＋</button>
             </div>
-            <button class="stepper-btn" id="platePlusBtn" aria-label="1枚重くする">＋</button>
+            <div class="plate-stepper-row reps-stepper-row" id="repsStepperWrap">
+              <button class="stepper-btn" id="repsMinusBtn" aria-label="回数を1回減らす">－</button>
+              <div class="plate-count-box">
+                <span class="plate-num" id="repsCountNum">10</span>
+                <span class="plate-unit">回</span>
+              </div>
+              <button class="stepper-btn" id="repsPlusBtn" aria-label="回数を1回増やす">＋</button>
+            </div>
           </div>
         </div>
 
-        <!-- 手応えワンタップ（休憩中・セット完了直後に表示 → 次回ウェイト自動提案） -->
+        <!-- セット回数1タップ ＆ 手応えワンタップ（休憩中・セット完了直後に表示 → 次回ウェイト自動提案） -->
         <div class="rpe-feedback-box hidden" id="rpeFeedbackBox">
           <div class="widget-heading-row">
-            <span class="widget-heading-title" id="rpeHeadingTitle">手応えワンタップ（次回重量ナビ）</span>
+            <span class="widget-heading-title" id="rpeHeadingTitle">回数 ＆ 手応えワンタップ</span>
             <span class="rpe-streak-hint" id="rpeStreakHint"></span>
+          </div>
+          <div class="rep-quick-row" id="repQuickRow" role="group" aria-label="このセットの回数ワンタップ記録">
+            <button type="button" class="rep-pill" data-reps="5">5回</button>
+            <button type="button" class="rep-pill" data-reps="6">6回</button>
+            <button type="button" class="rep-pill" data-reps="7">7回</button>
+            <button type="button" class="rep-pill" data-reps="8">8回</button>
+            <button type="button" class="rep-pill" data-reps="9">9回</button>
+            <button type="button" class="rep-pill" data-reps="10">10回</button>
+            <button type="button" class="rep-pill" data-reps="12">12回</button>
+            <button type="button" class="rep-pill" data-reps="15">15回</button>
           </div>
           <div class="rpe-btn-row" id="rpeBtnRow">
             <button type="button" class="rpe-btn easy" data-rpe="easy">😊 余裕</button>
@@ -345,6 +365,13 @@
             <div class="h-metric"><span>柔軟・ヨガ</span><strong id="hmFlex">--分</strong></div>
             <div class="h-metric"><span>マインドフルネス瞑想</span><strong id="hmMeditation">5分</strong></div>
           </div>
+          <div class="session-weights-editor hidden" id="sessionWeightsEditor">
+            <div class="swe-header">
+              <span>🏋️ 本日の種目別 重量 ＆ 回数メモ（あとから微調整もOK）</span>
+              <span class="swe-sub">10回未満の種目は次回も現重量を維持して回数UPをナビ</span>
+            </div>
+            <div class="swe-list" id="sessionWeightsList"></div>
+          </div>
           <div class="quick-record-actions">
             <button type="button" class="quick-rec-btn primary" id="manualSaveSessionBtn">
               ✅ 本日のメニュー＆5分瞑想をNotionに記録
@@ -432,8 +459,8 @@
     </div>
   </div>
 
-  <script src="./data.js"></script>
-  <script src="./audio_manifest.js"></script>
-  <script src="./app.js"></script>
+  <script src="./data.js?v=4.1"></script>
+  <script src="./audio_manifest.js?v=4.1"></script>
+  <script src="./app.js?v=4.1"></script>
 </body>
 </html>

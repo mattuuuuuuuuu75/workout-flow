@@ -851,23 +851,39 @@ body[data-phase="WORK"] .visual-guide-frame {
   font-weight: 900;
 }
 
+.twin-stepper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.twin-stepper-grid.reps-only {
+  grid-template-columns: 1fr;
+}
 .plate-stepper-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 5px;
+  padding: 4px 5px;
+  border-radius: 8px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-card);
+}
+.reps-stepper-row {
+  background: #f8fafc;
 }
 .stepper-btn {
-  width: 48px;
-  height: 36px;
-  border-radius: 8px;
+  width: 34px;
+  height: 32px;
+  border-radius: 7px;
   background: var(--bg-subtle);
   border: 1px solid var(--border-strong);
   color: var(--text-primary);
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 900;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
 }
 .stepper-btn:hover {
   background: #e2e8f0;
@@ -881,16 +897,16 @@ body[data-phase="WORK"] .visual-guide-frame {
 .plate-count-box {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 3px;
 }
 .plate-num {
-  font-size: 1.55rem;
+  font-size: 1.32rem;
   font-weight: 900;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 .plate-unit {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: var(--text-muted);
 }
@@ -1399,6 +1415,122 @@ body[data-phase="WORK"] .visual-guide-frame {
   gap: 8px;
   margin-top: 10px;
 }
+
+/* 🏋️ 記録モーダル内の種目別 重量×回数 インラインエディタ */
+.session-weights-editor {
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-card);
+}
+.swe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 7px;
+  font-size: 0.77rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+.swe-sub {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.swe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.swe-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 9px;
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: 7px;
+}
+.swe-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  min-width: 140px;
+  flex: 1;
+}
+.swe-badge-hold {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fdba74;
+}
+.swe-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.swe-mini-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+.swe-mini-btn {
+  width: 25px;
+  height: 24px;
+  border-radius: 5px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  font-weight: 900;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  display: grid;
+  place-items: center;
+}
+.swe-mini-btn:hover {
+  background: #e2e8f0;
+}
+.swe-mini-btn:active {
+  background: var(--brand-orange);
+  color: #ffffff;
+  border-color: var(--brand-orange);
+}
+.swe-mini-val {
+  min-width: 66px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.swe-mini-val.reps-val {
+  min-width: 46px;
+}
+.swe-set-input {
+  width: 86px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border-strong);
+  background: #ffffff;
+  font-size: 0.71rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  text-align: center;
+}
 .quick-rec-btn {
   flex: 1;
   min-width: 200px;
@@ -1544,7 +1676,7 @@ body[data-phase="WORK"] .visual-guide-frame {
   background: var(--brand-orange-dark);
 }
 
-/* 😊👍🔥 最終セット・休憩中の手応えワンタップ */
+/* 😊👍🔥 セット別回数ワンタップ ＆ 手応えワンタップ */
 .rpe-feedback-box {
   margin-top: 7px;
   padding-top: 7px;
@@ -1555,11 +1687,36 @@ body[data-phase="WORK"] .visual-guide-frame {
   font-weight: 800;
   color: var(--brand-orange-dark);
 }
+.rep-quick-row {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 4px;
+  margin: 5px 0 6px;
+}
+.rep-pill {
+  padding: 5px 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-canvas);
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  transition: all 0.12s ease;
+}
+.rep-pill:hover {
+  border-color: var(--brand-orange);
+}
+.rep-pill.selected {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange-dark);
+  color: #ffffff;
+}
 .rpe-btn-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 .rpe-btn {
   padding: 6px 6px;
@@ -1723,12 +1880,27 @@ body[data-phase="WORK"] .visual-guide-frame {
     padding: 5px 8px;
   }
   .stepper-btn {
-    height: 28px;
-    width: 38px;
-    font-size: 1rem;
+    height: 25px;
+    width: 28px;
+    font-size: 0.92rem;
+  }
+  .plate-stepper-row {
+    padding: 2px 4px;
+    gap: 3px;
   }
   .plate-num {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
+  }
+  .plate-unit {
+    font-size: 0.64rem;
+  }
+  .rep-quick-row {
+    gap: 3px;
+    margin: 3px 0 4px;
+  }
+  .rep-pill {
+    padding: 3px 1px;
+    font-size: 0.64rem;
   }
   .next-up-bar {
     padding: 4px 8px;

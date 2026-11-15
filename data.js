@@ -1,1882 +1,2532 @@
 // ============================================================================
-// 40m Flow Studio v2 - 自宅IROTEC ＆ 出張ホテル対応 × ビジュアル図解 × ショウコさん音声
+// 筋トレNOW スタジオ v4.1 - 自宅IROTEC ＆ 出張ホテル対応 × 重量・回数記録 × 全18動画チャプター最適化
 // ============================================================================
 
 window.WORKOUT_DATA = {
-  irotecDemoVideoId: 'ubXOCaOEV5w',
-  plateStepLbs: 10,
-  plateStepKg: 4.5,
-  maxPlates: 15,
-
-  // 日替わり股割り（180度開脚）ストレッチ動画プール（自宅マット・ホテルのベッド/バスタオル両対応）
-  stretchPool: [
+  "irotecDemoVideoId": "ubXOCaOEV5w",
+  "plateStepLbs": 10,
+  "plateStepKg": 4.5,
+  "maxPlates": 15,
+  "stretchPool": [
     {
-      id: 'split_road_1',
-      category: '開脚王道・総合',
-      badge: '開脚A：総合アプローチ',
-      title: 'オガトレ｜2週間で開脚ベターっになるストレッチ',
-      channel: 'オガトレ',
-      videoId: 'Re5FPU5_37g',
-      startSeconds: 35,
-      durationSeconds: 720,
-      focus: '内転筋・裏もも・股関節をバランスよく開き、骨盤を立てて前屈する王道ルーティンです。'
+      "id": "split_road_1",
+      "category": "開脚王道・総合",
+      "badge": "開脚A：総合アプローチ",
+      "title": "オガトレ｜2週間で開脚ベターっになるストレッチ",
+      "channel": "オガトレ",
+      "videoId": "Re5FPU5_37g",
+      "startSeconds": 12,
+      "durationSeconds": 820,
+      "focus": "内転筋・裏もも・股関節をバランスよく開き、骨盤を立てて前屈する王道ルーティンです。",
+      "endSeconds": 832,
+      "shortEndSeconds": 407
     },
     {
-      id: 'split_road_2',
-      category: '股関節・腸腰筋',
-      badge: '開脚B：超硬い股関節ほぐし',
-      title: 'オガトレ｜股関節が『超』硬い人向け！体が柔らかくなるストレッチ',
-      channel: 'オガトレ',
-      videoId: '0jhnX8BPzes',
-      startSeconds: 30,
-      durationSeconds: 690,
-      focus: '股関節の詰まりを全方位から解消し、膝関節への普段のねじれストレスも軽減します。'
+      "id": "split_road_2",
+      "category": "股関節・腸腰筋",
+      "badge": "開脚B：超硬い股関節ほぐし",
+      "title": "オガトレ｜股関節が『超』硬い人向け！体が柔らかくなるストレッチ",
+      "channel": "オガトレ",
+      "videoId": "0jhnX8BPzes",
+      "startSeconds": 16,
+      "durationSeconds": 672,
+      "focus": "股関節の詰まりを全方位から解消し、膝関節への普段のねじれストレスも軽減します。",
+      "endSeconds": 688,
+      "shortEndSeconds": 368
     },
     {
-      id: 'split_road_3',
-      category: 'お尻深層・梨状筋',
-      badge: '開脚C：お尻深層リリース',
-      title: 'オガトレ｜おしりのストレッチ【決定版】',
-      channel: 'オガトレ',
-      videoId: 'KKLblqmPbKA',
-      startSeconds: 15,
-      durationSeconds: 465,
-      focus: '開脚で足が開かない隠れ原因「お尻の深層筋」をほぐし、膝のお皿の引っ張りも緩めます。'
+      "id": "split_road_3",
+      "category": "お尻深層・梨状筋",
+      "badge": "開脚C：お尻深層リリース",
+      "title": "GronG 前田｜お尻・股関節が硬い人向け深層ストレッチ",
+      "channel": "前田のまいにちセルフケア (GronG)",
+      "videoId": "KKLblqmPbKA",
+      "startSeconds": 6,
+      "durationSeconds": 431,
+      "focus": "開脚で足が開かない隠れ原因「お尻の深層筋」をほぐし、膝のお皿の引っ張りも緩めます。",
+      "endSeconds": 437,
+      "shortEndSeconds": 315
     },
     {
-      id: 'split_road_4',
-      category: '内もも・カエル足',
-      badge: '開脚D：2週間ベターっと開脚ヨガ',
-      title: 'B-life｜【毎日10分】2週間でベターっと開脚できる魔法のストレッチ #510',
-      channel: 'B-Flow (Mariko)',
-      videoId: 'hS_BRoS5euw',
-      startSeconds: 20,
-      durationSeconds: 720,
-      focus: 'マットやベッドの上でカエル足・内もも伸ばしを呼吸に合わせてキープします。'
+      "id": "split_road_4",
+      "category": "内もも・カエル足",
+      "badge": "開脚D：2週間ベターっと開脚ヨガ",
+      "title": "B-Flow｜【毎日10分】2週間でベターっと開脚できる魔法のストレッチ #510",
+      "channel": "B-Flow (Mariko)",
+      "videoId": "hS_BRoS5euw",
+      "startSeconds": 91,
+      "durationSeconds": 644,
+      "focus": "マットやベッドの上でカエル足・内もも伸ばしを呼吸に合わせてキープします。",
+      "endSeconds": 735,
+      "shortEndSeconds": 460
     },
     {
-      id: 'split_road_5',
-      category: '裏もも・全身連動',
-      badge: '開脚E：裏もも＆全身柔軟',
-      title: 'オガトレ｜【10分間】運動嫌いでもできる！全身＆裏ももストレッチ',
-      channel: 'オガトレ',
-      videoId: 'nqeuZ7-pMZU',
-      startSeconds: 20,
-      durationSeconds: 580,
-      focus: '骨盤を前に倒すカギとなるハムストリングスを中心に、寝たまま・座ったまま安全に伸ばします。'
+      "id": "split_road_5",
+      "category": "裏もも・全身連動",
+      "badge": "開脚E：裏もも＆全身柔軟",
+      "title": "走りの学校｜【10分間】運動が苦手でも一緒にできる全身＆裏ももストレッチ",
+      "channel": "走りの学校",
+      "videoId": "nqeuZ7-pMZU",
+      "startSeconds": 25,
+      "durationSeconds": 621,
+      "focus": "肩甲骨から股関節・ハムストリングスまで全身連動で伸ばします（片足バランスは壁添え・座位アレンジOK）。",
+      "endSeconds": 646,
+      "shortEndSeconds": 385
     },
     {
-      id: 'split_road_6',
-      category: '内転筋・付け根集中',
-      badge: '開脚F：内もも＆付け根集中',
-      title: 'Marina Takewaki｜【6分集中】足の付け根＆内ももストレッチ',
-      channel: 'Marina Takewaki',
-      videoId: 'w1xZucczKrE',
-      startSeconds: 15,
-      durationSeconds: 360,
-      focus: '足の付け根と内転筋をテンポよく緩めるショート集中プログラムです。'
+      "id": "split_road_6",
+      "category": "内転筋・付け根集中",
+      "badge": "開脚F：内もも＆付け根集中",
+      "title": "Marina Takewaki｜【6分集中】足の付け根＆内ももストレッチ",
+      "channel": "Marina Takewaki",
+      "videoId": "w1xZucczKrE",
+      "startSeconds": 14,
+      "durationSeconds": 364,
+      "focus": "足の付け根と内転筋をテンポよく緩めるショート集中プログラムです。",
+      "endSeconds": 378,
+      "shortEndSeconds": 378
     }
   ],
-
-  // 仕上げの5分間マインドフルネス瞑想プール（日替わり自動ローテーション＆ワンタップ切替対応）
-  meditationPool: [
+  "meditationPool": [
     {
-      id: 'meditation_harp',
-      category: '自律神経・脳疲労リセット（ハープ）',
-      badge: '仕上げ瞑想A：自律神経ハープ（5分）',
-      title: '5分 脳の疲れをとり 自律神経を整える音楽｜ハープヒーリング瞑想',
-      channel: 'Relax Sleep New Age Music Channel',
-      videoId: 'sx9-adj0aLw',
-      startSeconds: 0,
-      durationSeconds: 300,
-      focus: '優しいハープの音色に身を委ね、トレーニング後の交感神経を穏やかに鎮めて脳の疲れをリセットします。',
-      speech: '仕上げの5分間は、ハープの音色で脳の疲れをとり、自律神経を整える瞑想タイムです。ゆっくりと深い呼吸を続けながら、穏やかな時間をお過ごしください。'
+      "id": "meditation_harp",
+      "category": "自律神経・脳疲労リセット（ハープ）",
+      "badge": "仕上げ瞑想A：自律神経ハープ（5分）",
+      "title": "5分 脳の疲れをとり 自律神経を整える音楽｜ハープヒーリング瞑想",
+      "channel": "Relax Sleep New Age Music Channel",
+      "videoId": "sx9-adj0aLw",
+      "startSeconds": 0,
+      "durationSeconds": 300,
+      "focus": "優しいハープの音色に身を委ね、トレーニング後の交感神経を穏やかに鎮めて脳の疲れをリセットします。",
+      "speech": "仕上げの5分間は、ハープの音色で脳の疲れをとり、自律神経を整える瞑想タイムです。ゆっくりと深い呼吸を続けながら、穏やかな時間をお過ごしください。",
+      "endSeconds": 300
     },
     {
-      id: 'meditation_mindfulness',
-      category: 'マインドフルネス・集中力向上',
-      badge: '仕上げ瞑想B：マインドフルネス瞑想（5分）',
-      title: '瞑想音楽5分｜マインドフルネス瞑想（集中力・自然体リセット）',
-      channel: 'relaxing chill out room みかんそば',
-      videoId: 'bHR6HC7D7vA',
-      startSeconds: 0,
-      durationSeconds: 300,
-      focus: '静かな呼吸に意識を向け、頭の中をクリアに整える5分間のマインドフルネス瞑想です。',
-      speech: '仕上げの5分間は、頭の中をクリアに整えるマインドフルネス瞑想です。浮かんでくる思考はそのまま受け流して、静かな呼吸だけに意識を向けていきましょう。'
+      "id": "meditation_mindfulness",
+      "category": "マインドフルネス・集中力向上",
+      "badge": "仕上げ瞑想B：マインドフルネス瞑想（5分）",
+      "title": "瞑想音楽5分｜マインドフルネス瞑想（集中力・自然体リセット）",
+      "channel": "relaxing chill out room みかんそば",
+      "videoId": "bHR6HC7D7vA",
+      "startSeconds": 0,
+      "durationSeconds": 300,
+      "focus": "静かな呼吸に意識を向け、頭の中をクリアに整える5分間のマインドフルネス瞑想です。",
+      "speech": "仕上げの5分間は、頭の中をクリアに整えるマインドフルネス瞑想です。浮かんでくる思考はそのまま受け流して、静かな呼吸だけに意識を向けていきましょう。",
+      "endSeconds": 300
     }
   ],
-
-  // ==========================================================================
-  // 🏠 自宅モード（IROTEC 150V2 + Yes4All アタッチメント）週7プラン
-  // ==========================================================================
-  homePlans: {
-    // -------------------- 月曜（自宅・胸） --------------------
-    1: {
-      dayKey: 1,
-      dayLabel: '月曜',
-      shortTheme: '胸 集中',
-      title: 'CHEST DAY｜IROTEC 大胸筋フル稼働 ＆ フロア腹筋',
-      subtitle: 'プーリー交換なし！ピン操作だけで胸を追い込み、仰向け腹筋と股割りへ流れる40分',
-      defaultStretchId: 'split_road_1',
-      defaultMeditationId: 'meditation_harp',
-      blocks: [
+  "homePlans": {
+    "0": {
+      "dayKey": 0,
+      "dayLabel": "日曜",
+      "shortTheme": "膝股ケア・自律神経",
+      "title": "SUNDAY RESET｜股関節・お尻ケア ＆ 自律神経リセットヨガ",
+      "subtitle": "膝の負担を抜く股関節・お尻ほぐしと、寝たまま自律神経ヨガで翌週へ100%充電する40分",
+      "defaultStretchId": "split_road_2",
+      "defaultMeditationId": "meditation_harp",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP',
-          title: '肩甲骨・胸開きウォームアップ',
-          image: './images/exercises/warmup_shoulder_roll.jpg',
-          durationSeconds: 45,
-          pulley: 'チェストアーム',
-          attachment: 'ロックピン固定（押すモード）',
-          actionSteps: ['背筋を伸ばして座る', '両肩を大きく後ろへ10回まわす', 'アームが押すモードか確認'],
-          setupNote: '肩を大きく後ろへ回して胸を開きます。チェストアームのストッパーピンが刺さっているか確認しましょう。',
-          cues: ['膝で床を踏ん張らず、足は軽く添えるだけ', '深く吸って胸郭を広げる'],
-          speech: 'お疲れ様です！月曜日は胸の集中メニューですね。まずは肩を大きく後ろに回して、胸の筋肉を温めていきましょう！'
+          "type": "warmup",
+          "phase": "PREP",
+          "title": "サンデーリセット｜関節ケア＆休息準備",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "器具なし（自宅・ホテル共通）",
+          "attachment": "マット・ベッド上でもOK",
+          "actionSteps": [
+            "① 楽な姿勢で座る",
+            "② 股関節とお尻をほぐして膝を守る",
+            "③ 最後は寝たまま自律神経ヨガ"
+          ],
+          "setupNote": "日曜日は股関節とお尻を緩めて膝の負担を抜き、最後は寝たままヨガで心身をフル充電します。",
+          "cues": [
+            "頑張らないことが今日のゴールです"
+          ],
+          "speech": "日曜日ですね。今日は股関節とお尻をほぐして膝の負担を抜いてから、最後は寝たままできるヨガで自律神経を整えていきましょうね。"
         },
         {
-          type: 'machine',
-          id: 'mon_chest_press_wide',
-          phase: 'PHASE 1: MACHINE',
-          title: '① チェストプレス（横グリップ）',
-          image: './images/exercises/irotec_chest_wide.jpg',
-          targetMuscle: '大胸筋 全体・厚み',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 6,
-          pulley: 'チェストアーム',
-          attachment: '水平（横）グリップ',
-          demoRange: [30, 58],
-          actionSteps: ['① 肩甲骨を寄せて横バーを握る', '② 胸の力で前へ真っすぐ押す', '③ 重りがつく1cm手前で止める'],
-          setupNote: 'イラストのように横グリップを握り、肩甲骨をシートに寄せたまま前へ押し出します。',
-          cues: ['戻す時は重りがガチャンとつかない寸前で止める', '膝に力を入れず上半身だけで押す'],
-          speechIntro: '1種目目はチェストプレス、横グリップです。肩甲骨をシートに寄せて、胸の力で前へ押し出していきましょう。スタートです！'
+          "type": "video",
+          "phase": "PART 1: HIP MOBILITY",
+          "badge": "Step 1（11分）：股関節じっくり解放",
+          "title": "オガトレ｜股関節が『超』硬い人向け！体が柔らかくなるストレッチ",
+          "channel": "オガトレ",
+          "videoId": "0jhnX8BPzes",
+          "startSeconds": 16,
+          "durationSeconds": 672,
+          "note": "股関節がスムーズに動くほど、膝関節への日常の負担が減っていきます。",
+          "speech": "まずは股関節をじっくり解放する11分間です。痛くない範囲で気持ちよく動かしていきましょう。",
+          "endSeconds": 688,
+          "shortEndSeconds": 368
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '縦グリップへ持ち替え ＆ ピン調整',
-          image: './images/exercises/irotec_pin_setup.jpg',
-          durationSeconds: 45,
-          pulley: 'チェストアーム（そのまま）',
-          attachment: '縦（パラレル）グリップ',
-          actionSteps: ['① ピンを1枚軽くする', '② 縦方向のグリップを握る', '③ 脇をやや締めて構える'],
-          setupNote: 'アタッチメント交換は不要です！次は縦グリップを握り、胸の内側を狙います。',
-          cues: ['お水をひと口どうぞ！'],
-          speech: 'ナイスファイトです！次は縦グリップに持ち替えて、胸の内側を狙っていきますよ。ピンを1枚軽くして準備してくださいね。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "続いてお尻深層リリースへ",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 20,
+          "pulley": "マット上",
+          "attachment": "お尻ストレッチ",
+          "actionSteps": [
+            "① 力を抜いたまま待機",
+            "② お尻の外側・深層を8分間ほぐす"
+          ],
+          "setupNote": "そのままお尻の筋肉をほぐして下半身の血流を最大化します。",
+          "cues": [
+            "お尻が緩むと膝のお皿の引っ張りも軽くなります"
+          ],
+          "speech": "続いてはお尻のストレッチです。お尻の外側が緩むと膝もすごくラクになりますよ。そのまま続けましょう！"
         },
         {
-          type: 'machine',
-          id: 'mon_chest_press_neutral',
-          phase: 'PHASE 1: MACHINE',
-          title: '② チェストプレス（縦グリップ）',
-          image: './images/exercises/irotec_chest_neutral.jpg',
-          targetMuscle: '大胸筋 内側・上部',
-          sets: 3,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 5,
-          pulley: 'チェストアーム',
-          attachment: '縦（パラレル）グリップ',
-          demoRange: [30, 58],
-          actionSteps: ['① 縦グリップを握り脇を軽く締める', '② 押し切った位置で胸を中央に寄せる', '③ ゆっくり胸を開きながら戻す'],
-          setupNote: '縦グリップを握り、押し切ったところで大胸筋の中央をギュッと1秒縮めます。',
-          cues: ['肘を完全にロックせず胸に負荷を乗せ続ける', '押す時に息を吐き、戻す時に吸う'],
-          speechIntro: '2種目目、縦グリップのチェストプレスいきましょう！押し切ったところで、胸の真ん中をギュッと寄せる意識ですよ。スタート！'
+          "type": "video",
+          "phase": "PART 2: GLUTE RELEASE",
+          "badge": "Step 2（7分）：お尻ほぐし＆膝負担軽減",
+          "title": "GronG 前田｜お尻・股関節が硬い人向け深層ストレッチ",
+          "channel": "前田のまいにちセルフケア (GronG)",
+          "videoId": "KKLblqmPbKA",
+          "startSeconds": 6,
+          "durationSeconds": 431,
+          "note": "お尻の深層筋をほぐして開脚と膝ケアを同時に進めます。",
+          "speech": "7分間のお尻ストレッチ、スタートです！呼吸を止めずにじんわり伸ばしていきましょう。",
+          "endSeconds": 437,
+          "shortEndSeconds": 315
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: 'バタフライへピン切り替え',
-          image: './images/exercises/irotec_pec_fly.jpg',
-          durationSeconds: 55,
-          pulley: 'バタフライアーム',
-          attachment: '上部ロックピンを抜く',
-          actionSteps: ['① アーム上部のロックピンを抜く', '② 重りのピンを3〜4枚目に差す', '③ 肘パッドに腕を当てて構える'],
-          setupNote: '上部のストッパーピンを抜いてバタフライモードに切り替え！胸の仕上げ種目です。',
-          cues: ['大きな木を抱えるイメージで準備'],
-          speech: 'いいペースですね！次はバタフライに切り替えます。アームの上のロックピンを抜いて、重りを3枚目か4枚目にセットしましょう。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ラスト15分：寝たまま自律神経リセットヨガ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "マット / ベッド上OK",
+          "attachment": "枕やクッション準備",
+          "actionSteps": [
+            "① 照明を少し落としてもOK",
+            "② 仰向けでリラックス",
+            "③ 明日の月曜へフル充電"
+          ],
+          "setupNote": "最後は寝たままできる癒やしヨガで1週間を締めくくります。",
+          "cues": [
+            "そのまま眠くなるくらい脱力してOKです"
+          ],
+          "speech": "ラスト15分は、寝たままでできる自律神経リセットヨガです。明日からまた気持ちよくスタートできるよう、ゆっくり疲れを癒やしてくださいね。"
         },
         {
-          type: 'machine',
-          id: 'mon_pec_fly',
-          phase: 'PHASE 1: MACHINE',
-          title: '③ バタフライ（ペックフライ）',
-          image: './images/exercises/irotec_pec_fly.jpg',
-          targetMuscle: '大胸筋 ストレッチ＆中央ライン',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 4,
-          pulley: 'バタフライアーム',
-          attachment: 'バタフライパッド',
-          demoRange: [60, 88],
-          actionSteps: ['① 胸を張って両腕を横に開く', '② 肘と肘を近づけるように中央へ閉じる', '③ 3秒かけて胸を伸ばしながら戻す'],
-          setupNote: '手先ではなく「両肘を中央で合わせる」意識で閉じると大胸筋に強烈に入ります！',
-          cues: ['開いた時に胸がストレッチされるのを感じる', '反動を使わず丁寧にコントロール'],
-          speechIntro: '胸の仕上げ、バタフライです！腕の力ではなく、肘と肘を真ん中で合わせるイメージで胸を絞っていきましょう。スタートです！'
+          "type": "video",
+          "phase": "PART 3: AUTONOMIC NERVE RESET",
+          "badge": "Step 3（15分）：疲労回復・自律神経ヨガ",
+          "title": "B-life｜【寝る前のヨガ】全身の疲れを癒し、自律神経を整える #481",
+          "channel": "B-Flow (Mariko)",
+          "videoId": "fJJrJ2dd1U4",
+          "startSeconds": 36,
+          "durationSeconds": 880,
+          "note": "深く穏やかな呼吸で心拍を整え、最高の回復モードへ入ります。",
+          "speech": "それではリラックスヨガ、スタートです。今日も1日、本当にお疲れ様でした。",
+          "endSeconds": 916,
+          "shortEndSeconds": 396
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'マシン完了！ヨガマットへ移動',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 45,
-          pulley: 'ヨガマット',
-          attachment: '仰向けスタンバイ',
-          actionSteps: ['① 水分を補給する', '② ヨガマットに仰向けになる', '③ 膝負荷ゼロの腹筋HIITへ'],
-          setupNote: '胸トレ完走お疲れ様でした！お水を飲んでヨガマットに仰向けになりましょう。',
-          cues: ['立ち上がりやジャンプ動作は一切ありません'],
-          speech: '胸のマシンパート完走、お疲れ様でした！お水をひと口飲んで、ヨガマットに仰向けになってくださいね。次は膝に負担のかからない腹筋パートです！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ヨガマット（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① あぐら（または仰向け）で楽にする",
+            "② 肩の力を抜き目を軽く閉じる",
+            "③ 鼻から吸ってゆっくり吐く呼吸へ"
+          ],
+          "setupNote": "最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。",
+          "cues": [
+            "膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: HIIT',
-          badge: '膝保護・フロア腹筋HIIT',
-          title: '【8分完全版】腹筋サーキット（仰向け中心・ジャンプなし）',
-          channel: '腹筋集中サーキット',
-          videoId: 'GoxIQp8VtTg',
-          startSeconds: 15,
-          durationSeconds: 490,
-          note: '胸トレ後の脂肪燃焼を着火！首が疲れたら頭を床に置いたままお腹だけ丸めてもOKです。',
-          speech: 'ここからは8分間の腹筋サーキットです！動画に合わせて、無理のないペースで一緒にお腹を引き締めていきましょう！'
-        },
-        {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '深呼吸して股割りボーナスタイムへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: 'ヨガマット',
-          attachment: '開脚ストレッチ準備',
-          actionSteps: ['① 鼻から大きく息を吸う', '② 口から細く長く吐く', '③ 温まった股関節を伸ばす'],
-          setupNote: '体温が一番上がっている今が、股割り達成へのゴールデンタイムです！',
-          cues: ['痛気持ちいい7割の伸びで脱力します'],
-          speech: '腹筋お疲れ様でした！体がポカポカに温まっている今が、一番柔らかくなるボーナスタイムですよ。呼吸を整えて、股割りストレッチに入りましょう！'
-        },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
-        {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ヨガマット（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① あぐら（または仰向け）で楽にする', '② 肩の力を抜き目を軽く閉じる', '③ 鼻から吸ってゆっくり吐く呼吸へ'],
-          setupNote: '最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。',
-          cues: ['膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです'],
-          speech: 'ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。'
-        },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 火曜（自宅・背中） --------------------
-    2: {
-      dayKey: 2,
-      dayLabel: '火曜',
-      shortTheme: '背中 集中',
-      title: 'BACK DAY｜ダブルDハンドルで彫る逆三角形',
-      subtitle: '標準ラットバーとYes4AllダブルDハンドルをフル活用！背中の広がりと厚みを作る40分',
-      defaultStretchId: 'split_road_5',
-      defaultMeditationId: 'meditation_mindfulness',
-      blocks: [
+    "1": {
+      "dayKey": 1,
+      "dayLabel": "月曜",
+      "shortTheme": "胸 集中",
+      "title": "CHEST DAY｜IROTEC 大胸筋フル稼働 ＆ フロア腹筋",
+      "subtitle": "プーリー交換なし！ピン操作だけで胸を追い込み、仰向け腹筋と股割りへ流れる40分",
+      "defaultStretchId": "split_road_1",
+      "defaultMeditationId": "meditation_harp",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP',
-          title: '肩甲骨ウォームアップ ＆ 上プーリー確認',
-          image: './images/exercises/warmup_shoulder_roll.jpg',
-          durationSeconds: 45,
-          pulley: '上プーリー',
-          attachment: '標準ラットプルバー',
-          actionSteps: ['① 上プーリーに長いバーを装着', '② 肩を大きく上下・前後に動かす', '③ 胸を張る姿勢を確認'],
-          setupNote: '上プーリーに標準の長いラットバーが付いているか確認し、肩甲骨周りをほぐします。',
-          cues: ['手で引くのではなく「肘を腰へ下ろす」イメージ'],
-          speech: 'お疲れ様です！火曜日は背中の日ですね。上プーリーに長いラットバーをセットして、まずは肩甲骨まわりを軽くほぐしていきましょう！'
+          "type": "warmup",
+          "phase": "PREP",
+          "title": "肩甲骨・胸開きウォームアップ",
+          "image": "./images/exercises/warmup_shoulder_roll.jpg",
+          "durationSeconds": 45,
+          "pulley": "チェストアーム",
+          "attachment": "ロックピン固定（押すモード）",
+          "actionSteps": [
+            "背筋を伸ばして座る",
+            "両肩を大きく後ろへ10回まわす",
+            "アームが押すモードか確認"
+          ],
+          "setupNote": "肩を大きく後ろへ回して胸を開きます。チェストアームのストッパーピンが刺さっているか確認しましょう。",
+          "cues": [
+            "膝で床を踏ん張らず、足は軽く添えるだけ",
+            "深く吸って胸郭を広げる"
+          ],
+          "speech": "お疲れ様です！月曜日は胸の集中メニューですね。まずは肩を大きく後ろに回して、胸の筋肉を温めていきましょう！"
         },
         {
-          type: 'machine',
-          id: 'tue_wide_lat_pulldown',
-          phase: 'PHASE 1: MACHINE',
-          title: '① ワイド・ラットプルダウン',
-          image: './images/exercises/irotec_lat_pulldown.jpg',
-          targetMuscle: '広背筋 上部・大円筋（広がり）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 6,
-          pulley: '上プーリー',
-          attachment: '標準ラットプルバー',
-          demoRange: [90, 118],
-          actionSteps: ['① 肩幅より広くバーを握る', '② 胸を天井へ向け鎖骨へ引き下ろす', '③ 脇の下が伸びるまでゆっくり戻す'],
-          setupNote: 'イラストのように胸を張り、鎖骨へ向かってバーを引き下ろして逆三角形を作ります。',
-          cues: ['小指・薬指側を意識すると背中に直撃します', '反動で体を倒しすぎないよう注意'],
-          speechIntro: '1種目目はワイドラットプルダウンです！胸を少し天井に向けて、鎖骨に向かってバーを引き下ろしていきましょう。スタートです！'
+          "type": "machine",
+          "id": "mon_chest_press_wide",
+          "phase": "PHASE 1: MACHINE",
+          "title": "① チェストプレス（横グリップ）",
+          "image": "./images/exercises/irotec_chest_wide.jpg",
+          "targetMuscle": "大胸筋 全体・厚み",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 6,
+          "pulley": "チェストアーム",
+          "attachment": "水平（横）グリップ",
+          "demoRange": [
+            122,
+            132
+          ],
+          "actionSteps": [
+            "① 肩甲骨を寄せて横バーを握る",
+            "② 胸の力で前へ真っすぐ押す",
+            "③ 重りがつく1cm手前で止める"
+          ],
+          "setupNote": "イラストのように横グリップを握り、肩甲骨をシートに寄せたまま前へ押し出します。",
+          "cues": [
+            "戻す時は重りがガチャンとつかない寸前で止める",
+            "膝に力を入れず上半身だけで押す"
+          ],
+          "speechIntro": "1種目目はチェストプレス、横グリップです。肩甲骨をシートに寄せて、胸の力で前へ押し出していきましょう。スタートです！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '上プーリーを【ダブルDハンドル】へ交換',
-          image: './images/exercises/irotec_pin_setup.jpg',
-          durationSeconds: 55,
-          pulley: '上プーリー（そのまま）',
-          attachment: 'Yes4All ダブルDハンドル',
-          actionSteps: ['① 上プーリーのカラビナを外す', '② ダブルDハンドル（Vバー）を装着', '③ ピン位置を確認'],
-          setupNote: '上プーリーのまま、カラビナをYes4All「ダブルDハンドル」に付け替えます！',
-          cues: ['広背筋の下部まで深く入る名種目です'],
-          speech: 'いい調子です！ここで上プーリーのアタッチメントを、ダブルDハンドルに付け替えましょう。カラビナを交換するだけで準備オッケーですよ。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "縦グリップへ持ち替え ＆ ピン調整",
+          "image": "./images/exercises/irotec_pin_setup.jpg",
+          "durationSeconds": 45,
+          "pulley": "チェストアーム（そのまま）",
+          "attachment": "縦（パラレル）グリップ",
+          "actionSteps": [
+            "① ピンを1枚軽くする",
+            "② 縦方向のグリップを握る",
+            "③ 脇をやや締めて構える"
+          ],
+          "setupNote": "アタッチメント交換は不要です！次は縦グリップを握り、胸の内側を狙います。",
+          "cues": [
+            "お水をひと口どうぞ！"
+          ],
+          "speech": "ナイスファイトです！次は縦グリップに持ち替えて、胸の内側を狙っていきますよ。ピンを1枚軽くして準備してくださいね。"
         },
         {
-          type: 'machine',
-          id: 'tue_close_pulldown',
-          phase: 'PHASE 1: MACHINE',
-          title: '② パラレル・プルダウン（ダブルD）',
-          image: './images/exercises/irotec_vbar_pulldown.jpg',
-          targetMuscle: '広背筋 下部〜中部',
-          sets: 3,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 6,
-          pulley: '上プーリー',
-          attachment: 'Yes4All ダブルDハンドル',
-          demoRange: [90, 118],
-          actionSteps: ['① ダブルDハンドルを握り胸を張る', '② 脇を締めてみぞおちへ鋭く引く', '③ 下で1秒止めてゆっくり伸ばす'],
-          setupNote: '脇を締め、肘を体の後ろへ引くイメージでみぞおちの上へ引き込みます。',
-          cues: ['一番下で肩甲骨をグッと下げてキープ', '戻す時は広背筋をしっかりストレッチ'],
-          speechIntro: '2種目目、ダブルDハンドルでのプルダウンです！脇を締めて、みぞおちに向かってグッと引き込んでいきましょう。スタート！'
+          "type": "machine",
+          "id": "mon_chest_press_neutral",
+          "phase": "PHASE 1: MACHINE",
+          "title": "② チェストプレス（縦グリップ）",
+          "image": "./images/exercises/irotec_chest_neutral.jpg",
+          "targetMuscle": "大胸筋 内側・上部",
+          "sets": 3,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 5,
+          "pulley": "チェストアーム",
+          "attachment": "縦（パラレル）グリップ",
+          "demoRange": [
+            122,
+            132
+          ],
+          "actionSteps": [
+            "① 縦グリップを握り脇を軽く締める",
+            "② 押し切った位置で胸を中央に寄せる",
+            "③ ゆっくり胸を開きながら戻す"
+          ],
+          "setupNote": "縦グリップを握り、押し切ったところで大胸筋の中央をギュッと1秒縮めます。",
+          "cues": [
+            "肘を完全にロックせず胸に負荷を乗せ続ける",
+            "押す時に息を吐き、戻す時に吸う"
+          ],
+          "speechIntro": "2種目目、縦グリップのチェストプレスいきましょう！押し切ったところで、胸の真ん中をギュッと寄せる意識ですよ。スタート！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '下プーリーへ【ダブルDハンドル】を移動',
-          image: './images/exercises/irotec_seated_row.jpg',
-          durationSeconds: 65,
-          pulley: '下プーリー',
-          attachment: 'Yes4All ダブルDハンドル',
-          actionSteps: ['① 下プーリーのワイヤーを接続', '② ダブルDハンドルを下へ装着', '③ 床マットに座り膝を楽な角度で固定'],
-          setupNote: '下プーリーへダブルDハンドルを移動し、床に座ってローイングの準備をします。',
-          cues: ['⚠️ 膝は軽く曲げた楽な位置に置くだけ（脚で蹴らない）'],
-          speech: '次は背中の厚みを作るシーテッドローです。下プーリーのワイヤーを繋いで、ダブルDハンドルを下に付け替えてくださいね。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "バタフライへピン切り替え",
+          "image": "./images/exercises/irotec_pec_fly.jpg",
+          "durationSeconds": 55,
+          "pulley": "バタフライアーム",
+          "attachment": "上部ロックピンを抜く",
+          "actionSteps": [
+            "① アーム上部のロックピンを抜く",
+            "② 重りのピンを3〜4枚目に差す",
+            "③ 肘パッドに腕を当てて構える"
+          ],
+          "setupNote": "上部のストッパーピンを抜いてバタフライモードに切り替え！胸の仕上げ種目です。",
+          "cues": [
+            "大きな木を抱えるイメージで準備"
+          ],
+          "speech": "いいペースですね！次はバタフライに切り替えます。アームの上のロックピンを抜いて、重りを3枚目か4枚目にセットしましょう。"
         },
         {
-          type: 'machine',
-          id: 'tue_seated_row',
-          phase: 'PHASE 1: MACHINE',
-          title: '③ シーテッド・ケーブルロー（ダブルD）',
-          image: './images/exercises/irotec_seated_row.jpg',
-          targetMuscle: '広背筋 中部・僧帽筋（厚み）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 6,
-          pulley: '下プーリー',
-          attachment: 'Yes4All ダブルDハンドル',
-          demoRange: [120, 148],
-          actionSteps: ['① 背筋を真っすぐ立てて座る', '② おへそへ向かってハンドルを引く', '③ 左右の肩甲骨をギュッと寄せる'],
-          setupNote: 'イラストのように背筋を立て、おへそに向かって真っすぐ引きつけます。',
-          cues: ['腰を丸めず骨盤を立ててキープ', '膝の曲げ伸ばし反動は使わず背中で引く'],
-          speechIntro: '3種目目、シーテッドローいきましょう！背筋をピンと伸ばして、おへそに向かって引きつけながら肩甲骨を寄せていきますよ。スタートです！'
+          "type": "machine",
+          "id": "mon_pec_fly",
+          "phase": "PHASE 1: MACHINE",
+          "title": "③ バタフライ（ペックフライ）",
+          "image": "./images/exercises/irotec_pec_fly.jpg",
+          "targetMuscle": "大胸筋 ストレッチ＆中央ライン",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 4,
+          "pulley": "バタフライアーム",
+          "attachment": "バタフライパッド",
+          "demoRange": [
+            110,
+            122
+          ],
+          "actionSteps": [
+            "① 胸を張って両腕を横に開く",
+            "② 肘と肘を近づけるように中央へ閉じる",
+            "③ 3秒かけて胸を伸ばしながら戻す"
+          ],
+          "setupNote": "手先ではなく「両肘を中央で合わせる」意識で閉じると大胸筋に強烈に入ります！",
+          "cues": [
+            "開いた時に胸がストレッチされるのを感じる",
+            "反動を使わず丁寧にコントロール"
+          ],
+          "speechIntro": "胸の仕上げ、バタフライです！腕の力ではなく、肘と肘を真ん中で合わせるイメージで胸を絞っていきましょう。スタートです！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '背中トレ完了！マットで腹筋＆パンチへ',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 45,
-          pulley: 'ヨガマット',
-          attachment: '仰向けスタンバイ',
-          actionSteps: ['① 水分補給をする', '② そのままマットに仰向けになる', '③ 3分×3本の燃焼コンボへ'],
-          setupNote: '背中のパンプ完了！そのままマットで寝たまま下腹＆音楽腹筋＆上半身パンチへ流れます。',
-          cues: ['すべてジャンプなし・膝保護メニューです'],
-          speech: '背中パート完走、ナイスファイトです！お水を飲んだら、そのままマットに仰向けになってくださいね。3分ずつの楽しい燃焼コンボに入りますよ！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "マシン完了！ヨガマットへ移動",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 45,
+          "pulley": "ヨガマット",
+          "attachment": "仰向けスタンバイ",
+          "actionSteps": [
+            "① 水分を補給する",
+            "② ヨガマットに仰向けになる",
+            "③ 膝負荷ゼロの腹筋HIITへ"
+          ],
+          "setupNote": "胸トレ完走お疲れ様でした！お水を飲んでヨガマットに仰向けになりましょう。",
+          "cues": [
+            "立ち上がりやジャンプ動作は一切ありません"
+          ],
+          "speech": "胸のマシンパート完走、お疲れ様でした！お水をひと口飲んで、ヨガマットに仰向けになってくださいね。次は膝に負担のかからない腹筋パートです！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: HIIT (1/3)',
-          badge: 'フロア下腹 1/3',
-          title: '【3分下腹】腰が痛くならない！寝たまま下腹撃退トレーニング',
-          channel: 'Marina Takewaki',
-          videoId: 'kcj40PNGgbQ',
-          startSeconds: 18,
-          durationSeconds: 195,
-          note: '寝たまま腰と膝を守りつつ下腹部を集中刺激！終わると自動で2本目へ進みます。',
-          speech: 'まずは1本目、寝たままでできる3分間の下腹トレーニングです！腰を床につけたまま丁寧にいきましょう！'
+          "type": "video",
+          "phase": "PHASE 2: HIIT",
+          "badge": "膝保護・フロア腹筋HIIT",
+          "title": "【8分完全版】腹筋サーキット（仰向け中心・ジャンプなし）",
+          "channel": "uFit (林ケイスケ)",
+          "videoId": "GoxIQp8VtTg",
+          "startSeconds": 2,
+          "durationSeconds": 483,
+          "note": "胸トレ後の脂肪燃焼を着火！首が疲れたら頭を床に置いたままお腹だけ丸めてもOKです。",
+          "speech": "ここからは8分間の腹筋サーキットです！動画に合わせて、無理のないペースで一緒にお腹を引き締めていきましょう！",
+          "endSeconds": 485
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: HIIT (2/3)',
-          badge: '音楽腹筋 2/3',
-          title: '【地獄の3分】ノリノリな音楽にのせて腹筋を鍛えまくる！',
-          channel: 'Marina Takewaki',
-          videoId: 'ygR8sxmBHPc',
-          startSeconds: 15,
-          durationSeconds: 195,
-          note: '音楽に合わせてお腹全体を燃焼させます！',
-          speech: '続いて2本目！音楽に合わせて楽しくお腹全体を燃やしていきましょう！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "深呼吸して股割りボーナスタイムへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "ヨガマット",
+          "attachment": "開脚ストレッチ準備",
+          "actionSteps": [
+            "① 鼻から大きく息を吸う",
+            "② 口から細く長く吐く",
+            "③ 温まった股関節を伸ばす"
+          ],
+          "setupNote": "体温が一番上がっている今が、股割り達成へのゴールデンタイムです！",
+          "cues": [
+            "痛気持ちいい7割の伸びで脱力します"
+          ],
+          "speech": "腹筋お疲れ様でした！体がポカポカに温まっている今が、一番柔らかくなるボーナスタイムですよ。呼吸を整えて、股割りストレッチに入りましょう！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: HIIT (3/3)',
-          badge: '上半身パンチ 3/3',
-          title: '【3分ボクシング】二の腕と腹筋を鍛えるボクシングエクササイズ',
-          channel: 'Marina Takewaki',
-          videoId: 'DpANRK3AldY',
-          startSeconds: 12,
-          durationSeconds: 195,
-          note: '⚠️ 屈伸動作が出たら膝は曲げず、上半身のひねりとパンチ連打だけでOK！',
-          speech: 'ラスト3本目は3分ボクシングです！膝は曲げずに、上半身のひねりとシャープなパンチで汗をかきましょう！'
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '燃焼完了！股割りストレッチへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: 'ヨガマット',
-          attachment: '開脚ストレッチ',
-          actionSteps: ['① 呼吸を整える', '② 汗を拭いて水分補給', '③ 股割りストレッチ開始'],
-          setupNote: '最高の燃焼でした！温まった筋肉をじっくり伸ばしていきましょう。',
-          cues: ['息を吐くたびに股関節の力を抜きます'],
-          speech: '燃焼パート完走です、すごい集中力でしたね！ここからは気持ちよく股割りストレッチで体を緩めていきましょう。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ヨガマット（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① あぐら（または仰向け）で楽にする",
+            "② 肩の力を抜き目を軽く閉じる",
+            "③ 鼻から吸ってゆっくり吐く呼吸へ"
+          ],
+          "setupNote": "最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。",
+          "cues": [
+            "膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。"
         },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ヨガマット（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① あぐら（または仰向け）で楽にする', '② 肩の力を抜き目を軽く閉じる', '③ 鼻から吸ってゆっくり吐く呼吸へ'],
-          setupNote: '最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。',
-          cues: ['膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです'],
-          speech: 'ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。'
-        },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 水曜（自宅・有酸素＆ボクササイズ） --------------------
-    3: {
-      dayKey: 3,
-      dayLabel: '水曜',
-      shortTheme: '有酸素・拳',
-      title: 'CARDIO & BOXING｜膝に優しいノンジャンプ燃焼デイ',
-      subtitle: '週の真ん中はウエイト完全オフ！飛ばない有酸素＆ボクササイズ＋お尻深層ケアの40分',
-      defaultStretchId: 'split_road_3',
-      defaultMeditationId: 'meditation_harp',
-      blocks: [
+    "2": {
+      "dayKey": 2,
+      "dayLabel": "火曜",
+      "shortTheme": "背中 集中",
+      "title": "BACK DAY｜ダブルDハンドルで彫る逆三角形",
+      "subtitle": "標準ラットバーとYes4AllダブルDハンドルをフル活用！背中の広がりと厚みを作る40分",
+      "defaultStretchId": "split_road_5",
+      "defaultMeditationId": "meditation_mindfulness",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP',
-          title: 'ウエイト休養日！マットの上でスタンバイ',
-          image: './images/exercises/warmup_shoulder_roll.jpg',
-          durationSeconds: 35,
-          pulley: 'マシン不使用',
-          attachment: 'ヨガマット ＋ 水分・タオル',
-          actionSteps: ['① 肩と手首を軽く回す', '② 水とタオルを手元に置く', '③ 膝を曲げないルールを確認'],
-          setupNote: '水曜日は筋肉を超回復させつつ、飛ばない有酸素とパンチで心肺機能を引き上げます！',
-          cues: ['動画内でスクワットが出たら「その場ジャブ連打」に置き換えて膝を守ります'],
-          speech: 'お疲れ様です！水曜日はマシンをお休みして、膝に優しい有酸素とボクササイズでリフレッシュする日ですよ。もし動画の中で屈伸が出てきたら、上半身のパンチに置き換えて進めてくださいね！'
+          "type": "warmup",
+          "phase": "PREP",
+          "title": "肩甲骨ウォームアップ ＆ 上プーリー確認",
+          "image": "./images/exercises/warmup_shoulder_roll.jpg",
+          "durationSeconds": 45,
+          "pulley": "上プーリー",
+          "attachment": "標準ラットプルバー",
+          "actionSteps": [
+            "① 上プーリーに長いバーを装着",
+            "② 肩を大きく上下・前後に動かす",
+            "③ 胸を張る姿勢を確認"
+          ],
+          "setupNote": "上プーリーに標準の長いラットバーが付いているか確認し、肩甲骨周りをほぐします。",
+          "cues": [
+            "手で引くのではなく「肘を腰へ下ろす」イメージ"
+          ],
+          "speech": "お疲れ様です！火曜日は背中の日ですね。上プーリーに長いラットバーをセットして、まずは肩甲骨まわりを軽くほぐしていきましょう！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 1: LOW-IMPACT CARDIO',
-          badge: '飛ばない脂肪燃焼（19分）',
-          title: '【マンションOK】飛ばない有酸素運動で効率よく体脂肪を燃やそう！',
-          channel: 'Marina Takewaki',
-          videoId: 'hXyamPHNhkk',
-          startSeconds: 30,
-          durationSeconds: 1140,
-          note: 'ジャンプ一切なし！脚に負荷がかかる動きはウエストひねりやジャブにアレンジしてOK！',
-          speech: 'それでは前半19分の飛ばない有酸素、スタートです！マイペースで気持ちよく体を動かしていきましょう！'
+          "type": "machine",
+          "id": "tue_wide_lat_pulldown",
+          "phase": "PHASE 1: MACHINE",
+          "title": "① ワイド・ラットプルダウン",
+          "image": "./images/exercises/irotec_lat_pulldown.jpg",
+          "targetMuscle": "広背筋 上部・大円筋（広がり）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 6,
+          "pulley": "上プーリー",
+          "attachment": "標準ラットプルバー",
+          "demoRange": [
+            151,
+            160
+          ],
+          "actionSteps": [
+            "① 肩幅より広くバーを握る",
+            "② 胸を天井へ向け鎖骨へ引き下ろす",
+            "③ 脇の下が伸びるまでゆっくり戻す"
+          ],
+          "setupNote": "イラストのように胸を張り、鎖骨へ向かってバーを引き下ろして逆三角形を作ります。",
+          "cues": [
+            "小指・薬指側を意識すると背中に直撃します",
+            "反動で体を倒しすぎないよう注意"
+          ],
+          "speechIntro": "1種目目はワイドラットプルダウンです！胸を少し天井に向けて、鎖骨に向かってバーを引き下ろしていきましょう。スタートです！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '水分補給 ＆ 爽快3分ボクシングラッシュ',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 45,
-          pulley: 'マット上（立位または座位）',
-          attachment: 'シャドーボクシング準備',
-          actionSteps: ['① お水をしっかり飲む', '② 軽く深呼吸', '③ ラスト3分パンチ連打へ'],
-          setupNote: 'いい汗が出てきました！仕上げの3分ボクシングでストレスも吹き飛ばしましょう！',
-          cues: ['椅子やベッドに座ったままパンチしても効果抜群です'],
-          speech: 'いい汗が出てきましたね！お水を飲んで一息ついたら、仕上げの3分ボクシングでスカッとパンチを打ち込みましょう！'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "上プーリーを【ダブルDハンドル】へ交換",
+          "image": "./images/exercises/irotec_pin_setup.jpg",
+          "durationSeconds": 55,
+          "pulley": "上プーリー（そのまま）",
+          "attachment": "Yes4All ダブルDハンドル",
+          "actionSteps": [
+            "① 上プーリーのカラビナを外す",
+            "② ダブルDハンドル（Vバー）を装着",
+            "③ ピン位置を確認"
+          ],
+          "setupNote": "上プーリーのまま、カラビナをYes4All「ダブルDハンドル」に付け替えます！",
+          "cues": [
+            "広背筋の下部まで深く入る名種目です"
+          ],
+          "speech": "いい調子です！ここで上プーリーのアタッチメントを、ダブルDハンドルに付け替えましょう。カラビナを交換するだけで準備オッケーですよ。"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: BOXERCISE',
-          badge: '爽快ボクシング仕上げ',
-          title: '【3分ボクシングダンス】二の腕と腹筋を鍛えるボクシングエクササイズ',
-          channel: 'Marina Takewaki',
-          videoId: 'DpANRK3AldY',
-          startSeconds: 10,
-          durationSeconds: 195,
-          note: '肩甲骨からパンチを繰り出すと背中の血流も一気に良くなります！',
-          speech: 'さあ、3分間のボクシングパートです！肩甲骨からパンチを繰り出して、お腹まわりを引き締めていきましょう！'
+          "type": "machine",
+          "id": "tue_close_pulldown",
+          "phase": "PHASE 1: MACHINE",
+          "title": "② パラレル・プルダウン（ダブルD）",
+          "image": "./images/exercises/irotec_vbar_pulldown.jpg",
+          "targetMuscle": "広背筋 下部〜中部",
+          "sets": 3,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 6,
+          "pulley": "上プーリー",
+          "attachment": "Yes4All ダブルDハンドル",
+          "demoRange": [
+            151,
+            160
+          ],
+          "actionSteps": [
+            "① ダブルDハンドルを握り胸を張る",
+            "② 脇を締めてみぞおちへ鋭く引く",
+            "③ 下で1秒止めてゆっくり伸ばす"
+          ],
+          "setupNote": "脇を締め、肘を体の後ろへ引くイメージでみぞおちの上へ引き込みます。",
+          "cues": [
+            "一番下で肩甲骨をグッと下げてキープ",
+            "戻す時は広背筋をしっかりストレッチ"
+          ],
+          "speechIntro": "2種目目、ダブルDハンドルでのプルダウンです！脇を締めて、みぞおちに向かってグッと引き込んでいきましょう。スタート！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '有酸素完走！股割り＆付け根ストレッチへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 35,
-          pulley: 'ヨガマット',
-          attachment: 'たっぷり柔軟タイム',
-          actionSteps: ['① 呼吸をゆっくり整える', '② ヨガマットに座る', '③ お尻と内ももをたっぷり伸ばす'],
-          setupNote: '水曜日は後半たっぷり時間をかけて股関節とお尻・内ももを柔らかくします。',
-          cues: ['全身の血流が最高の状態です'],
-          speech: '有酸素パート完走、お疲れ様でした！体がしっかり温まっているので、ここからは時間をかけて股関節とお尻をじっくりほぐしていきましょうね。'
-        },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
-        {
-          type: 'video',
-          phase: 'PHASE 3+: BONUS HIP CARE',
-          badge: '仕上げ6分：足の付け根＆内もも',
-          title: '【6分集中】内もも・足の付け根を引き締める簡単ストレッチ',
-          channel: 'Marina Takewaki',
-          videoId: 'w1xZucczKrE',
-          startSeconds: 15,
-          durationSeconds: 350,
-          note: '仕上げに足の付け根までスッキリ伸ばして40分コース完了です！',
-          speech: '仕上げの6分間は、足の付け根と内もものストレッチです。リラックスして最後まで気持ちよく伸ばしましょう！'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "下プーリーへ【ダブルDハンドル】を移動",
+          "image": "./images/exercises/irotec_seated_row.jpg",
+          "durationSeconds": 65,
+          "pulley": "下プーリー",
+          "attachment": "Yes4All ダブルDハンドル",
+          "actionSteps": [
+            "① 下プーリーのワイヤーを接続",
+            "② ダブルDハンドルを下へ装着",
+            "③ 床マットに座り膝を楽な角度で固定"
+          ],
+          "setupNote": "下プーリーへダブルDハンドルを移動し、床に座ってローイングの準備をします。",
+          "cues": [
+            "⚠️ 膝は軽く曲げた楽な位置に置くだけ（脚で蹴らない）"
+          ],
+          "speech": "次は背中の厚みを作るシーテッドローです。下プーリーのワイヤーを繋いで、ダブルDハンドルを下に付け替えてくださいね。"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ヨガマット（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① あぐら（または仰向け）で楽にする', '② 肩の力を抜き目を軽く閉じる', '③ 鼻から吸ってゆっくり吐く呼吸へ'],
-          setupNote: '最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。',
-          cues: ['膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです'],
-          speech: 'ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。'
+          "type": "machine",
+          "id": "tue_seated_row",
+          "phase": "PHASE 1: MACHINE",
+          "title": "③ シーテッド・ケーブルロー（ダブルD）",
+          "image": "./images/exercises/irotec_seated_row.jpg",
+          "targetMuscle": "広背筋 中部・僧帽筋（厚み）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 6,
+          "pulley": "下プーリー",
+          "attachment": "Yes4All ダブルDハンドル",
+          "demoRange": [
+            188,
+            196
+          ],
+          "actionSteps": [
+            "① 背筋を真っすぐ立てて座る",
+            "② おへそへ向かってハンドルを引く",
+            "③ 左右の肩甲骨をギュッと寄せる"
+          ],
+          "setupNote": "イラストのように背筋を立て、おへそに向かって真っすぐ引きつけます。",
+          "cues": [
+            "腰を丸めず骨盤を立ててキープ",
+            "膝の曲げ伸ばし反動は使わず背中で引く"
+          ],
+          "speechIntro": "3種目目、シーテッドローいきましょう！背筋をピンと伸ばして、おへそに向かって引きつけながら肩甲骨を寄せていきますよ。スタートです！"
         },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "背中トレ完了！マットで腹筋＆パンチへ",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 45,
+          "pulley": "ヨガマット",
+          "attachment": "仰向けスタンバイ",
+          "actionSteps": [
+            "① 水分補給をする",
+            "② そのままマットに仰向けになる",
+            "③ 3分×3本の燃焼コンボへ"
+          ],
+          "setupNote": "背中のパンプ完了！そのままマットで寝たまま下腹＆音楽腹筋＆上半身パンチへ流れます。",
+          "cues": [
+            "すべてジャンプなし・膝保護メニューです"
+          ],
+          "speech": "背中パート完走、ナイスファイトです！お水を飲んだら、そのままマットに仰向けになってくださいね。3分ずつの楽しい燃焼コンボに入りますよ！"
+        },
+        {
+          "type": "video",
+          "phase": "PHASE 2: HIIT (1/3)",
+          "badge": "フロア下腹 1/3",
+          "title": "【3分下腹】腰が痛くならない！寝たまま下腹撃退トレーニング",
+          "channel": "Marina Takewaki",
+          "videoId": "kcj40PNGgbQ",
+          "startSeconds": 16,
+          "durationSeconds": 185,
+          "note": "寝たまま腰と膝を守りつつ下腹部を集中刺激！終わると自動で2本目へ進みます。",
+          "speech": "まずは1本目、寝たままでできる3分間の下腹トレーニングです！腰を床につけたまま丁寧にいきましょう！",
+          "endSeconds": 201
+        },
+        {
+          "type": "video",
+          "phase": "PHASE 2: HIIT (2/3)",
+          "badge": "音楽腹筋 2/3",
+          "title": "【地獄の3分】ノリノリな音楽にのせて腹筋を鍛えまくる！",
+          "channel": "Marina Takewaki",
+          "videoId": "ygR8sxmBHPc",
+          "startSeconds": 12,
+          "durationSeconds": 195,
+          "note": "音楽に合わせてお腹全体を燃焼させます！",
+          "speech": "続いて2本目！音楽に合わせて楽しくお腹全体を燃やしていきましょう！",
+          "endSeconds": 207
+        },
+        {
+          "type": "video",
+          "phase": "PHASE 2: HIIT (3/3)",
+          "badge": "上半身パンチ 3/3",
+          "title": "【3分ボクシング】二の腕と腹筋を鍛えるボクシングエクササイズ",
+          "channel": "Marina Takewaki",
+          "videoId": "DpANRK3AldY",
+          "startSeconds": 10,
+          "durationSeconds": 165,
+          "note": "⚠️ 屈伸動作が出たら膝は曲げず、上半身のひねりとパンチ連打だけでOK！",
+          "speech": "ラスト3本目は3分ボクシングです！膝は曲げずに、上半身のひねりとシャープなパンチで汗をかきましょう！",
+          "endSeconds": 175
+        },
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "燃焼完了！股割りストレッチへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "ヨガマット",
+          "attachment": "開脚ストレッチ",
+          "actionSteps": [
+            "① 呼吸を整える",
+            "② 汗を拭いて水分補給",
+            "③ 股割りストレッチ開始"
+          ],
+          "setupNote": "最高の燃焼でした！温まった筋肉をじっくり伸ばしていきましょう。",
+          "cues": [
+            "息を吐くたびに股関節の力を抜きます"
+          ],
+          "speech": "燃焼パート完走です、すごい集中力でしたね！ここからは気持ちよく股割りストレッチで体を緩めていきましょう。"
+        },
+        {
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
+        },
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ヨガマット（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① あぐら（または仰向け）で楽にする",
+            "② 肩の力を抜き目を軽く閉じる",
+            "③ 鼻から吸ってゆっくり吐く呼吸へ"
+          ],
+          "setupNote": "最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。",
+          "cues": [
+            "膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。"
+        },
+        {
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 木曜（自宅・肩＆姿勢） --------------------
-    4: {
-      dayKey: 4,
-      dayLabel: '木曜',
-      shortTheme: '肩・美姿勢',
-      title: 'SHOULDER DAY｜Yes4All ロープで作る立体肩＆美姿勢',
-      subtitle: 'トライセプスロープの真骨頂「フェイスプル」から始まり、肩の前後・側面を彫り込む40分',
-      defaultStretchId: 'split_road_2',
-      defaultMeditationId: 'meditation_mindfulness',
-      blocks: [
+    "3": {
+      "dayKey": 3,
+      "dayLabel": "水曜",
+      "shortTheme": "有酸素・拳",
+      "title": "CARDIO & BOXING｜膝に優しいノンジャンプ燃焼デイ",
+      "subtitle": "週の真ん中はウエイト完全オフ！飛ばない有酸素＆ボクササイズ＋お尻深層ケアの40分",
+      "defaultStretchId": "split_road_3",
+      "defaultMeditationId": "meditation_harp",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP',
-          title: '肩インナー温め ＆ 上プーリー【ロープ】準備',
-          image: './images/exercises/irotec_pin_setup.jpg',
-          durationSeconds: 45,
-          pulley: '上プーリー',
-          attachment: 'Yes4All トライセプスロープ',
-          actionSteps: ['① 上プーリーにロープを装着', '② ピンは軽め（2〜3枚目）に差す', '③ 肩を軽く回して準備'],
-          setupNote: '上プーリーにYes4All「トライセプスロープ」をセット！肩は軽めの重さで丁寧に効かせます。',
-          cues: ['デスクワークや出張移動の巻き肩も一発でリセットできます'],
-          speech: 'お疲れ様です！木曜日は肩と美姿勢のメニューです。上プーリーにトライセプスロープを付けて、ピンは軽めの3枚目あたりからスタートしましょうね！'
+          "type": "warmup",
+          "phase": "PREP",
+          "title": "ウエイト休養日！マットの上でスタンバイ",
+          "image": "./images/exercises/warmup_shoulder_roll.jpg",
+          "durationSeconds": 35,
+          "pulley": "マシン不使用",
+          "attachment": "ヨガマット ＋ 水分・タオル",
+          "actionSteps": [
+            "① 肩と手首を軽く回す",
+            "② 水とタオルを手元に置く",
+            "③ 膝を曲げないルールを確認"
+          ],
+          "setupNote": "水曜日は筋肉を超回復させつつ、飛ばない有酸素とパンチで心肺機能を引き上げます！",
+          "cues": [
+            "動画内でスクワットが出たら「その場ジャブ連打」に置き換えて膝を守ります"
+          ],
+          "speech": "お疲れ様です！水曜日はマシンをお休みして、膝に優しい有酸素とボクササイズでリフレッシュする日ですよ。もし動画の中で屈伸が出てきたら、上半身のパンチに置き換えて進めてくださいね！"
         },
         {
-          type: 'machine',
-          id: 'thu_face_pull',
-          phase: 'PHASE 1: MACHINE',
-          title: '① ロープ・フェイスプル',
-          image: './images/exercises/irotec_face_pull.jpg',
-          targetMuscle: '三角筋 後部・僧帽筋中部（姿勢改善）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 3,
-          pulley: '上プーリー',
-          attachment: 'Yes4All トライセプスロープ',
-          demoRange: [90, 118],
-          actionSteps: ['① ロープの結び目を外側から握る', '② おでこ・両耳の横へロープを割って引く', '③ 肩の後ろ側を1秒ギュッと収縮'],
-          setupNote: 'イラストのように肘を高く保ち、ロープを左右に広げながら耳の横へ引きます。',
-          cues: ['腰を反らさずお腹に軽く力を入れる', '肩の後ろ側が熱くなれば大正解！'],
-          speechIntro: '1種目目は名種目、フェイスプルです！おでこや耳の横に向かってロープを左右に割りながら引いて、肩の後ろ側を引き締めましょう。スタートです！'
+          "type": "video",
+          "phase": "PHASE 1: LOW-IMPACT CARDIO",
+          "badge": "飛ばない脂肪燃焼（15分）",
+          "title": "【マンションOK】飛ばない有酸素運動で効率よく体脂肪を燃やそう！",
+          "channel": "Marina Takewaki",
+          "videoId": "hXyamPHNhkk",
+          "startSeconds": 13,
+          "durationSeconds": 873,
+          "note": "ジャンプ一切なし！脚に負荷がかかる動きはウエストひねりやジャブにアレンジしてOK！",
+          "speech": "それでは前半15分の飛ばない有酸素、スタートです！マイペースで気持ちよく体を動かしていきましょう！",
+          "endSeconds": 886,
+          "shortEndSeconds": 373
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '下プーリーへ【ショートバー】をセット',
-          image: './images/exercises/irotec_upright_row.jpg',
-          durationSeconds: 60,
-          pulley: '下プーリー',
-          attachment: '付属ショートストレートバー',
-          actionSteps: ['① 下プーリーのワイヤーを接続', '② 付属ショートバーを装着', '③ ピンを3〜4枚目にセット'],
-          setupNote: '下プーリーに切り替え、短いストレートバーを装着します。次は肩の横幅を作る種目です。',
-          cues: ['肘から先導して引き上げるイメージを確認'],
-          speech: '肩の後ろが温まってきましたね！次は下プーリーに繋ぎ変えて、付属のショートバーをセットしてください。アップライトローにいきますよ。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "水分補給 ＆ 爽快3分ボクシングラッシュ",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 45,
+          "pulley": "マット上（立位または座位）",
+          "attachment": "シャドーボクシング準備",
+          "actionSteps": [
+            "① お水をしっかり飲む",
+            "② 軽く深呼吸",
+            "③ ラスト3分パンチ連打へ"
+          ],
+          "setupNote": "いい汗が出てきました！仕上げの3分ボクシングでストレスも吹き飛ばしましょう！",
+          "cues": [
+            "椅子やベッドに座ったままパンチしても効果抜群です"
+          ],
+          "speech": "いい汗が出てきましたね！お水を飲んで一息ついたら、仕上げの3分ボクシングでスカッとパンチを打ち込みましょう！"
         },
         {
-          type: 'machine',
-          id: 'thu_upright_row',
-          phase: 'PHASE 1: MACHINE',
-          title: '② ケーブル・アップライトロー',
-          image: './images/exercises/irotec_upright_row.jpg',
-          targetMuscle: '三角筋 中部（肩の丸み・横幅）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 4,
-          pulley: '下プーリー',
-          attachment: '付属ショートバー',
-          demoRange: [150, 180],
-          actionSteps: ['① 肩幅より少し狭くバーを順手で持つ', '② 肘を天井へ吊り上げるように鎖骨下まで引く', '③ ゆっくり抵抗を感じながら下ろす'],
-          setupNote: 'イラストのように「手首より肘が上」になるフォームで胸の上まで引き上げます。',
-          cues: ['肩をすくめず、肩の横側で持ち上げる', '自然な立ち姿勢で膝はロックしない'],
-          speechIntro: '2種目目、アップライトローです！手首ではなく、両肘を天井から糸で引き上げられるイメージで鎖骨の下まで引いていきましょう。スタート！'
+          "type": "video",
+          "phase": "PHASE 2: BOXERCISE",
+          "badge": "爽快ボクシング仕上げ",
+          "title": "【3分ボクシングダンス】二の腕と腹筋を鍛えるボクシングエクササイズ",
+          "channel": "Marina Takewaki",
+          "videoId": "DpANRK3AldY",
+          "startSeconds": 10,
+          "durationSeconds": 165,
+          "note": "肩甲骨からパンチを繰り出すと背中の血流も一気に良くなります！",
+          "speech": "さあ、3分間のボクシングパートです！肩甲骨からパンチを繰り出して、お腹まわりを引き締めていきましょう！",
+          "endSeconds": 175
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '下プーリーを【ロープ】へ交換',
-          image: './images/exercises/irotec_front_raise.jpg',
-          durationSeconds: 50,
-          pulley: '下プーリー（そのまま）',
-          attachment: 'Yes4All トライセプスロープ',
-          actionSteps: ['① 下プーリーのカラビナをロープに交換', '② ピンを2枚目に軽くする', '③ マシンに背を向けて股の間からロープを持つ'],
-          setupNote: '下プーリーのままロープに付け替え、マシンに背を向けて股の間からロープを握ります。',
-          cues: ['ケーブルならではの抜けない負荷で肩の前側を仕上げます'],
-          speech: '次は肩のフロントラインです。下プーリーのままロープに付け替えて、ピンは軽めの2枚目にしておきましょう。マシンに背を向けて構えてくださいね。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "有酸素完走！股割り＆付け根ストレッチへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 35,
+          "pulley": "ヨガマット",
+          "attachment": "たっぷり柔軟タイム",
+          "actionSteps": [
+            "① 呼吸をゆっくり整える",
+            "② ヨガマットに座る",
+            "③ お尻と内ももをたっぷり伸ばす"
+          ],
+          "setupNote": "水曜日は後半たっぷり時間をかけて股関節とお尻・内ももを柔らかくします。",
+          "cues": [
+            "全身の血流が最高の状態です"
+          ],
+          "speech": "有酸素パート完走、お疲れ様でした！体がしっかり温まっているので、ここからは時間をかけて股関節とお尻をじっくりほぐしていきましょうね。"
         },
         {
-          type: 'machine',
-          id: 'thu_front_raise',
-          phase: 'PHASE 1: MACHINE',
-          title: '③ ロープ・フロントレイズ',
-          image: './images/exercises/irotec_front_raise.jpg',
-          targetMuscle: '三角筋 前部',
-          sets: 3,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 2,
-          pulley: '下プーリー',
-          attachment: 'Yes4All トライセプスロープ',
-          demoRange: [150, 180],
-          actionSteps: ['① マシンに背を向け股の間からロープを持つ', '② 腕を伸ばしたまま目の高さまで前へ上げる', '③ 3秒かけてゆっくり下ろす'],
-          setupNote: 'イラストの通り、目の高さまでスッと持ち上げて3秒かけてゆっくり下ろします。',
-          cues: ['体を前後に揺らさず肩の力だけでコントロール'],
-          speechIntro: '3種目目、ロープフロントレイズいきましょう！目の高さまでスッと持ち上げて、下ろす時は3秒かけてゆっくり耐えていきますよ。スタートです！'
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '肩トレ完了！ヨガマットへ移動',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 45,
-          pulley: 'ヨガマット',
-          attachment: '仰向けスタンバイ',
-          actionSteps: ['① 水分補給をする', '② ヨガマットに仰向けになる', '③ 8分腹筋サーキットへ'],
-          setupNote: '肩まわりが綺麗にパンプしました！マットへ移動して腹筋パートに入りましょう。',
-          cues: ['呼吸を整えてスタンバイ'],
-          speech: '肩のマシンパート完走です、お疲れ様でした！お水を飲んでヨガマットに横になってくださいね。次は腹筋サーキットにいきますよ！'
+          "type": "video",
+          "phase": "PHASE 3+: BONUS HIP CARE",
+          "badge": "仕上げ6分：足の付け根＆内もも",
+          "title": "【6分集中】内もも・足の付け根を引き締める簡単ストレッチ",
+          "channel": "Marina Takewaki",
+          "videoId": "w1xZucczKrE",
+          "startSeconds": 14,
+          "durationSeconds": 364,
+          "note": "仕上げに足の付け根までスッキリ伸ばして40分コース完了です！",
+          "speech": "仕上げの6分間は、足の付け根と内もものストレッチです。リラックスして最後まで気持ちよく伸ばしましょう！",
+          "endSeconds": 378,
+          "shortEndSeconds": 378
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: HIIT',
-          badge: '膝保護・フロア腹筋HIIT',
-          title: '【8分完全版】腹筋サーキット（フロア集中）',
-          channel: '腹筋集中サーキット',
-          videoId: 'GoxIQp8VtTg',
-          startSeconds: 15,
-          durationSeconds: 490,
-          note: 'おへそを覗き込む意識で丁寧にお腹を縮めましょう！',
-          speech: '8分間の腹筋サーキット、スタートです！腰が反らないようにおへそを床に近づけて、丁寧にお腹に効かせていきましょう！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ヨガマット（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① あぐら（または仰向け）で楽にする",
+            "② 肩の力を抜き目を軽く閉じる",
+            "③ 鼻から吸ってゆっくり吐く呼吸へ"
+          ],
+          "setupNote": "最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。",
+          "cues": [
+            "膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ラストは股割りストレッチへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: 'ヨガマット',
-          attachment: '開脚ストレッチ',
-          actionSteps: ['① 深呼吸で心拍を落ち着かせる', '② 股関節の力を抜く', '③ 日替わり開脚スタート'],
-          setupNote: '温まった体で股関節の可動域を広げていきます。',
-          cues: ['マットの上で膝をつく時は無理のない位置でOK'],
-          speech: 'ナイスファイトでした！ラストは股割りストレッチで、股関節まわりをじっくり柔らかくしていきましょうね。'
-        },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
-        {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ヨガマット（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① あぐら（または仰向け）で楽にする', '② 肩の力を抜き目を軽く閉じる', '③ 鼻から吸ってゆっくり吐く呼吸へ'],
-          setupNote: '最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。',
-          cues: ['膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです'],
-          speech: 'ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。'
-        },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 金曜（自宅・腕＆加重腹筋） --------------------
-    5: {
-      dayKey: 5,
-      dayLabel: '金曜',
-      shortTheme: '腕・加重腹筋',
-      title: 'ARMS & ABS｜二頭・三頭パンプ ＆ 加重アブクランチ',
-      subtitle: '華金のご褒美パンプ！腕を太く引き締め、IROTEC専用アブ機能でお腹に重り負荷をかける40分',
-      defaultStretchId: 'split_road_4',
-      defaultMeditationId: 'meditation_harp',
-      blocks: [
+    "4": {
+      "dayKey": 4,
+      "dayLabel": "木曜",
+      "shortTheme": "肩・美姿勢",
+      "title": "SHOULDER DAY｜Yes4All ロープで作る立体肩＆美姿勢",
+      "subtitle": "トライセプスロープの真骨頂「フェイスプル」から始まり、肩の前後・側面を彫り込む40分",
+      "defaultStretchId": "split_road_2",
+      "defaultMeditationId": "meditation_mindfulness",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP',
-          title: '肘ウォームアップ ＆ 上プーリー【ロープ】装着',
-          image: './images/exercises/irotec_rope_pushdown.jpg',
-          durationSeconds: 45,
-          pulley: '上プーリー',
-          attachment: 'Yes4All トライセプスロープ',
-          actionSteps: ['① 上プーリーにロープを装着', '② 肘の曲げ伸ばしを軽く20回', '③ ピンを4枚目にセット'],
-          setupNote: '金曜日はパンプ感が一番楽しい腕と加重腹筋の日です！上プーリーにロープを付けましょう。',
-          cues: ['肘関節を軽く動かして温めておきます'],
-          speech: '金曜日ですね、1週間お疲れ様です！今日は腕と加重腹筋で気持ちよくパンプさせていきましょう。まずは上プーリーにロープをセットしてくださいね！'
+          "type": "warmup",
+          "phase": "PREP",
+          "title": "肩インナー温め ＆ 上プーリー【ロープ】準備",
+          "image": "./images/exercises/irotec_pin_setup.jpg",
+          "durationSeconds": 45,
+          "pulley": "上プーリー",
+          "attachment": "Yes4All トライセプスロープ",
+          "actionSteps": [
+            "① 上プーリーにロープを装着",
+            "② ピンは軽め（2〜3枚目）に差す",
+            "③ 肩を軽く回して準備"
+          ],
+          "setupNote": "上プーリーにYes4All「トライセプスロープ」をセット！肩は軽めの重さで丁寧に効かせます。",
+          "cues": [
+            "デスクワークや出張移動の巻き肩も一発でリセットできます"
+          ],
+          "speech": "お疲れ様です！木曜日は肩と美姿勢のメニューです。上プーリーにトライセプスロープを付けて、ピンは軽めの3枚目あたりからスタートしましょうね！"
         },
         {
-          type: 'machine',
-          id: 'fri_rope_pushdown',
-          phase: 'PHASE 1: MACHINE',
-          title: '① ロープ・トライセプスプッシュダウン',
-          image: './images/exercises/irotec_rope_pushdown.jpg',
-          targetMuscle: '上腕三頭筋（二の腕）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 4,
-          pulley: '上プーリー',
-          attachment: 'Yes4All トライセプスロープ',
-          demoRange: [145, 175],
-          actionSteps: ['① 両肘を脇腹にピタッと固定する', '② ロープを真下へ押し下げる', '③ 一番下でロープを「ハの字」に外へ割る'],
-          setupNote: 'イラストのように肘の位置を動かさず、一番下でロープを外側へ開いて二の腕を絞り込みます！',
-          cues: ['肘が前後に動くと負荷が逃げるので脇腹に固定'],
-          speechIntro: '1種目目はローププッシュダウンです！肘を脇腹に固定して、一番下でロープをハの字にグッと開いて二の腕に効かせましょう。スタートです！'
+          "type": "machine",
+          "id": "thu_face_pull",
+          "phase": "PHASE 1: MACHINE",
+          "title": "① ロープ・フェイスプル",
+          "image": "./images/exercises/irotec_face_pull.jpg",
+          "targetMuscle": "三角筋 後部・僧帽筋中部（姿勢改善）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 3,
+          "pulley": "上プーリー",
+          "attachment": "Yes4All トライセプスロープ",
+          "demoRange": [
+            170,
+            180
+          ],
+          "actionSteps": [
+            "① ロープの結び目を外側から握る",
+            "② おでこ・両耳の横へロープを割って引く",
+            "③ 肩の後ろ側を1秒ギュッと収縮"
+          ],
+          "setupNote": "イラストのように肘を高く保ち、ロープを左右に広げながら耳の横へ引きます。",
+          "cues": [
+            "腰を反らさずお腹に軽く力を入れる",
+            "肩の後ろ側が熱くなれば大正解！"
+          ],
+          "speechIntro": "1種目目は名種目、フェイスプルです！おでこや耳の横に向かってロープを左右に割りながら引いて、肩の後ろ側を引き締めましょう。スタートです！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: 'IROTEC名物【アブクランチ】準備',
-          image: './images/exercises/irotec_ab_crunch.jpg',
-          durationSeconds: 55,
-          pulley: 'アブクランチ / 上プーリー',
-          attachment: '付属アブストラップ（or ロープ）',
-          actionSteps: ['① アブストラップ（またはロープ）をセット', '② ピンを5枚目にセット', '③ シートに座り肩の横で保持する'],
-          setupNote: '重りの負荷でお腹を割るアブクランチの準備です！シートに座って両肩の上からストラップを持ちます。',
-          cues: ['腕で引くのではなく背中を丸める準備'],
-          speech: '次はアイロテック名物の加重腹筋、アブクランチです！ストラップを肩の横で持って、重りの負荷でお腹をしっかり縮めていきましょうね。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "下プーリーへ【ショートバー】をセット",
+          "image": "./images/exercises/irotec_upright_row.jpg",
+          "durationSeconds": 60,
+          "pulley": "下プーリー",
+          "attachment": "付属ショートストレートバー",
+          "actionSteps": [
+            "① 下プーリーのワイヤーを接続",
+            "② 付属ショートバーを装着",
+            "③ ピンを3〜4枚目にセット"
+          ],
+          "setupNote": "下プーリーに切り替え、短いストレートバーを装着します。次は肩の横幅を作る種目です。",
+          "cues": [
+            "肘から先導して引き上げるイメージを確認"
+          ],
+          "speech": "肩の後ろが温まってきましたね！次は下プーリーに繋ぎ変えて、付属のショートバーをセットしてください。アップライトローにいきますよ。"
         },
         {
-          type: 'machine',
-          id: 'fri_machine_abcrunch',
-          phase: 'PHASE 1: MACHINE',
-          title: '② マシン・アブクランチ（加重腹筋）',
-          image: './images/exercises/irotec_ab_crunch.jpg',
-          targetMuscle: '腹直筋（シックスパック）',
-          sets: 3,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 5,
-          pulley: 'アブクランチ',
-          attachment: '付属アブストラップ',
-          demoRange: [175, 205],
-          actionSteps: ['① 両手を鎖骨・肩の横に固定する', '② 息を吐き切りながらおへそを覗き込むように丸める', '③ お腹の伸びを感じながらゆっくり戻す'],
-          setupNote: 'イラストの通り、股関節から折るのではなく「みぞおちから背中を丸める」と腹筋に直撃します！',
-          cues: ['息をフーッと吐き切ると腹直筋が最大収縮します'],
-          speechIntro: '2種目目、マシン・アブクランチいきましょう！息をフーッと吐き切りながら、おへそを覗き込むように背中を丸めていきますよ。スタート！'
+          "type": "machine",
+          "id": "thu_upright_row",
+          "phase": "PHASE 1: MACHINE",
+          "title": "② ケーブル・アップライトロー",
+          "image": "./images/exercises/irotec_upright_row.jpg",
+          "targetMuscle": "三角筋 中部（肩の丸み・横幅）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 4,
+          "pulley": "下プーリー",
+          "attachment": "付属ショートバー",
+          "demoRange": [
+            196,
+            205
+          ],
+          "actionSteps": [
+            "① 肩幅より少し狭くバーを順手で持つ",
+            "② 肘を天井へ吊り上げるように鎖骨下まで引く",
+            "③ ゆっくり抵抗を感じながら下ろす"
+          ],
+          "setupNote": "イラストのように「手首より肘が上」になるフォームで胸の上まで引き上げます。",
+          "cues": [
+            "肩をすくめず、肩の横側で持ち上げる",
+            "自然な立ち姿勢で膝はロックしない"
+          ],
+          "speechIntro": "2種目目、アップライトローです！手首ではなく、両肘を天井から糸で引き上げられるイメージで鎖骨の下まで引いていきましょう。スタート！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '下プーリーへ【ショートバー or ロープ】装着',
-          image: './images/exercises/irotec_cable_curl.jpg',
-          durationSeconds: 60,
-          pulley: '下プーリー',
-          attachment: 'ショートバー または ロープ',
-          actionSteps: ['① 下プーリーのワイヤーを接続', '② ショートバー（またはロープ）を装着', '③ ピンを4枚目にセット'],
-          setupNote: 'ラストは力こぶを作るケーブルカール！下プーリーに接続して立ち上がります。',
-          cues: ['バーなら力こぶ全体、ロープ縦持ちなら前腕まで太くなります'],
-          speech: 'マシンのラストは力こぶを作るアームカールです！下プーリーにワイヤーを繋いで、ショートバーかロープをセットしてくださいね。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "下プーリーを【ロープ】へ交換",
+          "image": "./images/exercises/irotec_front_raise.jpg",
+          "durationSeconds": 50,
+          "pulley": "下プーリー（そのまま）",
+          "attachment": "Yes4All トライセプスロープ",
+          "actionSteps": [
+            "① 下プーリーのカラビナをロープに交換",
+            "② ピンを2枚目に軽くする",
+            "③ マシンに背を向けて股の間からロープを持つ"
+          ],
+          "setupNote": "下プーリーのままロープに付け替え、マシンに背を向けて股の間からロープを握ります。",
+          "cues": [
+            "ケーブルならではの抜けない負荷で肩の前側を仕上げます"
+          ],
+          "speech": "次は肩のフロントラインです。下プーリーのままロープに付け替えて、ピンは軽めの2枚目にしておきましょう。マシンに背を向けて構えてくださいね。"
         },
         {
-          type: 'machine',
-          id: 'fri_cable_curl',
-          phase: 'PHASE 1: MACHINE',
-          title: '③ ケーブル・アームカール',
-          image: './images/exercises/irotec_cable_curl.jpg',
-          targetMuscle: '上腕二頭筋・前腕',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          defaultPlates: 4,
-          pulley: '下プーリー',
-          attachment: 'ショートバー / ロープ',
-          demoRange: [155, 185],
-          actionSteps: ['① 肘を体側の少し前に固定する', '② 肩へ向かって一気に巻き上げる', '③ 3秒かけてゆっくり下ろす'],
-          setupNote: 'イラストのように肘を動かさず、ケーブルの抜けない負荷で二頭筋をパンプさせます！',
-          cues: ['上体を後ろにのけぞらせないよう注意'],
-          speechIntro: '3種目目、ケーブルアームカールです！肘の位置を固定して、下ろす時に3秒かけると一気にパンプしますよ。スタートです！'
+          "type": "machine",
+          "id": "thu_front_raise",
+          "phase": "PHASE 1: MACHINE",
+          "title": "③ ロープ・フロントレイズ",
+          "image": "./images/exercises/irotec_front_raise.jpg",
+          "targetMuscle": "三角筋 前部",
+          "sets": 3,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 2,
+          "pulley": "下プーリー",
+          "attachment": "Yes4All トライセプスロープ",
+          "demoRange": [
+            196,
+            205
+          ],
+          "actionSteps": [
+            "① マシンに背を向け股の間からロープを持つ",
+            "② 腕を伸ばしたまま目の高さまで前へ上げる",
+            "③ 3秒かけてゆっくり下ろす"
+          ],
+          "setupNote": "イラストの通り、目の高さまでスッと持ち上げて3秒かけてゆっくり下ろします。",
+          "cues": [
+            "体を前後に揺らさず肩の力だけでコントロール"
+          ],
+          "speechIntro": "3種目目、ロープフロントレイズいきましょう！目の高さまでスッと持ち上げて、下ろす時は3秒かけてゆっくり耐えていきますよ。スタートです！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '平日ウエイト全完走！華金パンチ＆腹筋コンボへ',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 45,
-          pulley: 'ヨガマット',
-          attachment: '立位パンチ ➔ マット腹筋',
-          actionSteps: ['① 水分補給をする', '② パンプした腕で3分ボクシング', '③ 続けて寝たまま腹筋仕上げ'],
-          setupNote: '今週のウエイトパート全制覇！パンプした腕で3分パンチを打ち込んでからフロア腹筋で締めます！',
-          cues: ['膝は曲げず上半身だけでOK！'],
-          speech: '今週のマシンパート全完走、おめでとうございます！お水を飲んだら、パンプした腕で爽快に3分間ボクシングを打ち込んでいきましょう！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "肩トレ完了！ヨガマットへ移動",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 45,
+          "pulley": "ヨガマット",
+          "attachment": "仰向けスタンバイ",
+          "actionSteps": [
+            "① 水分補給をする",
+            "② ヨガマットに仰向けになる",
+            "③ 8分腹筋サーキットへ"
+          ],
+          "setupNote": "肩まわりが綺麗にパンプしました！マットへ移動して腹筋パートに入りましょう。",
+          "cues": [
+            "呼吸を整えてスタンバイ"
+          ],
+          "speech": "肩のマシンパート完走です、お疲れ様でした！お水を飲んでヨガマットに横になってくださいね。次は腹筋サーキットにいきますよ！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: HIIT (1/3)',
-          badge: '爽快パンチ 1/3',
-          title: '【3分ボクシングダンス】パンプした腕で打ち込むボクササイズ',
-          channel: 'Marina Takewaki',
-          videoId: 'DpANRK3AldY',
-          startSeconds: 10,
-          durationSeconds: 195,
-          note: '膝の屈伸は入れず、シャープなパンチ連打で心拍数を上げます！',
-          speech: '華金コンボ1本目、3分ボクシングスタートです！気持ちよくパンチを打ち込んでいきましょう！'
+          "type": "video",
+          "phase": "PHASE 2: HIIT",
+          "badge": "膝保護・フロア腹筋HIIT",
+          "title": "【8分完全版】腹筋サーキット（フロア集中）",
+          "channel": "uFit (林ケイスケ)",
+          "videoId": "GoxIQp8VtTg",
+          "startSeconds": 2,
+          "durationSeconds": 483,
+          "note": "おへそを覗き込む意識で丁寧にお腹を縮めましょう！",
+          "speech": "8分間の腹筋サーキット、スタートです！腰が反らないようにおへそを床に近づけて、丁寧にお腹に効かせていきましょう！",
+          "endSeconds": 485
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: HIIT (2/3)',
-          badge: 'フロア下腹 2/3',
-          title: '【3分下腹】寝たまま下腹のお肉をごっそり落とす簡単筋トレ',
-          channel: 'Marina Takewaki',
-          videoId: 'kcj40PNGgbQ',
-          startSeconds: 18,
-          durationSeconds: 195,
-          note: 'マットに仰向けになり、下腹部をさらに引き締めます！',
-          speech: 'そのままヨガマットに仰向けになって、2本目は寝たまま下腹トレーニングです！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ラストは股割りストレッチへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "ヨガマット",
+          "attachment": "開脚ストレッチ",
+          "actionSteps": [
+            "① 深呼吸で心拍を落ち着かせる",
+            "② 股関節の力を抜く",
+            "③ 日替わり開脚スタート"
+          ],
+          "setupNote": "温まった体で股関節の可動域を広げていきます。",
+          "cues": [
+            "マットの上で膝をつく時は無理のない位置でOK"
+          ],
+          "speech": "ナイスファイトでした！ラストは股割りストレッチで、股関節まわりをじっくり柔らかくしていきましょうね。"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: HIIT (3/3)',
-          badge: 'ラスト2分腹筋 3/3',
-          title: '【毎日2分】もっと！腹筋を割るフィニッシャー',
-          channel: 'のがちゃんねる',
-          videoId: 'ygeKbuKSk30',
-          startSeconds: 5,
-          durationSeconds: 130,
-          note: 'ラスト2分！これを乗り切れば最高に気持ちいい週末ストレッチです！',
-          speech: 'ラスト2分間の腹筋フィニッシャーです！ここを乗り切れば気持ちいいストレッチが待っていますよ、ファイトです！'
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '金曜フィニッシュ！じっくり股割りへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: 'ヨガマット',
-          attachment: '開脚ストレッチ',
-          actionSteps: ['① 大きく深呼吸する', '② 汗を拭いてリラックス', '③ 今週の開脚深まりをチェック'],
-          setupNote: '1週間の追い込み完走お疲れ様でした！温まり切った体で開脚を深めましょう。',
-          cues: ['終わったら開脚レベルも記録してみてくださいね'],
-          speech: '平日の追い込みパート、すべて完走です！本当にお疲れ様でした。温まりきった体で、今週どれくらい柔らかくなったか楽しみながら股割りストレッチにいきましょう！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ヨガマット（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① あぐら（または仰向け）で楽にする",
+            "② 肩の力を抜き目を軽く閉じる",
+            "③ 鼻から吸ってゆっくり吐く呼吸へ"
+          ],
+          "setupNote": "最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。",
+          "cues": [
+            "膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。"
         },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ヨガマット（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① あぐら（または仰向け）で楽にする', '② 肩の力を抜き目を軽く閉じる', '③ 鼻から吸ってゆっくり吐く呼吸へ'],
-          setupNote: '最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。',
-          cues: ['膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです'],
-          speech: 'ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。'
-        },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 土曜（自宅・ホテル共通 リラックス①） --------------------
-    6: {
-      dayKey: 6,
-      dayLabel: '土曜',
-      shortTheme: '回復ヨガ・深開脚',
-      title: 'ACTIVE RECOVERY｜肩甲骨リリースヨガ ＆ 長尺ディープ股割り',
-      subtitle: '土日は痛めつけないご褒美ケア！平日の上半身トレの張りを抜き、時間をかけて股割りを深める40分',
-      defaultStretchId: 'split_road_1',
-      defaultMeditationId: 'meditation_mindfulness',
-      blocks: [
+    "5": {
+      "dayKey": 5,
+      "dayLabel": "金曜",
+      "shortTheme": "腕・加重腹筋",
+      "title": "ARMS & ABS｜二頭・三頭パンプ ＆ 加重アブクランチ",
+      "subtitle": "華金のご褒美パンプ！腕を太く引き締め、IROTEC専用アブ機能でお腹に重り負荷をかける40分",
+      "defaultStretchId": "split_road_4",
+      "defaultMeditationId": "meditation_harp",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP',
-          title: '週末リラックス準備｜マットで深呼吸',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: '器具なし（自宅・ホテル共通）',
-          attachment: 'ヨガマット ＋ クッション',
-          actionSteps: ['① ゆったり座って目を閉じる', '② 肩の力をストンと抜く', '③ 前半ヨガ ➔ 後半ディープ開脚'],
-          setupNote: '土曜日は追い込みゼロ。前半19分は肩甲骨・上半身ほぐしヨガ、後半20分は長尺のディープ開脚です。',
-          cues: ['膝に違和感があるポーズはあぐらや長座に変えてOK'],
-          speech: '土曜日ですね、1週間本当にお疲れ様でした！今日は筋肉を痛めつけず、ヨガと長めの開脚ストレッチでじっくり体を癒やしていきましょうね。'
+          "type": "warmup",
+          "phase": "PREP",
+          "title": "肘ウォームアップ ＆ 上プーリー【ロープ】装着",
+          "image": "./images/exercises/irotec_rope_pushdown.jpg",
+          "durationSeconds": 45,
+          "pulley": "上プーリー",
+          "attachment": "Yes4All トライセプスロープ",
+          "actionSteps": [
+            "① 上プーリーにロープを装着",
+            "② 肘の曲げ伸ばしを軽く20回",
+            "③ ピンを4枚目にセット"
+          ],
+          "setupNote": "金曜日はパンプ感が一番楽しい腕と加重腹筋の日です！上プーリーにロープを付けましょう。",
+          "cues": [
+            "肘関節を軽く動かして温めておきます"
+          ],
+          "speech": "金曜日ですね、1週間お疲れ様です！今日は腕と加重腹筋で気持ちよくパンプさせていきましょう。まずは上プーリーにロープをセットしてくださいね！"
         },
         {
-          type: 'video',
-          phase: 'PART 1: UPPER BODY YOGA',
-          badge: '前半19分：肩甲骨・上半身ほぐし',
-          title: 'B-life｜肩甲骨をほぐすヨガ 肩こり・腰痛さようなら！ #62',
-          channel: 'B-Flow (Mariko)',
-          videoId: 'IaO7CKkB8d8',
-          startSeconds: 15,
-          durationSeconds: 1110,
-          note: '平日の筋トレやデスクワークで張った胸・背中・肩甲骨まわりが驚くほど軽くなります。',
-          speech: '前半は肩甲骨をほぐすヨガです。深い呼吸に合わせて、上半身の張りをじんわりほどいていきましょう。'
+          "type": "machine",
+          "id": "fri_rope_pushdown",
+          "phase": "PHASE 1: MACHINE",
+          "title": "① ロープ・トライセプスプッシュダウン",
+          "image": "./images/exercises/irotec_rope_pushdown.jpg",
+          "targetMuscle": "上腕三頭筋（二の腕）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 4,
+          "pulley": "上プーリー",
+          "attachment": "Yes4All トライセプスロープ",
+          "demoRange": [
+            160,
+            180
+          ],
+          "actionSteps": [
+            "① 両肘を脇腹にピタッと固定する",
+            "② ロープを真下へ押し下げる",
+            "③ 一番下でロープを「ハの字」に外へ割る"
+          ],
+          "setupNote": "イラストのように肘の位置を動かさず、一番下でロープを外側へ開いて二の腕を絞り込みます！",
+          "cues": [
+            "肘が前後に動くと負荷が逃げるので脇腹に固定"
+          ],
+          "speechIntro": "1種目目はローププッシュダウンです！肘を脇腹に固定して、一番下でロープをハの字にグッと開いて二の腕に効かせましょう。スタートです！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '水分補給 ＆ 後半20分ディープ股割りへ',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 30,
-          pulley: 'ヨガマット',
-          attachment: 'ディープストレッチ',
-          actionSteps: ['① お水をひと口飲む', '② 骨盤を楽に立てる', '③ 20分間の深層開脚へ'],
-          setupNote: '上半身が軽くなりました！後半は1ポーズを長くキープして股割りの可動域を一段引き上げます。',
-          cues: ['7割の伸びで脱力するのが一番柔らかくなります'],
-          speech: '肩まわりがスッキリしましたね！お水をひと口飲んだら、後半は20分間かけてじっくり股関節と全身を深層から伸ばしていきましょう。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "IROTEC名物【アブクランチ】準備",
+          "image": "./images/exercises/irotec_ab_crunch.jpg",
+          "durationSeconds": 55,
+          "pulley": "アブクランチ / 上プーリー",
+          "attachment": "付属アブストラップ（or ロープ）",
+          "actionSteps": [
+            "① アブストラップ（またはロープ）をセット",
+            "② ピンを5枚目にセット",
+            "③ シートに座り肩の横で保持する"
+          ],
+          "setupNote": "重りの負荷でお腹を割るアブクランチの準備です！シートに座って両肩の上からストラップを持ちます。",
+          "cues": [
+            "腕で引くのではなく背中を丸める準備"
+          ],
+          "speech": "次はアイロテック名物の加重腹筋、アブクランチです！ストラップを肩の横で持って、重りの負荷でお腹をしっかり縮めていきましょうね。"
         },
         {
-          type: 'video',
-          phase: 'PART 2: DEEP SPLIT & FULL BODY',
-          badge: '後半20分：全身＆股関節ディープ開脚',
-          title: 'オガトレ｜体が硬い人のための全身ディープストレッチ（20分セクション）',
-          channel: 'オガトレ',
-          videoId: 'sQNv7j0N0sw',
-          startSeconds: 40,
-          durationSeconds: 1200,
-          note: '普段の12分では届かない深層筋膜までじんわり緩みます。',
-          speech: 'それではディープストレッチ、スタートです。無理に押さず、重力と呼吸に身を任せてゆっくり伸ばしてくださいね。'
+          "type": "machine",
+          "id": "fri_machine_abcrunch",
+          "phase": "PHASE 1: MACHINE",
+          "title": "② マシン・アブクランチ（加重腹筋）",
+          "image": "./images/exercises/irotec_ab_crunch.jpg",
+          "targetMuscle": "腹直筋（シックスパック）",
+          "sets": 3,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 5,
+          "pulley": "アブクランチ",
+          "attachment": "付属アブストラップ",
+          "demoRange": [
+            140,
+            151
+          ],
+          "actionSteps": [
+            "① 両手を鎖骨・肩の横に固定する",
+            "② 息を吐き切りながらおへそを覗き込むように丸める",
+            "③ お腹の伸びを感じながらゆっくり戻す"
+          ],
+          "setupNote": "イラストの通り、股関節から折るのではなく「みぞおちから背中を丸める」と腹筋に直撃します！",
+          "cues": [
+            "息をフーッと吐き切ると腹直筋が最大収縮します"
+          ],
+          "speechIntro": "2種目目、マシン・アブクランチいきましょう！息をフーッと吐き切りながら、おへそを覗き込むように背中を丸めていきますよ。スタート！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ヨガマット（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① あぐら（または仰向け）で楽にする', '② 肩の力を抜き目を軽く閉じる', '③ 鼻から吸ってゆっくり吐く呼吸へ'],
-          setupNote: '最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。',
-          cues: ['膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです'],
-          speech: 'ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "下プーリーへ【ショートバー or ロープ】装着",
+          "image": "./images/exercises/irotec_cable_curl.jpg",
+          "durationSeconds": 60,
+          "pulley": "下プーリー",
+          "attachment": "ショートバー または ロープ",
+          "actionSteps": [
+            "① 下プーリーのワイヤーを接続",
+            "② ショートバー（またはロープ）を装着",
+            "③ ピンを4枚目にセット"
+          ],
+          "setupNote": "ラストは力こぶを作るケーブルカール！下プーリーに接続して立ち上がります。",
+          "cues": [
+            "バーなら力こぶ全体、ロープ縦持ちなら前腕まで太くなります"
+          ],
+          "speech": "マシンのラストは力こぶを作るアームカールです！下プーリーにワイヤーを繋いで、ショートバーかロープをセットしてくださいね。"
         },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+        {
+          "type": "machine",
+          "id": "fri_cable_curl",
+          "phase": "PHASE 1: MACHINE",
+          "title": "③ ケーブル・アームカール",
+          "image": "./images/exercises/irotec_cable_curl.jpg",
+          "targetMuscle": "上腕二頭筋・前腕",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "defaultPlates": 4,
+          "pulley": "下プーリー",
+          "attachment": "ショートバー / ロープ",
+          "demoRange": [
+            180,
+            188
+          ],
+          "actionSteps": [
+            "① 肘を体側の少し前に固定する",
+            "② 肩へ向かって一気に巻き上げる",
+            "③ 3秒かけてゆっくり下ろす"
+          ],
+          "setupNote": "イラストのように肘を動かさず、ケーブルの抜けない負荷で二頭筋をパンプさせます！",
+          "cues": [
+            "上体を後ろにのけぞらせないよう注意"
+          ],
+          "speechIntro": "3種目目、ケーブルアームカールです！肘の位置を固定して、下ろす時に3秒かけると一気にパンプしますよ。スタートです！"
+        },
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "平日ウエイト全完走！華金パンチ＆腹筋コンボへ",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 45,
+          "pulley": "ヨガマット",
+          "attachment": "立位パンチ ➔ マット腹筋",
+          "actionSteps": [
+            "① 水分補給をする",
+            "② パンプした腕で3分ボクシング",
+            "③ 続けて寝たまま腹筋仕上げ"
+          ],
+          "setupNote": "今週のウエイトパート全制覇！パンプした腕で3分パンチを打ち込んでからフロア腹筋で締めます！",
+          "cues": [
+            "膝は曲げず上半身だけでOK！"
+          ],
+          "speech": "今週のマシンパート全完走、おめでとうございます！お水を飲んだら、パンプした腕で爽快に3分間ボクシングを打ち込んでいきましょう！"
+        },
+        {
+          "type": "video",
+          "phase": "PHASE 2: HIIT (1/3)",
+          "badge": "爽快パンチ 1/3",
+          "title": "【3分ボクシングダンス】パンプした腕で打ち込むボクササイズ",
+          "channel": "Marina Takewaki",
+          "videoId": "DpANRK3AldY",
+          "startSeconds": 10,
+          "durationSeconds": 165,
+          "note": "膝の屈伸は入れず、シャープなパンチ連打で心拍数を上げます！",
+          "speech": "華金コンボ1本目、3分ボクシングスタートです！気持ちよくパンチを打ち込んでいきましょう！",
+          "endSeconds": 175
+        },
+        {
+          "type": "video",
+          "phase": "PHASE 2: HIIT (2/3)",
+          "badge": "フロア下腹 2/3",
+          "title": "【3分下腹】寝たまま下腹のお肉をごっそり落とす簡単筋トレ",
+          "channel": "Marina Takewaki",
+          "videoId": "kcj40PNGgbQ",
+          "startSeconds": 16,
+          "durationSeconds": 185,
+          "note": "マットに仰向けになり、下腹部をさらに引き締めます！",
+          "speech": "そのままヨガマットに仰向けになって、2本目は寝たまま下腹トレーニングです！",
+          "endSeconds": 201
+        },
+        {
+          "type": "video",
+          "phase": "PHASE 2: HIIT (3/3)",
+          "badge": "ラスト2分腹筋 3/3",
+          "title": "【毎日2分】もっと！腹筋を割るフィニッシャー",
+          "channel": "のがちゃんねる",
+          "videoId": "ygeKbuKSk30",
+          "startSeconds": 4,
+          "durationSeconds": 129,
+          "note": "ラスト2分！これを乗り切れば最高に気持ちいい週末ストレッチです！",
+          "speech": "ラスト2分間の腹筋フィニッシャーです！ここを乗り切れば気持ちいいストレッチが待っていますよ、ファイトです！",
+          "endSeconds": 133
+        },
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "金曜フィニッシュ！じっくり股割りへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "ヨガマット",
+          "attachment": "開脚ストレッチ",
+          "actionSteps": [
+            "① 大きく深呼吸する",
+            "② 汗を拭いてリラックス",
+            "③ 今週の開脚深まりをチェック"
+          ],
+          "setupNote": "1週間の追い込み完走お疲れ様でした！温まり切った体で開脚を深めましょう。",
+          "cues": [
+            "終わったら開脚レベルも記録してみてくださいね"
+          ],
+          "speech": "平日の追い込みパート、すべて完走です！本当にお疲れ様でした。温まりきった体で、今週どれくらい柔らかくなったか楽しみながら股割りストレッチにいきましょう！"
+        },
+        {
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
+        },
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ヨガマット（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① あぐら（または仰向け）で楽にする",
+            "② 肩の力を抜き目を軽く閉じる",
+            "③ 鼻から吸ってゆっくり吐く呼吸へ"
+          ],
+          "setupNote": "最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。",
+          "cues": [
+            "膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。"
+        },
+        {
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 日曜（自宅・ホテル共通 リラックス②） --------------------
-    0: {
-      dayKey: 0,
-      dayLabel: '日曜',
-      shortTheme: '膝股ケア・自律神経',
-      title: 'SUNDAY RESET｜股関節・お尻ケア ＆ 自律神経リセットヨガ',
-      subtitle: '膝の負担を抜く股関節・お尻ほぐしと、寝たまま自律神経ヨガで翌週へ100%充電する40分',
-      defaultStretchId: 'split_road_2',
-      defaultMeditationId: 'meditation_harp',
-      blocks: [
+    "6": {
+      "dayKey": 6,
+      "dayLabel": "土曜",
+      "shortTheme": "回復ヨガ・深開脚",
+      "title": "ACTIVE RECOVERY｜肩甲骨リリースヨガ ＆ 長尺ディープ股割り",
+      "subtitle": "土日は痛めつけないご褒美ケア！平日の上半身トレの張りを抜き、時間をかけて股割りを深める40分",
+      "defaultStretchId": "split_road_1",
+      "defaultMeditationId": "meditation_mindfulness",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP',
-          title: 'サンデーリセット｜関節ケア＆休息準備',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: '器具なし（自宅・ホテル共通）',
-          attachment: 'マット・ベッド上でもOK',
-          actionSteps: ['① 楽な姿勢で座る', '② 股関節とお尻をほぐして膝を守る', '③ 最後は寝たまま自律神経ヨガ'],
-          setupNote: '日曜日は股関節とお尻を緩めて膝の負担を抜き、最後は寝たままヨガで心身をフル充電します。',
-          cues: ['頑張らないことが今日のゴールです'],
-          speech: '日曜日ですね。今日は股関節とお尻をほぐして膝の負担を抜いてから、最後は寝たままできるヨガで自律神経を整えていきましょうね。'
+          "type": "warmup",
+          "phase": "PREP",
+          "title": "週末リラックス準備｜マットで深呼吸",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "器具なし（自宅・ホテル共通）",
+          "attachment": "ヨガマット ＋ クッション",
+          "actionSteps": [
+            "① ゆったり座って目を閉じる",
+            "② 肩の力をストンと抜く",
+            "③ 前半ヨガ ➔ 後半ディープ開脚"
+          ],
+          "setupNote": "土曜日は追い込みゼロ。前半18分は肩甲骨・上半身ほぐしヨガ、後半20分は長尺のディープ開脚です。",
+          "cues": [
+            "膝に違和感があるポーズはあぐらや長座に変えてOK"
+          ],
+          "speech": "土曜日ですね、1週間本当にお疲れ様でした！今日は筋肉を痛めつけず、ヨガと長めの開脚ストレッチでじっくり体を癒やしていきましょうね。"
         },
         {
-          type: 'video',
-          phase: 'PART 1: HIP MOBILITY',
-          badge: 'Step 1（12分）：股関節じっくり解放',
-          title: 'オガトレ｜股関節が『超』硬い人向け！体が柔らかくなるストレッチ',
-          channel: 'オガトレ',
-          videoId: '0jhnX8BPzes',
-          startSeconds: 30,
-          durationSeconds: 690,
-          note: '股関節がスムーズに動くほど、膝関節への日常の負担が減っていきます。',
-          speech: 'まずは股関節をじっくり解放する12分間です。痛くない範囲で気持ちよく動かしていきましょう。'
+          "type": "video",
+          "phase": "PART 1: UPPER BODY YOGA",
+          "badge": "前半18分：肩甲骨・上半身ほぐし",
+          "title": "B-life｜肩甲骨をほぐすヨガ 肩こり・腰痛さようなら！ #62",
+          "channel": "B-Flow (Mariko)",
+          "videoId": "IaO7CKkB8d8",
+          "startSeconds": 46,
+          "durationSeconds": 1052,
+          "note": "平日の筋トレやデスクワークで張った胸・背中・肩甲骨まわりが驚くほど軽くなります。",
+          "speech": "前半は肩甲骨をほぐすヨガです。深い呼吸に合わせて、上半身の張りをじんわりほどいていきましょう。",
+          "endSeconds": 1098,
+          "shortEndSeconds": 406
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '続いてお尻深層リリースへ',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 20,
-          pulley: 'マット上',
-          attachment: 'お尻ストレッチ',
-          actionSteps: ['① 力を抜いたまま待機', '② お尻の外側・深層を8分間ほぐす'],
-          setupNote: 'そのままお尻の筋肉をほぐして下半身の血流を最大化します。',
-          cues: ['お尻が緩むと膝のお皿の引っ張りも軽くなります'],
-          speech: '続いてはお尻のストレッチです。お尻の外側が緩むと膝もすごくラクになりますよ。そのまま続けましょう！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "水分補給 ＆ 後半20分ディープ股割りへ",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 30,
+          "pulley": "ヨガマット",
+          "attachment": "ディープストレッチ",
+          "actionSteps": [
+            "① お水をひと口飲む",
+            "② 骨盤を楽に立てる",
+            "③ 20分間の深層開脚へ"
+          ],
+          "setupNote": "上半身が軽くなりました！後半は1ポーズを長くキープして股割りの可動域を一段引き上げます。",
+          "cues": [
+            "7割の伸びで脱力するのが一番柔らかくなります"
+          ],
+          "speech": "肩まわりがスッキリしましたね！お水をひと口飲んだら、後半は20分間かけてじっくり股関節と全身を深層から伸ばしていきましょう。"
         },
         {
-          type: 'video',
-          phase: 'PART 2: GLUTE RELEASE',
-          badge: 'Step 2（8分）：お尻ほぐし＆膝負担軽減',
-          title: 'オガトレ｜おしりのストレッチ【決定版】',
-          channel: 'オガトレ',
-          videoId: 'KKLblqmPbKA',
-          startSeconds: 15,
-          durationSeconds: 460,
-          note: 'お尻の深層筋をほぐして開脚と膝ケアを同時に進めます。',
-          speech: '8分間のお尻ストレッチ、スタートです！呼吸を止めずにじんわり伸ばしていきましょう。'
+          "type": "video",
+          "phase": "PART 2: DEEP SPLIT & FULL BODY",
+          "badge": "後半20分：全身＆股関節ディープ開脚",
+          "title": "オガトレ｜体が硬い人のための全身ディープストレッチ（20分セクション）",
+          "channel": "オガトレ",
+          "videoId": "sQNv7j0N0sw",
+          "startSeconds": 12,
+          "durationSeconds": 1201,
+          "note": "普段の12分では届かない深層筋膜までじんわり緩みます。",
+          "speech": "それではディープストレッチ、スタートです。無理に押さず、重力と呼吸に身を任せてゆっくり伸ばしてくださいね。",
+          "endSeconds": 1213,
+          "shortEndSeconds": 373
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ラスト18分：寝たまま自律神経リセットヨガ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'マット / ベッド上OK',
-          attachment: '枕やクッション準備',
-          actionSteps: ['① 照明を少し落としてもOK', '② 仰向けでリラックス', '③ 明日の月曜へフル充電'],
-          setupNote: '最後は寝たままできる癒やしヨガで1週間を締めくくります。',
-          cues: ['そのまま眠くなるくらい脱力してOKです'],
-          speech: 'ラスト18分は、寝たままでできる自律神経リセットヨガです。明日からまた気持ちよくスタートできるよう、ゆっくり疲れを癒やしてくださいね。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ヨガマット（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① あぐら（または仰向け）で楽にする",
+            "② 肩の力を抜き目を軽く閉じる",
+            "③ 鼻から吸ってゆっくり吐く呼吸へ"
+          ],
+          "setupNote": "最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。",
+          "cues": [
+            "膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。"
         },
         {
-          type: 'video',
-          phase: 'PART 3: AUTONOMIC NERVE RESET',
-          badge: 'Step 3（18分）：疲労回復・自律神経ヨガ',
-          title: 'B-life｜【寝る前のヨガ】全身の疲れを癒し、自律神経を整える #481',
-          channel: 'B-Flow (Mariko)',
-          videoId: 'fJJrJ2dd1U4',
-          startSeconds: 15,
-          durationSeconds: 1050,
-          note: '深く穏やかな呼吸で心拍を整え、最高の回復モードへ入ります。',
-          speech: 'それではリラックスヨガ、スタートです。今日も1日、本当にお疲れ様でした。'
-        },
-        {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ヨガマット（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① あぐら（または仰向け）で楽にする', '② 肩の力を抜き目を軽く閉じる', '③ 鼻から吸ってゆっくり吐く呼吸へ'],
-          setupNote: '最後は5分間の瞑想で自律神経と脳の疲れをリセットして締めくくります。',
-          cues: ['膝が気になる場合は足を伸ばして座るか、仰向けで目を閉じてもOKです'],
-          speech: 'ストレッチお疲れ様でした！最後は5分間の瞑想で、脳の疲れと自律神経を穏やかに整えていきましょう。楽な姿勢になって、そっと目を閉じてくださいね。'
-        },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     }
   },
-
-  // ==========================================================================
-  // 🏨 出張ホテルモード（月〜金：器具なし・ベッド＆バスタオル活用・完全静音・膝保護）
-  // ==========================================================================
-  hotelPlans: {
-    // -------------------- 月曜（ホテル・胸） --------------------
-    1: {
-      dayKey: 1,
-      dayLabel: '月曜',
-      shortTheme: '胸(ホテル)',
-      title: 'HOTEL CHEST｜ベッド端プッシュアップ ＆ 合掌スクイーズ',
-      subtitle: '出張先の狭い客室でも足音ゼロ・膝つきゼロ！ベッドの縁と自重アイソメトリックで大胸筋を追い込む40分',
-      defaultStretchId: 'split_road_1',
-      defaultMeditationId: 'meditation_mindfulness',
-      blocks: [
+  "hotelPlans": {
+    "1": {
+      "dayKey": 1,
+      "dayLabel": "月曜",
+      "shortTheme": "胸(ホテル)",
+      "title": "HOTEL CHEST｜ベッド端プッシュアップ ＆ 合掌スクイーズ",
+      "subtitle": "出張先の狭い客室でも足音ゼロ・膝つきゼロ！ベッドの縁と自重アイソメトリックで大胸筋を追い込む40分",
+      "defaultStretchId": "split_road_1",
+      "defaultMeditationId": "meditation_mindfulness",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP (HOTEL)',
-          title: '出張お疲れ様です！肩回し＆ベッド端の安全確認',
-          image: './images/exercises/warmup_shoulder_roll.jpg',
-          durationSeconds: 45,
-          pulley: 'ホテルのベッド端',
-          attachment: 'バスタオル1枚（床マット用）',
-          actionSteps: ['① ベッドが動かないか確認する', '② 床にバスタオルを敷いておく', '③ 肩を大きく後ろへ10回まわす'],
-          setupNote: '移動や仕事で固まった肩甲骨と胸を大きく開きます。ベッドにキャスターがある場合は壁側で使いましょう。',
-          cues: ['ホテルでも膝を床につかず安全に胸をパンプできます！'],
-          speech: '出張お疲れ様です！ホテルのお部屋でも、ベッドの端を使えば膝に負担をかけずにしっかり胸を鍛えられますよ。まずは肩を大きく回してほぐしましょう！'
+          "type": "warmup",
+          "phase": "PREP (HOTEL)",
+          "title": "出張お疲れ様です！肩回し＆ベッド端の安全確認",
+          "image": "./images/exercises/warmup_shoulder_roll.jpg",
+          "durationSeconds": 45,
+          "pulley": "ホテルのベッド端",
+          "attachment": "バスタオル1枚（床マット用）",
+          "actionSteps": [
+            "① ベッドが動かないか確認する",
+            "② 床にバスタオルを敷いておく",
+            "③ 肩を大きく後ろへ10回まわす"
+          ],
+          "setupNote": "移動や仕事で固まった肩甲骨と胸を大きく開きます。ベッドにキャスターがある場合は壁側で使いましょう。",
+          "cues": [
+            "ホテルでも膝を床につかず安全に胸をパンプできます！"
+          ],
+          "speech": "出張お疲れ様です！ホテルのお部屋でも、ベッドの端を使えば膝に負担をかけずにしっかり胸を鍛えられますよ。まずは肩を大きく回してほぐしましょう！"
         },
         {
-          type: 'machine',
-          id: 'hotel_mon_wide_incline',
-          phase: 'PHASE 1: HOTEL BODYWEIGHT',
-          title: '① ベッド端インクライン・ワイドプッシュアップ',
-          image: './images/exercises/hotel_incline_pushup.jpg',
-          targetMuscle: '大胸筋 全体・下部',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: 'ホテルベッドの縁',
-          attachment: '手幅：肩幅の1.5倍（ワイド）',
-          actionSteps: ['① ベッドの端に肩幅より広く手をつく', '② 頭からかかとまで一直線に保つ（膝はつかない）', '③ 3秒かけて胸をベッド端に近づけ力強く押す'],
-          setupNote: 'イラストのようにベッドの縁に広く手をつき、ゆっくり3秒かけて下ろすことで自重でも強烈な負荷が入ります！',
-          cues: ['腰が反らないようお腹に軽く力を入れる', 'きつくなったら歩幅を少しベッドに近づければ負荷調整OK'],
-          speechIntro: '1種目目はベッドの端を使ったワイドプッシュアップです！3秒かけてゆっくり胸を下ろすと、マシンに負けないくらいしっかり効きますよ。スタートです！'
+          "type": "machine",
+          "id": "hotel_mon_wide_incline",
+          "phase": "PHASE 1: HOTEL BODYWEIGHT",
+          "title": "① ベッド端インクライン・ワイドプッシュアップ",
+          "image": "./images/exercises/hotel_incline_pushup.jpg",
+          "targetMuscle": "大胸筋 全体・下部",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "ホテルベッドの縁",
+          "attachment": "手幅：肩幅の1.5倍（ワイド）",
+          "actionSteps": [
+            "① ベッドの端に肩幅より広く手をつく",
+            "② 頭からかかとまで一直線に保つ（膝はつかない）",
+            "③ 3秒かけて胸をベッド端に近づけ力強く押す"
+          ],
+          "setupNote": "イラストのようにベッドの縁に広く手をつき、ゆっくり3秒かけて下ろすことで自重でも強烈な負荷が入ります！",
+          "cues": [
+            "腰が反らないようお腹に軽く力を入れる",
+            "きつくなったら歩幅を少しベッドに近づければ負荷調整OK"
+          ],
+          "speechIntro": "1種目目はベッドの端を使ったワイドプッシュアップです！3秒かけてゆっくり胸を下ろすと、マシンに負けないくらいしっかり効きますよ。スタートです！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '手幅を狭めてナローフォーム確認',
-          image: './images/exercises/hotel_diamond_pushup.jpg',
-          durationSeconds: 40,
-          pulley: 'ホテルベッド（または安定デスク）',
-          attachment: '手幅：肩幅より狭め',
-          actionSteps: ['① 手首を軽くブラブラ振って休める', '② 次は手幅を肩幅より狭くセット', '③ 脇を締めて胸の内側を狙う'],
-          setupNote: '次は手幅を狭くして、大胸筋の内側と二の腕に効かせるナロープッシュアップです。',
-          cues: ['手首が窮屈なら拳ひとつ分あけたハの字でOK'],
-          speech: 'いいフォームですね！一度手首を軽く振ってリラックスしましょう。次は手幅を少し狭くして、胸の内側を狙っていきますよ。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "手幅を狭めてナローフォーム確認",
+          "image": "./images/exercises/hotel_diamond_pushup.jpg",
+          "durationSeconds": 40,
+          "pulley": "ホテルベッド（または安定デスク）",
+          "attachment": "手幅：肩幅より狭め",
+          "actionSteps": [
+            "① 手首を軽くブラブラ振って休める",
+            "② 次は手幅を肩幅より狭くセット",
+            "③ 脇を締めて胸の内側を狙う"
+          ],
+          "setupNote": "次は手幅を狭くして、大胸筋の内側と二の腕に効かせるナロープッシュアップです。",
+          "cues": [
+            "手首が窮屈なら拳ひとつ分あけたハの字でOK"
+          ],
+          "speech": "いいフォームですね！一度手首を軽く振ってリラックスしましょう。次は手幅を少し狭くして、胸の内側を狙っていきますよ。"
         },
         {
-          type: 'machine',
-          id: 'hotel_mon_close_incline',
-          phase: 'PHASE 1: HOTEL BODYWEIGHT',
-          title: '② ベッド端ナロープッシュアップ',
-          image: './images/exercises/hotel_diamond_pushup.jpg',
-          targetMuscle: '大胸筋 内側・上腕三頭筋',
-          sets: 3,
-          workSeconds: 45,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: 'ホテルベッド（またはデスク）',
-          attachment: 'ナロー（狭め）スタンス',
-          actionSteps: ['① ベッド端に肩幅より狭く手をつく', '② 脇を締めて肘を後ろに引きながら下ろす', '③ 押し切った位置で胸の谷間をギュッと寄せる'],
-          setupNote: 'イラストのように脇を締めて上下し、一番上で胸の内側を強く収縮させます！',
-          cues: ['きつい場合は壁に手をつくウォールプッシュアップに変えてもOK'],
-          speechIntro: '2種目目、ナロープッシュアップいきましょう！脇を締めて、押し切ったところで胸の真ん中をギュッと寄せる意識ですよ。スタート！'
+          "type": "machine",
+          "id": "hotel_mon_close_incline",
+          "phase": "PHASE 1: HOTEL BODYWEIGHT",
+          "title": "② ベッド端ナロープッシュアップ",
+          "image": "./images/exercises/hotel_diamond_pushup.jpg",
+          "targetMuscle": "大胸筋 内側・上腕三頭筋",
+          "sets": 3,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "ホテルベッド（またはデスク）",
+          "attachment": "ナロー（狭め）スタンス",
+          "actionSteps": [
+            "① ベッド端に肩幅より狭く手をつく",
+            "② 脇を締めて肘を後ろに引きながら下ろす",
+            "③ 押し切った位置で胸の谷間をギュッと寄せる"
+          ],
+          "setupNote": "イラストのように脇を締めて上下し、一番上で胸の内側を強く収縮させます！",
+          "cues": [
+            "きつい場合は壁に手をつくウォールプッシュアップに変えてもOK"
+          ],
+          "speechIntro": "2種目目、ナロープッシュアップいきましょう！脇を締めて、押し切ったところで胸の真ん中をギュッと寄せる意識ですよ。スタート！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '立ち姿勢（またはベッド座り）で合掌準備',
-          image: './images/exercises/hotel_prayer_press.jpg',
-          durationSeconds: 40,
-          pulley: 'その場でOK（立位 or ベッド座位）',
-          attachment: '器具なし（自分の両手）',
-          actionSteps: ['① お水をひと口飲む', '② 胸の前で両手のひらを合わせる', '③ 押し合う力を確認'],
-          setupNote: '3種目目は器具ゼロで大胸筋を限界までパンプさせる「合掌アイソメトリック・スクイーズ」です！',
-          cues: ['さっきのプッシュアップで疲労した胸を完全に絞り切ります'],
-          speech: '胸の仕上げは、両手を全力で押し合うアイソメトリック種目です。ベッドに座ったままでも立ったままでもオッケーですよ！'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "立ち姿勢（またはベッド座り）で合掌準備",
+          "image": "./images/exercises/hotel_prayer_press.jpg",
+          "durationSeconds": 40,
+          "pulley": "その場でOK（立位 or ベッド座位）",
+          "attachment": "器具なし（自分の両手）",
+          "actionSteps": [
+            "① お水をひと口飲む",
+            "② 胸の前で両手のひらを合わせる",
+            "③ 押し合う力を確認"
+          ],
+          "setupNote": "3種目目は器具ゼロで大胸筋を限界までパンプさせる「合掌アイソメトリック・スクイーズ」です！",
+          "cues": [
+            "さっきのプッシュアップで疲労した胸を完全に絞り切ります"
+          ],
+          "speech": "胸の仕上げは、両手を全力で押し合うアイソメトリック種目です。ベッドに座ったままでも立ったままでもオッケーですよ！"
         },
         {
-          type: 'machine',
-          id: 'hotel_mon_prayer_press',
-          phase: 'PHASE 1: HOTEL ISOMETRIC',
-          title: '③ 合掌アイソメトリック・チェストスクイーズ',
-          image: './images/exercises/hotel_prayer_press.jpg',
-          targetMuscle: '大胸筋 中央ライン（完全収縮）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 45,
-          hidePlates: true,
-          pulley: '立位 または ベッド座位',
-          attachment: '両手のひら全力プレス',
-          actionSteps: ['① 胸の前で両手のひらを8割〜全力で押し合う', '② 押し合ったまま20cm前へ出し、胸へ戻す', '③ 45秒間、1秒も押し合う力を抜かない！'],
-          setupNote: 'イラストのように両手のひらを強く押し合い続けながら、ゆっくり前後にスライドさせます！',
-          cues: ['肩を下げて胸の筋肉がカチカチになっているのを感じる', '呼吸は止めずに小さく吐き続ける'],
-          speechIntro: 'それでは合掌チェストスクイーズ、スタートです！手のひら同士をずっと押し合ったまま、ゆっくり前後に動かして胸をパンプさせましょう！'
+          "type": "machine",
+          "id": "hotel_mon_prayer_press",
+          "phase": "PHASE 1: HOTEL ISOMETRIC",
+          "title": "③ 合掌アイソメトリック・チェストスクイーズ",
+          "image": "./images/exercises/hotel_prayer_press.jpg",
+          "targetMuscle": "大胸筋 中央ライン（完全収縮）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 45,
+          "hidePlates": true,
+          "pulley": "立位 または ベッド座位",
+          "attachment": "両手のひら全力プレス",
+          "actionSteps": [
+            "① 胸の前で両手のひらを8割〜全力で押し合う",
+            "② 押し合ったまま20cm前へ出し、胸へ戻す",
+            "③ 45秒間、1秒も押し合う力を抜かない！"
+          ],
+          "setupNote": "イラストのように両手のひらを強く押し合い続けながら、ゆっくり前後にスライドさせます！",
+          "cues": [
+            "肩を下げて胸の筋肉がカチカチになっているのを感じる",
+            "呼吸は止めずに小さく吐き続ける"
+          ],
+          "speechIntro": "それでは合掌チェストスクイーズ、スタートです！手のひら同士をずっと押し合ったまま、ゆっくり前後に動かして胸をパンプさせましょう！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '胸パンプ完了！床バスタオル（またはベッド）へ',
-          image: './images/exercises/hotel_floor_crunch.jpg',
-          durationSeconds: 45,
-          pulley: '床バスタオル または ベッド上',
-          attachment: '仰向けスタンバイ',
-          actionSteps: ['① 水分を摂る', '② バスタオルの上（または固めのベッド）に仰向け', '③ 足音ゼロの腹筋HIITへ'],
-          setupNote: '器具なしでも大胸筋が熱くなりました！そのまま静音フロア腹筋HIITへ入ります。',
-          cues: ['下の階に一切響かない仰向けメニューです'],
-          speech: 'ホテルでの胸パート完走、ナイスパンプです！お水を飲んだら、バスタオルの上かベッドの上に仰向けになってくださいね。静かにできる腹筋パートに入りますよ！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "胸パンプ完了！床バスタオル（またはベッド）へ",
+          "image": "./images/exercises/hotel_floor_crunch.jpg",
+          "durationSeconds": 45,
+          "pulley": "床バスタオル または ベッド上",
+          "attachment": "仰向けスタンバイ",
+          "actionSteps": [
+            "① 水分を摂る",
+            "② バスタオルの上（または固めのベッド）に仰向け",
+            "③ 足音ゼロの腹筋HIITへ"
+          ],
+          "setupNote": "器具なしでも大胸筋が熱くなりました！そのまま静音フロア腹筋HIITへ入ります。",
+          "cues": [
+            "下の階に一切響かない仰向けメニューです"
+          ],
+          "speech": "ホテルでの胸パート完走、ナイスパンプです！お水を飲んだら、バスタオルの上かベッドの上に仰向けになってくださいね。静かにできる腹筋パートに入りますよ！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT HIIT',
-          badge: 'ホテルOK・完全静音フロア腹筋',
-          title: '【8分完全版】腹筋サーキット（仰向け・足音ゼロ）',
-          channel: '腹筋集中サーキット',
-          videoId: 'GoxIQp8VtTg',
-          startSeconds: 15,
-          durationSeconds: 490,
-          note: 'ホテルの床やベッドの上でも静かに追い込める8分間です！',
-          speech: '8分間の静音腹筋サーキット、スタートです！反動を使わずお腹の力だけでじっくり効かせていきましょう！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT HIIT",
+          "badge": "ホテルOK・完全静音フロア腹筋",
+          "title": "【8分完全版】腹筋サーキット（仰向け・足音ゼロ）",
+          "channel": "uFit (林ケイスケ)",
+          "videoId": "GoxIQp8VtTg",
+          "startSeconds": 2,
+          "durationSeconds": 483,
+          "note": "ホテルの床やベッドの上でも静かに追い込める8分間です！",
+          "speech": "8分間の静音腹筋サーキット、スタートです！反動を使わずお腹の力だけでじっくり効かせていきましょう！",
+          "endSeconds": 485
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '出張の移動疲れも抜く股割りタイムへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: 'ベッド上 または 床タオル上',
-          attachment: '開脚ストレッチ',
-          actionSteps: ['① 深呼吸して汗を拭く', '② ベッドの上でも広く使える場所へ', '③ 股関節の詰まりを解放'],
-          setupNote: '新幹線や車移動で固まった股関節を伸ばす最高のタイミングです！',
-          cues: ['ベッドの上なら膝をついても痛くないので快適です'],
-          speech: 'お疲れ様でした！出張の移動で固まりやすい股関節を、ここからのストレッチでじっくり柔らかくほぐしていきましょうね。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "出張の移動疲れも抜く股割りタイムへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "ベッド上 または 床タオル上",
+          "attachment": "開脚ストレッチ",
+          "actionSteps": [
+            "① 深呼吸して汗を拭く",
+            "② ベッドの上でも広く使える場所へ",
+            "③ 股関節の詰まりを解放"
+          ],
+          "setupNote": "新幹線や車移動で固まった股関節を伸ばす最高のタイミングです！",
+          "cues": [
+            "ベッドの上なら膝をついても痛くないので快適です"
+          ],
+          "speech": "お疲れ様でした！出張の移動で固まりやすい股関節を、ここからのストレッチでじっくり柔らかくほぐしていきましょうね。"
         },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ホテルベッド上（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① ベッドの上で楽な姿勢になる', '② 照明を少し落として目を閉じる', '③ 深い呼吸だけに意識を向ける'],
-          setupNote: '出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。',
-          cues: ['ベッドに仰向けになってそのまま脱力しても最高に整います'],
-          speech: 'ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。'
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
         },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ホテルベッド上（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① ベッドの上で楽な姿勢になる",
+            "② 照明を少し落として目を閉じる",
+            "③ 深い呼吸だけに意識を向ける"
+          ],
+          "setupNote": "出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。",
+          "cues": [
+            "ベッドに仰向けになってそのまま脱力しても最高に整います"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。"
+        },
+        {
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 火曜（ホテル・背中：バスタオル活用！） --------------------
-    2: {
-      dayKey: 2,
-      dayLabel: '火曜',
-      shortTheme: '背中(ホテル)',
-      title: 'HOTEL BACK｜バスタオル1枚で彫る広背筋＆姿勢ケア',
-      subtitle: 'ホテル備え付けのバスタオルがケーブルマシンに化ける！引っ張り張力とアイソメトリックで背中を鍛える40分',
-      defaultStretchId: 'split_road_5',
-      defaultMeditationId: 'meditation_harp',
-      blocks: [
+    "2": {
+      "dayKey": 2,
+      "dayLabel": "火曜",
+      "shortTheme": "背中(ホテル)",
+      "title": "HOTEL BACK｜バスタオル1枚で彫る広背筋＆姿勢ケア",
+      "subtitle": "ホテル備え付けのバスタオルがケーブルマシンに化ける！引っ張り張力とアイソメトリックで背中を鍛える40分",
+      "defaultStretchId": "split_road_5",
+      "defaultMeditationId": "meditation_harp",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP (HOTEL)',
-          title: 'ホテルの【バスタオル1枚】を細長く持って準備！',
-          image: './images/exercises/hotel_towel_pulldown.jpg',
-          durationSeconds: 45,
-          pulley: '立位 または ベッド座位',
-          attachment: 'ホテルのバスタオル 1枚',
-          actionSteps: ['① バスタオルを縦長にクルクル巻く', '② 肩幅より広く両端を握る', '③ 左右へピンと引っ張る感覚を確認'],
-          setupNote: 'ホテルで鍛えにくい「背中」も、バスタオルを左右へ引き裂くように引っ張りながら動かすことで強烈に入ります！',
-          cues: ['タオルがたるまないよう常に外へ引っ張り続けるのが極意です'],
-          speech: '出張お疲れ様です！火曜日のホテル背中メニューは、お部屋にあるバスタオルを1枚使いますよ。縦に細長く持って、左右にピンと引っ張る準備をしてくださいね！'
+          "type": "warmup",
+          "phase": "PREP (HOTEL)",
+          "title": "ホテルの【バスタオル1枚】を細長く持って準備！",
+          "image": "./images/exercises/hotel_towel_pulldown.jpg",
+          "durationSeconds": 45,
+          "pulley": "立位 または ベッド座位",
+          "attachment": "ホテルのバスタオル 1枚",
+          "actionSteps": [
+            "① バスタオルを縦長にクルクル巻く",
+            "② 肩幅より広く両端を握る",
+            "③ 左右へピンと引っ張る感覚を確認"
+          ],
+          "setupNote": "ホテルで鍛えにくい「背中」も、バスタオルを左右へ引き裂くように引っ張りながら動かすことで強烈に入ります！",
+          "cues": [
+            "タオルがたるまないよう常に外へ引っ張り続けるのが極意です"
+          ],
+          "speech": "出張お疲れ様です！火曜日のホテル背中メニューは、お部屋にあるバスタオルを1枚使いますよ。縦に細長く持って、左右にピンと引っ張る準備をしてくださいね！"
         },
         {
-          type: 'machine',
-          id: 'hotel_tue_towel_pulldown',
-          phase: 'PHASE 1: HOTEL TOWEL',
-          title: '① バスタオル・テンションラットプルダウン',
-          image: './images/exercises/hotel_towel_pulldown.jpg',
-          targetMuscle: '広背筋 上部・大円筋',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: 'ベッド座位 または 立位',
-          attachment: 'バスタオル（外へ全力牽引）',
-          actionSteps: ['① 頭上でタオルを左右に全力で引っ張り合う', '② 張力を保ったまま鎖骨の前へ3秒かけて引き下ろす', '③ 脇の下でギュッと1秒止めてゆっくり戻す'],
-          setupNote: 'イラストのようにタオルを外側へ引きちぎる勢いで引っ張り続けながら、鎖骨へ引き下ろします！',
-          cues: ['引っ張る力を緩めなければ広背筋が驚くほど熱くなります！'],
-          speechIntro: '1種目目はタオル・ラットプルダウンです！タオルを左右にグッと引っ張り合ったまま、鎖骨に向かってゆっくり引き下ろしていきましょう。スタートです！'
+          "type": "machine",
+          "id": "hotel_tue_towel_pulldown",
+          "phase": "PHASE 1: HOTEL TOWEL",
+          "title": "① バスタオル・テンションラットプルダウン",
+          "image": "./images/exercises/hotel_towel_pulldown.jpg",
+          "targetMuscle": "広背筋 上部・大円筋",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "ベッド座位 または 立位",
+          "attachment": "バスタオル（外へ全力牽引）",
+          "actionSteps": [
+            "① 頭上でタオルを左右に全力で引っ張り合う",
+            "② 張力を保ったまま鎖骨の前へ3秒かけて引き下ろす",
+            "③ 脇の下でギュッと1秒止めてゆっくり戻す"
+          ],
+          "setupNote": "イラストのようにタオルを外側へ引きちぎる勢いで引っ張り続けながら、鎖骨へ引き下ろします！",
+          "cues": [
+            "引っ張る力を緩めなければ広背筋が驚くほど熱くなります！"
+          ],
+          "speechIntro": "1種目目はタオル・ラットプルダウンです！タオルを左右にグッと引っ張り合ったまま、鎖骨に向かってゆっくり引き下ろしていきましょう。スタートです！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: 'ベッドの上にうつ伏せになってタオルを持つ',
-          image: './images/exercises/hotel_prone_back_pull.jpg',
-          durationSeconds: 45,
-          pulley: 'ホテルベッド上（うつ伏せ）',
-          attachment: 'バスタオル保持',
-          actionSteps: ['① ベッドの上にうつ伏せになる', '② 両手でタオルを持って前へ伸ばす', '③ 腰を反りすぎず胸だけ軽く浮かす'],
-          setupNote: '次はベッドの上でうつ伏せになり、重力＋タオル張力で背中の厚みを作ります！',
-          cues: ['膝への負担ゼロで背中全体に効く快適種目です'],
-          speech: '背中に効いてきましたね！次はベッドの上にうつ伏せになって、両手でタオルを前に持ってスタンバイしてください。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "ベッドの上にうつ伏せになってタオルを持つ",
+          "image": "./images/exercises/hotel_prone_back_pull.jpg",
+          "durationSeconds": 45,
+          "pulley": "ホテルベッド上（うつ伏せ）",
+          "attachment": "バスタオル保持",
+          "actionSteps": [
+            "① ベッドの上にうつ伏せになる",
+            "② 両手でタオルを持って前へ伸ばす",
+            "③ 腰を反りすぎず胸だけ軽く浮かす"
+          ],
+          "setupNote": "次はベッドの上でうつ伏せになり、重力＋タオル張力で背中の厚みを作ります！",
+          "cues": [
+            "膝への負担ゼロで背中全体に効く快適種目です"
+          ],
+          "speech": "背中に効いてきましたね！次はベッドの上にうつ伏せになって、両手でタオルを前に持ってスタンバイしてください。"
         },
         {
-          type: 'machine',
-          id: 'hotel_tue_prone_row',
-          phase: 'PHASE 1: HOTEL TOWEL',
-          title: '② うつ伏せタオル・バックエクステンションロー',
-          image: './images/exercises/hotel_prone_back_pull.jpg',
-          targetMuscle: '広背筋 中部・脊柱起立筋・僧帽筋',
-          sets: 3,
-          workSeconds: 45,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: 'ホテルベッド上（うつ伏せ）',
-          attachment: 'バスタオル',
-          actionSteps: ['① うつ伏せで胸を少し浮かせタオルをピンと張る', '② 鎖骨へ向かってタオルを引きつけ肩甲骨を寄せる', '③ 2秒キープして前へ伸ばす'],
-          setupNote: 'イラストのように胸を軽く起こしながらタオルを引きつけ、肩甲骨をギュッと寄せます！',
-          cues: ['顎を軽く引き、首の後ろを長く保つ'],
-          speechIntro: '2種目目、うつ伏せタオルローイングです！胸を少し浮かせて、肩甲骨をギュッと寄せながらタオルを引いていきましょう。スタート！'
+          "type": "machine",
+          "id": "hotel_tue_prone_row",
+          "phase": "PHASE 1: HOTEL TOWEL",
+          "title": "② うつ伏せタオル・バックエクステンションロー",
+          "image": "./images/exercises/hotel_prone_back_pull.jpg",
+          "targetMuscle": "広背筋 中部・脊柱起立筋・僧帽筋",
+          "sets": 3,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "ホテルベッド上（うつ伏せ）",
+          "attachment": "バスタオル",
+          "actionSteps": [
+            "① うつ伏せで胸を少し浮かせタオルをピンと張る",
+            "② 鎖骨へ向かってタオルを引きつけ肩甲骨を寄せる",
+            "③ 2秒キープして前へ伸ばす"
+          ],
+          "setupNote": "イラストのように胸を軽く起こしながらタオルを引きつけ、肩甲骨をギュッと寄せます！",
+          "cues": [
+            "顎を軽く引き、首の後ろを長く保つ"
+          ],
+          "speechIntro": "2種目目、うつ伏せタオルローイングです！胸を少し浮かせて、肩甲骨をギュッと寄せながらタオルを引いていきましょう。スタート！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: 'ベッドまたは床に座り、足裏にタオルをかける',
-          image: './images/exercises/hotel_towel_isometric_row.jpg',
-          durationSeconds: 50,
-          pulley: 'ベッド上 または 床長座',
-          attachment: 'バスタオル（足裏フック）',
-          actionSteps: ['① 足を前に出して座る（膝は軽く曲げて固定）', '② 両足の裏の土踏まずにタオルを引っ掛ける', '③ 背筋をピンと立てて両端を握る'],
-          setupNote: '3種目目はケーブルローイング並みの高負荷がかかる「足裏フック・アイソメトリックロー」です！',
-          cues: ['⚠️ 膝の曲げ伸ばしはせず、軽く曲げた楽な角度で固定したまま引きます'],
-          speech: '背中の仕上げは、足の裏にタオルを引っ掛けて引くアイソメトリックローです！膝は楽な角度で固定したまま、背中の力で引っ張り合いますよ。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "ベッドまたは床に座り、足裏にタオルをかける",
+          "image": "./images/exercises/hotel_towel_isometric_row.jpg",
+          "durationSeconds": 50,
+          "pulley": "ベッド上 または 床長座",
+          "attachment": "バスタオル（足裏フック）",
+          "actionSteps": [
+            "① 足を前に出して座る（膝は軽く曲げて固定）",
+            "② 両足の裏の土踏まずにタオルを引っ掛ける",
+            "③ 背筋をピンと立てて両端を握る"
+          ],
+          "setupNote": "3種目目はケーブルローイング並みの高負荷がかかる「足裏フック・アイソメトリックロー」です！",
+          "cues": [
+            "⚠️ 膝の曲げ伸ばしはせず、軽く曲げた楽な角度で固定したまま引きます"
+          ],
+          "speech": "背中の仕上げは、足の裏にタオルを引っ掛けて引くアイソメトリックローです！膝は楽な角度で固定したまま、背中の力で引っ張り合いますよ。"
         },
         {
-          type: 'machine',
-          id: 'hotel_tue_isometric_row',
-          phase: 'PHASE 1: HOTEL ISOMETRIC',
-          title: '③ 足裏フック・タオルアイソメトリックロー',
-          image: './images/exercises/hotel_towel_isometric_row.jpg',
-          targetMuscle: '広背筋・僧帽筋中部（高負荷収縮）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: '座位（足裏アンカー）',
-          attachment: 'バスタオル',
-          actionSteps: ['① 背筋を伸ばし脇腹へタオルを全力で引く', '② 「7秒間全力で引き続ける ➔ 3秒緩める」を繰り返す', '③ 肩甲骨を背骨へ寄せ切る！'],
-          setupNote: 'イラストのように足裏と背中で綱引き！「7秒全力引き＋3秒脱力」をセット終了まで繰り返します！',
-          cues: ['自分の引く力次第で何十キロものケーブルローと同じ負荷になります'],
-          speechIntro: 'それでは足裏タオルロー、スタートです！7秒間グッと全力で引き続けて、3秒緩める動きを繰り返していきましょう。背中が熱くなりますよ！'
+          "type": "machine",
+          "id": "hotel_tue_isometric_row",
+          "phase": "PHASE 1: HOTEL ISOMETRIC",
+          "title": "③ 足裏フック・タオルアイソメトリックロー",
+          "image": "./images/exercises/hotel_towel_isometric_row.jpg",
+          "targetMuscle": "広背筋・僧帽筋中部（高負荷収縮）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "座位（足裏アンカー）",
+          "attachment": "バスタオル",
+          "actionSteps": [
+            "① 背筋を伸ばし脇腹へタオルを全力で引く",
+            "② 「7秒間全力で引き続ける ➔ 3秒緩める」を繰り返す",
+            "③ 肩甲骨を背骨へ寄せ切る！"
+          ],
+          "setupNote": "イラストのように足裏と背中で綱引き！「7秒全力引き＋3秒脱力」をセット終了まで繰り返します！",
+          "cues": [
+            "自分の引く力次第で何十キロものケーブルローと同じ負荷になります"
+          ],
+          "speechIntro": "それでは足裏タオルロー、スタートです！7秒間グッと全力で引き続けて、3秒緩める動きを繰り返していきましょう。背中が熱くなりますよ！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ホテル背中トレ完走！静音腹筋＆パンチへ',
-          image: './images/exercises/hotel_floor_crunch.jpg',
-          durationSeconds: 45,
-          pulley: 'ベッド または 床バスタオル',
-          attachment: '静音コンボ準備',
-          actionSteps: ['① 水分を補給する', '② 仰向けになって待機', '③ 静音3分×3本コンボへ'],
-          setupNote: 'タオル1枚で背中がしっかりパンプしました！そのまま足音ゼロの燃焼コンボへ進みます。',
-          cues: ['客室でも一切音が出ないメニューです'],
-          speech: 'タオルでの背中トレーニング完走、素晴らしかったです！お水を飲んだら、そのまま仰向けになって静音腹筋コンボにいきましょうね。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ホテル背中トレ完走！静音腹筋＆パンチへ",
+          "image": "./images/exercises/hotel_floor_crunch.jpg",
+          "durationSeconds": 45,
+          "pulley": "ベッド または 床バスタオル",
+          "attachment": "静音コンボ準備",
+          "actionSteps": [
+            "① 水分を補給する",
+            "② 仰向けになって待機",
+            "③ 静音3分×3本コンボへ"
+          ],
+          "setupNote": "タオル1枚で背中がしっかりパンプしました！そのまま足音ゼロの燃焼コンボへ進みます。",
+          "cues": [
+            "客室でも一切音が出ないメニューです"
+          ],
+          "speech": "タオルでの背中トレーニング完走、素晴らしかったです！お水を飲んだら、そのまま仰向けになって静音腹筋コンボにいきましょうね。"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT HIIT (1/3)',
-          badge: '静音フロア下腹 1/3',
-          title: '【3分下腹】腰が痛くならない！寝たまま下腹撃退トレーニング',
-          channel: 'Marina Takewaki',
-          videoId: 'kcj40PNGgbQ',
-          startSeconds: 18,
-          durationSeconds: 195,
-          note: 'ベッドやバスタオルの上で静かに下腹を追い込みます。',
-          speech: '1本目は寝たまま3分間の下腹トレーニングです！静かに効かせていきましょう！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT HIIT (1/3)",
+          "badge": "静音フロア下腹 1/3",
+          "title": "【3分下腹】腰が痛くならない！寝たまま下腹撃退トレーニング",
+          "channel": "Marina Takewaki",
+          "videoId": "kcj40PNGgbQ",
+          "startSeconds": 16,
+          "durationSeconds": 185,
+          "note": "ベッドやバスタオルの上で静かに下腹を追い込みます。",
+          "speech": "1本目は寝たまま3分間の下腹トレーニングです！静かに効かせていきましょう！",
+          "endSeconds": 201
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT HIIT (2/3)',
-          badge: '音楽腹筋 2/3',
-          title: '【地獄の3分】ノリノリな音楽にのせて腹筋を鍛えまくる！',
-          channel: 'Marina Takewaki',
-          videoId: 'ygR8sxmBHPc',
-          startSeconds: 15,
-          durationSeconds: 195,
-          note: 'イヤホンまたは控えめ音量でも画面に合わせてしっかり燃えます！',
-          speech: '続いて2本目、音楽に合わせてお腹全体を引き締めていきますよ！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT HIIT (2/3)",
+          "badge": "音楽腹筋 2/3",
+          "title": "【地獄の3分】ノリノリな音楽にのせて腹筋を鍛えまくる！",
+          "channel": "Marina Takewaki",
+          "videoId": "ygR8sxmBHPc",
+          "startSeconds": 12,
+          "durationSeconds": 195,
+          "note": "イヤホンまたは控えめ音量でも画面に合わせてしっかり燃えます！",
+          "speech": "続いて2本目、音楽に合わせてお腹全体を引き締めていきますよ！",
+          "endSeconds": 207
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT HIIT (3/3)',
-          badge: '足音ゼロ上半身パンチ 3/3',
-          title: '【3分ボクシング】二の腕と腹筋を鍛えるボクシングエクササイズ',
-          channel: 'Marina Takewaki',
-          videoId: 'DpANRK3AldY',
-          startSeconds: 12,
-          durationSeconds: 195,
-          note: '足は床に固定したまま（またはベッドに座ったまま）上半身パンチで完全静音燃焼！',
-          speech: 'ラスト3本目はボクシングです！足は動かさず、座ったままか立ったまま上半身のパンチだけで静かに燃やしましょう！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT HIIT (3/3)",
+          "badge": "足音ゼロ上半身パンチ 3/3",
+          "title": "【3分ボクシング】二の腕と腹筋を鍛えるボクシングエクササイズ",
+          "channel": "Marina Takewaki",
+          "videoId": "DpANRK3AldY",
+          "startSeconds": 10,
+          "durationSeconds": 165,
+          "note": "足は床に固定したまま（またはベッドに座ったまま）上半身パンチで完全静音燃焼！",
+          "speech": "ラスト3本目はボクシングです！足は動かさず、座ったままか立ったまま上半身のパンチだけで静かに燃やしましょう！",
+          "endSeconds": 175
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '燃焼完了！ベッド上で股割りストレッチへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: 'ベッド上 または 床タオル',
-          attachment: '開脚ストレッチ',
-          actionSteps: ['① 呼吸を整える', '② お水を飲む', '③ 股割りストレッチ開始'],
-          setupNote: '温まった体で裏ももと股関節をじっくり伸ばしましょう。',
-          cues: ['出張先でも柔軟性を積み上げられます'],
-          speech: 'お疲れ様でした！ここからは股割りストレッチで、出張の疲れも一緒にリセットしていきましょうね。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "燃焼完了！ベッド上で股割りストレッチへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "ベッド上 または 床タオル",
+          "attachment": "開脚ストレッチ",
+          "actionSteps": [
+            "① 呼吸を整える",
+            "② お水を飲む",
+            "③ 股割りストレッチ開始"
+          ],
+          "setupNote": "温まった体で裏ももと股関節をじっくり伸ばしましょう。",
+          "cues": [
+            "出張先でも柔軟性を積み上げられます"
+          ],
+          "speech": "お疲れ様でした！ここからは股割りストレッチで、出張の疲れも一緒にリセットしていきましょうね。"
         },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ホテルベッド上（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① ベッドの上で楽な姿勢になる', '② 照明を少し落として目を閉じる', '③ 深い呼吸だけに意識を向ける'],
-          setupNote: '出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。',
-          cues: ['ベッドに仰向けになってそのまま脱力しても最高に整います'],
-          speech: 'ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。'
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
         },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ホテルベッド上（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① ベッドの上で楽な姿勢になる",
+            "② 照明を少し落として目を閉じる",
+            "③ 深い呼吸だけに意識を向ける"
+          ],
+          "setupNote": "出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。",
+          "cues": [
+            "ベッドに仰向けになってそのまま脱力しても最高に整います"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。"
+        },
+        {
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 水曜（ホテル・静音有酸素＆ボクササイズ） --------------------
-    3: {
-      dayKey: 3,
-      dayLabel: '水曜',
-      shortTheme: '有酸素(ホテル)',
-      title: 'HOTEL CARDIO｜客室で足音ゼロ！飛ばない燃焼＆ボクシング',
-      subtitle: '元々器具なしのノンジャンプメニューだからホテル客室と相性100%！静かに汗をかき股関節をほぐす40分',
-      defaultStretchId: 'split_road_3',
-      defaultMeditationId: 'meditation_mindfulness',
-      blocks: [
+    "3": {
+      "dayKey": 3,
+      "dayLabel": "水曜",
+      "shortTheme": "有酸素(ホテル)",
+      "title": "HOTEL CARDIO｜客室で足音ゼロ！飛ばない燃焼＆ボクシング",
+      "subtitle": "元々器具なしのノンジャンプメニューだからホテル客室と相性100%！静かに汗をかき股関節をほぐす40分",
+      "defaultStretchId": "split_road_3",
+      "defaultMeditationId": "meditation_mindfulness",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP (HOTEL)',
-          title: 'ホテル静音有酸素スタンバイ！',
-          image: './images/exercises/warmup_shoulder_roll.jpg',
-          durationSeconds: 35,
-          pulley: 'ベッド横の省スペース（半畳でOK）',
-          attachment: 'バスタオル ＋ お水',
-          actionSteps: ['① 足裏を床につけたままステップは踏まない', '② 屈伸動作は上半身ツイスト＆パンチに置換', '③ お水を手元に置く'],
-          setupNote: 'ホテルの階下に一切響かない「すり足・上半身連動」でたっぷり汗をかきましょう！',
-          cues: ['ベッドに座ったまま上半身だけ動かしても十分な有酸素になります'],
-          speech: '出張先の水曜日ですね！今日は筋トレをお休みして、ホテルのお部屋でも音が響かない飛ばない有酸素とボクササイズでリフレッシュしましょう！'
+          "type": "warmup",
+          "phase": "PREP (HOTEL)",
+          "title": "ホテル静音有酸素スタンバイ！",
+          "image": "./images/exercises/warmup_shoulder_roll.jpg",
+          "durationSeconds": 35,
+          "pulley": "ベッド横の省スペース（半畳でOK）",
+          "attachment": "バスタオル ＋ お水",
+          "actionSteps": [
+            "① 足裏を床につけたままステップは踏まない",
+            "② 屈伸動作は上半身ツイスト＆パンチに置換",
+            "③ お水を手元に置く"
+          ],
+          "setupNote": "ホテルの階下に一切響かない「すり足・上半身連動」でたっぷり汗をかきましょう！",
+          "cues": [
+            "ベッドに座ったまま上半身だけ動かしても十分な有酸素になります"
+          ],
+          "speech": "出張先の水曜日ですね！今日は筋トレをお休みして、ホテルのお部屋でも音が響かない飛ばない有酸素とボクササイズでリフレッシュしましょう！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 1: HOTEL SILENT CARDIO',
-          badge: 'ホテル・マンションOK（19分）',
-          title: '【マンションOK】飛ばない有酸素運動で効率よく体脂肪を燃やそう！',
-          channel: 'Marina Takewaki',
-          videoId: 'hXyamPHNhkk',
-          startSeconds: 30,
-          durationSeconds: 1140,
-          note: '足音が鳴りそうな動きや膝屈伸は、その場でのウエストひねりやジャブ連打に変えてOK！',
-          speech: 'それでは19分間の飛ばない有酸素、スタートです！足音が出ないよう上半身を大きく使って汗をかいていきましょう！'
+          "type": "video",
+          "phase": "PHASE 1: HOTEL SILENT CARDIO",
+          "badge": "ホテル・マンションOK（15分）",
+          "title": "【マンションOK】飛ばない有酸素運動で効率よく体脂肪を燃やそう！",
+          "channel": "Marina Takewaki",
+          "videoId": "hXyamPHNhkk",
+          "startSeconds": 13,
+          "durationSeconds": 873,
+          "note": "足音が鳴りそうな動きや膝屈伸は、その場でのウエストひねりやジャブ連打に変えてOK！",
+          "speech": "それでは15分間の飛ばない有酸素、スタートです！足音が出ないよう上半身を大きく使って汗をかいていきましょう！",
+          "endSeconds": 886,
+          "shortEndSeconds": 373
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '水分補給 ＆ 座ってOK！3分ボクシング',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 45,
-          pulley: '立位 または ベッド端座位',
-          attachment: 'シャドーボクシング',
-          actionSteps: ['① お水をしっかり飲む', '② ベッド端に座るか足を固定して立つ', '③ 3分パンチ連打へ'],
-          setupNote: '仕上げは3分ボクシング！ベッドの端に座ってパンチを打ち込むと膝ゼロ負荷＆完全無音で最高です！',
-          cues: ['お腹をひねりながら打つとウエストに効きます'],
-          speech: 'いい汗をかきましたね！お水を飲んだら、仕上げの3分ボクシングです。ベッドの端に座ったままパンチしてもすごく効きますよ！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "水分補給 ＆ 座ってOK！3分ボクシング",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 45,
+          "pulley": "立位 または ベッド端座位",
+          "attachment": "シャドーボクシング",
+          "actionSteps": [
+            "① お水をしっかり飲む",
+            "② ベッド端に座るか足を固定して立つ",
+            "③ 3分パンチ連打へ"
+          ],
+          "setupNote": "仕上げは3分ボクシング！ベッドの端に座ってパンチを打ち込むと膝ゼロ負荷＆完全無音で最高です！",
+          "cues": [
+            "お腹をひねりながら打つとウエストに効きます"
+          ],
+          "speech": "いい汗をかきましたね！お水を飲んだら、仕上げの3分ボクシングです。ベッドの端に座ったままパンチしてもすごく効きますよ！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT BOXING',
-          badge: '無音パンチ仕上げ',
-          title: '【3分ボクシングダンス】二の腕と腹筋を鍛えるボクシングエクササイズ',
-          channel: 'Marina Takewaki',
-          videoId: 'DpANRK3AldY',
-          startSeconds: 10,
-          durationSeconds: 195,
-          note: '肩甲骨からシャープにパンチを繰り出しましょう！',
-          speech: '3分ボクシング、スタートです！リズミカルにパンチを繰り出していきましょう！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT BOXING",
+          "badge": "無音パンチ仕上げ",
+          "title": "【3分ボクシングダンス】二の腕と腹筋を鍛えるボクシングエクササイズ",
+          "channel": "Marina Takewaki",
+          "videoId": "DpANRK3AldY",
+          "startSeconds": 10,
+          "durationSeconds": 165,
+          "note": "肩甲骨からシャープにパンチを繰り出しましょう！",
+          "speech": "3分ボクシング、スタートです！リズミカルにパンチを繰り出していきましょう！",
+          "endSeconds": 175
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ベッドの上でたっぷり股割り＆お尻ケアへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 35,
-          pulley: 'ホテルベッド上',
-          attachment: 'ストレッチタイム',
-          actionSteps: ['① 呼吸を整える', '② ベッドの広い場所へ移動', '③ お尻と内ももをほぐす'],
-          setupNote: '後半はお尻深層と足の付け根までたっぷり伸ばして出張の疲労をリセットします。',
-          cues: ['呼吸を深めてリラックス'],
-          speech: '有酸素パートお疲れ様でした！ここからはベッドの上でゆったりと、股関節と足の付け根を伸ばしていきましょうね。'
-        },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
-        {
-          type: 'video',
-          phase: 'PHASE 3+: BONUS HIP CARE',
-          badge: '仕上げ6分：足の付け根＆内もも',
-          title: '【6分集中】内もも・足の付け根を引き締める簡単ストレッチ',
-          channel: 'Marina Takewaki',
-          videoId: 'w1xZucczKrE',
-          startSeconds: 15,
-          durationSeconds: 350,
-          note: '歩き疲れ・座り疲れの股関節がスッキリ軽くなります！',
-          speech: '仕上げの6分間は足の付け根のストレッチです。最後まで気持ちよく伸ばしていきましょう！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ベッドの上でたっぷり股割り＆お尻ケアへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 35,
+          "pulley": "ホテルベッド上",
+          "attachment": "ストレッチタイム",
+          "actionSteps": [
+            "① 呼吸を整える",
+            "② ベッドの広い場所へ移動",
+            "③ お尻と内ももをほぐす"
+          ],
+          "setupNote": "後半はお尻深層と足の付け根までたっぷり伸ばして出張の疲労をリセットします。",
+          "cues": [
+            "呼吸を深めてリラックス"
+          ],
+          "speech": "有酸素パートお疲れ様でした！ここからはベッドの上でゆったりと、股関節と足の付け根を伸ばしていきましょうね。"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ホテルベッド上（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① ベッドの上で楽な姿勢になる', '② 照明を少し落として目を閉じる', '③ 深い呼吸だけに意識を向ける'],
-          setupNote: '出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。',
-          cues: ['ベッドに仰向けになってそのまま脱力しても最高に整います'],
-          speech: 'ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。'
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
         },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+        {
+          "type": "video",
+          "phase": "PHASE 3+: BONUS HIP CARE",
+          "badge": "仕上げ6分：足の付け根＆内もも",
+          "title": "【6分集中】内もも・足の付け根を引き締める簡単ストレッチ",
+          "channel": "Marina Takewaki",
+          "videoId": "w1xZucczKrE",
+          "startSeconds": 14,
+          "durationSeconds": 364,
+          "note": "歩き疲れ・座り疲れの股関節がスッキリ軽くなります！",
+          "speech": "仕上げの6分間は足の付け根のストレッチです。最後まで気持ちよく伸ばしていきましょう！",
+          "endSeconds": 378,
+          "shortEndSeconds": 378
+        },
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ホテルベッド上（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① ベッドの上で楽な姿勢になる",
+            "② 照明を少し落として目を閉じる",
+            "③ 深い呼吸だけに意識を向ける"
+          ],
+          "setupNote": "出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。",
+          "cues": [
+            "ベッドに仰向けになってそのまま脱力しても最高に整います"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。"
+        },
+        {
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 木曜（ホテル・肩＆美姿勢） --------------------
-    4: {
-      dayKey: 4,
-      dayLabel: '木曜',
-      shortTheme: '肩(ホテル)',
-      title: 'HOTEL SHOULDERS｜ベッド端パイクプレス ＆ タオルサイドレイズ',
-      subtitle: 'ダンベル無しでも肩が丸く熱くなる！ベッド端パイク・バスタオル抵抗・うつ伏せYTWで肩全域を鍛える40分',
-      defaultStretchId: 'split_road_2',
-      defaultMeditationId: 'meditation_harp',
-      blocks: [
+    "4": {
+      "dayKey": 4,
+      "dayLabel": "木曜",
+      "shortTheme": "肩(ホテル)",
+      "title": "HOTEL SHOULDERS｜ベッド端パイクプレス ＆ タオルサイドレイズ",
+      "subtitle": "ダンベル無しでも肩が丸く熱くなる！ベッド端パイク・バスタオル抵抗・うつ伏せYTWで肩全域を鍛える40分",
+      "defaultStretchId": "split_road_2",
+      "defaultMeditationId": "meditation_harp",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP (HOTEL)',
-          title: '肩まわり温め ＆ ベッド端とバスタオル準備',
-          image: './images/exercises/warmup_shoulder_roll.jpg',
-          durationSeconds: 45,
-          pulley: 'ホテルベッド ＆ バスタオル1枚',
-          attachment: '器具なし',
-          actionSteps: ['① バスタオルを1枚手元に置く', '② 肩を大きく前回し・後ろ回し各10回', '③ ベッド端の位置を確認'],
-          setupNote: '木曜日のホテル版は、自重とタオル抵抗を使って肩の「前・横・後ろ」を完璧に網羅します！',
-          cues: ['PC作業で凝り固まった首肩もスッキリほぐれます'],
-          speech: '出張お疲れ様です！木曜日はホテルのお部屋でできる肩と美姿勢のメニューです。ベッドとバスタオル1枚を用意して、まずは肩を軽く回しましょうね！'
+          "type": "warmup",
+          "phase": "PREP (HOTEL)",
+          "title": "肩まわり温め ＆ ベッド端とバスタオル準備",
+          "image": "./images/exercises/warmup_shoulder_roll.jpg",
+          "durationSeconds": 45,
+          "pulley": "ホテルベッド ＆ バスタオル1枚",
+          "attachment": "器具なし",
+          "actionSteps": [
+            "① バスタオルを1枚手元に置く",
+            "② 肩を大きく前回し・後ろ回し各10回",
+            "③ ベッド端の位置を確認"
+          ],
+          "setupNote": "木曜日のホテル版は、自重とタオル抵抗を使って肩の「前・横・後ろ」を完璧に網羅します！",
+          "cues": [
+            "PC作業で凝り固まった首肩もスッキリほぐれます"
+          ],
+          "speech": "出張お疲れ様です！木曜日はホテルのお部屋でできる肩と美姿勢のメニューです。ベッドとバスタオル1枚を用意して、まずは肩を軽く回しましょうね！"
         },
         {
-          type: 'machine',
-          id: 'hotel_thu_pike_pushup',
-          phase: 'PHASE 1: HOTEL SHOULDERS',
-          title: '① ベッド端パイク・ショルダープレス',
-          image: './images/exercises/hotel_pike_pushup.jpg',
-          targetMuscle: '三角筋 前部・中部（肩全体のボリューム）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: 'ホテルベッドの縁',
-          attachment: 'お尻を高く上げた「くの字」姿勢',
-          actionSteps: ['① ベッド端に肩幅より少し広く手をつく', '② お尻を高く突き上げて上半身を逆さまに近づける', '③ 頭頂部をベッドへ近づけ、肩の力で押し返す'],
-          setupNote: 'イラストのように腰を「くの字」に高く上げることで、胸ではなく「肩のショルダープレス」になります！',
-          cues: ['膝は軽く曲げてもOKなので裏ももが突っ張らない姿勢で行う'],
-          speechIntro: '1種目目はベッドの端を使ったパイク・ショルダープレスです！お尻を高く上げて、頭のてっぺんをベッドに近づけるように肩で押していきましょう。スタートです！'
+          "type": "machine",
+          "id": "hotel_thu_pike_pushup",
+          "phase": "PHASE 1: HOTEL SHOULDERS",
+          "title": "① ベッド端パイク・ショルダープレス",
+          "image": "./images/exercises/hotel_pike_pushup.jpg",
+          "targetMuscle": "三角筋 前部・中部（肩全体のボリューム）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "ホテルベッドの縁",
+          "attachment": "お尻を高く上げた「くの字」姿勢",
+          "actionSteps": [
+            "① ベッド端に肩幅より少し広く手をつく",
+            "② お尻を高く突き上げて上半身を逆さまに近づける",
+            "③ 頭頂部をベッドへ近づけ、肩の力で押し返す"
+          ],
+          "setupNote": "イラストのように腰を「くの字」に高く上げることで、胸ではなく「肩のショルダープレス」になります！",
+          "cues": [
+            "膝は軽く曲げてもOKなので裏ももが突っ張らない姿勢で行う"
+          ],
+          "speechIntro": "1種目目はベッドの端を使ったパイク・ショルダープレスです！お尻を高く上げて、頭のてっぺんをベッドに近づけるように肩で押していきましょう。スタートです！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: 'バスタオルを持って【セルフ抵抗サイドレイズ】準備',
-          image: './images/exercises/hotel_towel_lateral.jpg',
-          durationSeconds: 50,
-          pulley: '立位 または ベッド端座位',
-          attachment: 'ホテルのバスタオル',
-          actionSteps: ['① 右手でタオルの上端、左手で下端を持つ', '② 左手で下へ引っ張りながら右腕を横へ上げる練習', '③ 1セットごとに右・左（または前半22秒右・後半22秒左）'],
-          setupNote: '次は下の手でブレーキ（抵抗）をかけながら上の腕を横に上げる「タオル抵抗サイドレイズ」です！',
-          cues: ['45秒のうち前半22秒で右肩、後半22秒で左肩を行うとバランス抜群です！'],
-          speech: '次はバスタオルを使ったサイドレイズです！下の手でグッと抵抗をかけながら片腕を横に上げると、ダンベル以上に肩の横に効きますよ。前半は右肩、後半は左肩でいきましょう！'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "バスタオルを持って【セルフ抵抗サイドレイズ】準備",
+          "image": "./images/exercises/hotel_towel_lateral.jpg",
+          "durationSeconds": 50,
+          "pulley": "立位 または ベッド端座位",
+          "attachment": "ホテルのバスタオル",
+          "actionSteps": [
+            "① 右手でタオルの上端、左手で下端を持つ",
+            "② 左手で下へ引っ張りながら右腕を横へ上げる練習",
+            "③ 1セットごとに右・左（または前半22秒右・後半22秒左）"
+          ],
+          "setupNote": "次は下の手でブレーキ（抵抗）をかけながら上の腕を横に上げる「タオル抵抗サイドレイズ」です！",
+          "cues": [
+            "45秒のうち前半22秒で右肩、後半22秒で左肩を行うとバランス抜群です！"
+          ],
+          "speech": "次はバスタオルを使ったサイドレイズです！下の手でグッと抵抗をかけながら片腕を横に上げると、ダンベル以上に肩の横に効きますよ。前半は右肩、後半は左肩でいきましょう！"
         },
         {
-          type: 'machine',
-          id: 'hotel_thu_towel_lateral',
-          phase: 'PHASE 1: HOTEL TOWEL',
-          title: '② タオル抵抗サイドレイズ（前半右・後半左）',
-          image: './images/exercises/hotel_towel_lateral.jpg',
-          targetMuscle: '三角筋 中部（肩の横幅）',
-          sets: 4,
-          workSeconds: 46,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: '立位 または 座位',
-          attachment: 'バスタオル自己抵抗',
-          actionSteps: ['① 下の手でタオルを強く引き下げて負荷を作る', '② 上の腕を肩の高さまでゆっくり横へ引き上げる', '③ 残り23秒で左右の手を入れ替える！'],
-          setupNote: 'イラストのように下の手で重り代わりの抵抗を作りながら、肩の横で引き上げます！',
-          cues: ['自分の引き下げる力加減でピンポイントに追い込めます'],
-          speechIntro: '2種目目、タオル抵抗サイドレイズいきましょう！まずは片側から、下の手でしっかりブレーキをかけながら横へ引き上げますよ。スタート！'
+          "type": "machine",
+          "id": "hotel_thu_towel_lateral",
+          "phase": "PHASE 1: HOTEL TOWEL",
+          "title": "② タオル抵抗サイドレイズ（前半右・後半左）",
+          "image": "./images/exercises/hotel_towel_lateral.jpg",
+          "targetMuscle": "三角筋 中部（肩の横幅）",
+          "sets": 4,
+          "workSeconds": 46,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "立位 または 座位",
+          "attachment": "バスタオル自己抵抗",
+          "actionSteps": [
+            "① 下の手でタオルを強く引き下げて負荷を作る",
+            "② 上の腕を肩の高さまでゆっくり横へ引き上げる",
+            "③ 残り23秒で左右の手を入れ替える！"
+          ],
+          "setupNote": "イラストのように下の手で重り代わりの抵抗を作りながら、肩の横で引き上げます！",
+          "cues": [
+            "自分の引き下げる力加減でピンポイントに追い込めます"
+          ],
+          "speechIntro": "2種目目、タオル抵抗サイドレイズいきましょう！まずは片側から、下の手でしっかりブレーキをかけながら横へ引き上げますよ。スタート！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: 'ベッドの上にうつ伏せで【Y-T-Wレイズ】準備',
-          image: './images/exercises/hotel_ytw_raise.jpg',
-          durationSeconds: 45,
-          pulley: 'ホテルベッド上（うつ伏せ）',
-          attachment: '器具なし（親指を天井に向ける）',
-          actionSteps: ['① ベッドの上にうつ伏せになる', '② 両腕を斜め前（Yの字）に伸ばし親指を上へ', '③ 肩の後ろ側と肩甲骨を意識'],
-          setupNote: '自宅のフェイスプルの代わりとなる、肩後部・猫背解消の最強自重種目「うつ伏せY-T-Wレイズ」です！',
-          cues: ['重りなしでも肩の後ろがバチバチに燃えます'],
-          speech: '肩の仕上げは、ベッドにうつ伏せで行うワイ・ティー・ダブリュー・レイズです！親指を天井に向けて、肩の後ろ側を引き締めていきましょうね。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "ベッドの上にうつ伏せで【Y-T-Wレイズ】準備",
+          "image": "./images/exercises/hotel_ytw_raise.jpg",
+          "durationSeconds": 45,
+          "pulley": "ホテルベッド上（うつ伏せ）",
+          "attachment": "器具なし（親指を天井に向ける）",
+          "actionSteps": [
+            "① ベッドの上にうつ伏せになる",
+            "② 両腕を斜め前（Yの字）に伸ばし親指を上へ",
+            "③ 肩の後ろ側と肩甲骨を意識"
+          ],
+          "setupNote": "自宅のフェイスプルの代わりとなる、肩後部・猫背解消の最強自重種目「うつ伏せY-T-Wレイズ」です！",
+          "cues": [
+            "重りなしでも肩の後ろがバチバチに燃えます"
+          ],
+          "speech": "肩の仕上げは、ベッドにうつ伏せで行うワイ・ティー・ダブリュー・レイズです！親指を天井に向けて、肩の後ろ側を引き締めていきましょうね。"
         },
         {
-          type: 'machine',
-          id: 'hotel_thu_ytw_raise',
-          phase: 'PHASE 1: HOTEL POSTURE',
-          title: '③ うつ伏せ Y-T-W リアデルトレイズ',
-          image: './images/exercises/hotel_ytw_raise.jpg',
-          targetMuscle: '三角筋 後部・僧帽筋中部（巻き肩リセット）',
-          sets: 3,
-          workSeconds: 45,
-          restSeconds: 45,
-          hidePlates: true,
-          pulley: 'ホテルベッド上（うつ伏せ）',
-          attachment: '自重（Y字 ➔ T字 ➔ W字）',
-          actionSteps: ['① 親指を上に向けて斜め前「Yの字」に腕を上げる', '② 続けて真横「Tの字」、肘を曲げて「Wの字」に引く', '③ 腕を床におろさずゆっくり繰り返す'],
-          setupNote: 'イラストのように親指を立てて腕を高く引き上げ、肩の後ろと肩甲骨をギュッと寄せます！',
-          cues: ['首をすくめず、肩甲骨を下げる意識で行うと効果倍増'],
-          speechIntro: '3種目目、うつ伏せレイズ、スタートです！Yの字、Tの字、Wの字と順番に腕を動かして、肩の後ろ側をキュッと収縮させましょう！'
+          "type": "machine",
+          "id": "hotel_thu_ytw_raise",
+          "phase": "PHASE 1: HOTEL POSTURE",
+          "title": "③ うつ伏せ Y-T-W リアデルトレイズ",
+          "image": "./images/exercises/hotel_ytw_raise.jpg",
+          "targetMuscle": "三角筋 後部・僧帽筋中部（巻き肩リセット）",
+          "sets": 3,
+          "workSeconds": 45,
+          "restSeconds": 45,
+          "hidePlates": true,
+          "pulley": "ホテルベッド上（うつ伏せ）",
+          "attachment": "自重（Y字 ➔ T字 ➔ W字）",
+          "actionSteps": [
+            "① 親指を上に向けて斜め前「Yの字」に腕を上げる",
+            "② 続けて真横「Tの字」、肘を曲げて「Wの字」に引く",
+            "③ 腕を床におろさずゆっくり繰り返す"
+          ],
+          "setupNote": "イラストのように親指を立てて腕を高く引き上げ、肩の後ろと肩甲骨をギュッと寄せます！",
+          "cues": [
+            "首をすくめず、肩甲骨を下げる意識で行うと効果倍増"
+          ],
+          "speechIntro": "3種目目、うつ伏せレイズ、スタートです！Yの字、Tの字、Wの字と順番に腕を動かして、肩の後ろ側をキュッと収縮させましょう！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '肩パンプ完了！そのまま仰向けで腹筋HIITへ',
-          image: './images/exercises/hotel_floor_crunch.jpg',
-          durationSeconds: 45,
-          pulley: 'ベッド または 床バスタオル',
-          attachment: '仰向けスタンバイ',
-          actionSteps: ['① お水を飲む', '② そのまま仰向けに寝返りを打つ', '③ 8分静音腹筋へ'],
-          setupNote: 'うつ伏せからそのままコロンと仰向けになるだけで腹筋パートへ入れます！',
-          cues: ['移動ゼロで流れるように進みます'],
-          speech: '肩パート完走、お疲れ様でした！お水をひと口飲んだら、そのままコロンと仰向けになって静音腹筋サーキットに入りましょう！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "肩パンプ完了！そのまま仰向けで腹筋HIITへ",
+          "image": "./images/exercises/hotel_floor_crunch.jpg",
+          "durationSeconds": 45,
+          "pulley": "ベッド または 床バスタオル",
+          "attachment": "仰向けスタンバイ",
+          "actionSteps": [
+            "① お水を飲む",
+            "② そのまま仰向けに寝返りを打つ",
+            "③ 8分静音腹筋へ"
+          ],
+          "setupNote": "うつ伏せからそのままコロンと仰向けになるだけで腹筋パートへ入れます！",
+          "cues": [
+            "移動ゼロで流れるように進みます"
+          ],
+          "speech": "肩パート完走、お疲れ様でした！お水をひと口飲んだら、そのままコロンと仰向けになって静音腹筋サーキットに入りましょう！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT HIIT',
-          badge: 'ホテルOK・静音フロア腹筋',
-          title: '【8分完全版】腹筋サーキット（フロア集中）',
-          channel: '腹筋集中サーキット',
-          videoId: 'GoxIQp8VtTg',
-          startSeconds: 15,
-          durationSeconds: 490,
-          note: '腰を痛めないようおへそを覗き込みながらお腹を丸めましょう！',
-          speech: '8分間の腹筋サーキット、スタートです！呼吸に合わせてお腹を引き締めていきましょう！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT HIIT",
+          "badge": "ホテルOK・静音フロア腹筋",
+          "title": "【8分完全版】腹筋サーキット（フロア集中）",
+          "channel": "uFit (林ケイスケ)",
+          "videoId": "GoxIQp8VtTg",
+          "startSeconds": 2,
+          "durationSeconds": 483,
+          "note": "腰を痛めないようおへそを覗き込みながらお腹を丸めましょう！",
+          "speech": "8分間の腹筋サーキット、スタートです！呼吸に合わせてお腹を引き締めていきましょう！",
+          "endSeconds": 485
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ラストは日替わり股割りストレッチへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: 'ベッド上 または 床タオル',
-          attachment: '開脚ストレッチ',
-          actionSteps: ['① 深呼吸する', '② 股関節の力を抜く', '③ 開脚ストレッチ開始'],
-          setupNote: '温まった体で股関節の柔軟性を高めて仕上げます。',
-          cues: ['明日への疲労を残さない心地よい伸びを意識'],
-          speech: 'ナイスファイトでした！最後は股割りストレッチで、体全体をゆったり緩めていきましょうね。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ラストは日替わり股割りストレッチへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "ベッド上 または 床タオル",
+          "attachment": "開脚ストレッチ",
+          "actionSteps": [
+            "① 深呼吸する",
+            "② 股関節の力を抜く",
+            "③ 開脚ストレッチ開始"
+          ],
+          "setupNote": "温まった体で股関節の柔軟性を高めて仕上げます。",
+          "cues": [
+            "明日への疲労を残さない心地よい伸びを意識"
+          ],
+          "speech": "ナイスファイトでした！最後は股割りストレッチで、体全体をゆったり緩めていきましょうね。"
         },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ホテルベッド上（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① ベッドの上で楽な姿勢になる', '② 照明を少し落として目を閉じる', '③ 深い呼吸だけに意識を向ける'],
-          setupNote: '出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。',
-          cues: ['ベッドに仰向けになってそのまま脱力しても最高に整います'],
-          speech: 'ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。'
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
         },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ホテルベッド上（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① ベッドの上で楽な姿勢になる",
+            "② 照明を少し落として目を閉じる",
+            "③ 深い呼吸だけに意識を向ける"
+          ],
+          "setupNote": "出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。",
+          "cues": [
+            "ベッドに仰向けになってそのまま脱力しても最高に整います"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。"
+        },
+        {
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     },
-
-    // -------------------- 金曜（ホテル・腕＆腹筋） --------------------
-    5: {
-      dayKey: 5,
-      dayLabel: '金曜',
-      shortTheme: '腕・腹(ホテル)',
-      title: 'HOTEL ARMS & ABS｜ベッド端ディップス ＆ タオル全力カール',
-      subtitle: '出張最終日も腕パンパン！ベッド端の三頭ディップスとバスタオル抵抗カールで仕上げる40分',
-      defaultStretchId: 'split_road_4',
-      defaultMeditationId: 'meditation_mindfulness',
-      blocks: [
+    "5": {
+      "dayKey": 5,
+      "dayLabel": "金曜",
+      "shortTheme": "腕・腹(ホテル)",
+      "title": "HOTEL ARMS & ABS｜ベッド端ディップス ＆ タオル全力カール",
+      "subtitle": "出張最終日も腕パンパン！ベッド端の三頭ディップスとバスタオル抵抗カールで仕上げる40分",
+      "defaultStretchId": "split_road_4",
+      "defaultMeditationId": "meditation_mindfulness",
+      "blocks": [
         {
-          type: 'warmup',
-          phase: 'PREP (HOTEL)',
-          title: '肘・手首ウォームアップ ＆ ベッド端・タオル準備',
-          image: './images/exercises/hotel_bed_dips.jpg',
-          durationSeconds: 45,
-          pulley: 'ホテルベッド端 ＆ バスタオル',
-          attachment: '器具なし',
-          actionSteps: ['① 手首と肘をくるくる回して温める', '② バスタオルを近くに置く', '③ ベッドの端に腰掛ける'],
-          setupNote: '金曜日のホテル版は、ベッド端での二の腕ディップスとバスタオル抵抗カールで腕を太くパンプさせます！',
-          cues: ['膝への負担は一切ありません'],
-          speech: '金曜日ですね、今週も出張お疲れ様です！今日はベッドの端とバスタオルを使って、二の腕・力こぶ・腹筋を気持ちよくパンプさせていきましょう！'
+          "type": "warmup",
+          "phase": "PREP (HOTEL)",
+          "title": "肘・手首ウォームアップ ＆ ベッド端・タオル準備",
+          "image": "./images/exercises/hotel_bed_dips.jpg",
+          "durationSeconds": 45,
+          "pulley": "ホテルベッド端 ＆ バスタオル",
+          "attachment": "器具なし",
+          "actionSteps": [
+            "① 手首と肘をくるくる回して温める",
+            "② バスタオルを近くに置く",
+            "③ ベッドの端に腰掛ける"
+          ],
+          "setupNote": "金曜日のホテル版は、ベッド端での二の腕ディップスとバスタオル抵抗カールで腕を太くパンプさせます！",
+          "cues": [
+            "膝への負担は一切ありません"
+          ],
+          "speech": "金曜日ですね、今週も出張お疲れ様です！今日はベッドの端とバスタオルを使って、二の腕・力こぶ・腹筋を気持ちよくパンプさせていきましょう！"
         },
         {
-          type: 'machine',
-          id: 'hotel_fri_bed_dips',
-          phase: 'PHASE 1: HOTEL ARMS',
-          title: '① ベッド端トライセプス・ディップス',
-          image: './images/exercises/hotel_bed_dips.jpg',
-          targetMuscle: '上腕三頭筋（二の腕）',
-          sets: 4,
-          workSeconds: 45,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: 'ホテルベッドの縁',
-          attachment: '手はお尻のすぐ横にセット',
-          actionSteps: ['① ベッド端をお尻の横で握り、お尻だけ少し前に出す', '② 膝は楽に曲げ足を床に添える（脚で踏ん張らない）', '③ 肘を後ろへ曲げて体を下ろし、二の腕で押し上げる'],
-          setupNote: 'イラストのように背中をベッド端に近づけたまま肘を曲げ伸ばしすると、二の腕に強烈に入ります！',
-          cues: ['肩がすくまないよう胸を軽く張って押し上げる'],
-          speechIntro: '1種目目はベッドの端を使ったディップスです！肘を真っすぐ後ろに曲げて、二の腕の力でグッと体を押し上げていきましょう。スタートです！'
+          "type": "machine",
+          "id": "hotel_fri_bed_dips",
+          "phase": "PHASE 1: HOTEL ARMS",
+          "title": "① ベッド端トライセプス・ディップス",
+          "image": "./images/exercises/hotel_bed_dips.jpg",
+          "targetMuscle": "上腕三頭筋（二の腕）",
+          "sets": 4,
+          "workSeconds": 45,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "ホテルベッドの縁",
+          "attachment": "手はお尻のすぐ横にセット",
+          "actionSteps": [
+            "① ベッド端をお尻の横で握り、お尻だけ少し前に出す",
+            "② 膝は楽に曲げ足を床に添える（脚で踏ん張らない）",
+            "③ 肘を後ろへ曲げて体を下ろし、二の腕で押し上げる"
+          ],
+          "setupNote": "イラストのように背中をベッド端に近づけたまま肘を曲げ伸ばしすると、二の腕に強烈に入ります！",
+          "cues": [
+            "肩がすくまないよう胸を軽く張って押し上げる"
+          ],
+          "speechIntro": "1種目目はベッドの端を使ったディップスです！肘を真っすぐ後ろに曲げて、二の腕の力でグッと体を押し上げていきましょう。スタートです！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: 'バスタオルを持って【セルフ抵抗アームカール】準備',
-          image: './images/exercises/hotel_towel_curl.jpg',
-          durationSeconds: 50,
-          pulley: '立位 または ベッド端座位',
-          attachment: 'ホテルのバスタオル',
-          actionSteps: ['① 片手でタオルの上側を逆手で握る', '② 反対の手でタオルの下端を持ち、下へ強く引っ張る', '③ 前半23秒で右腕、後半22秒で左腕をカール！'],
-          setupNote: '反対の手で下へ引っ張るブレーキ負荷をかけると、ダンベル20kg並みの強烈なアームカールになります！',
-          cues: ['下ろす時も引っ張り合いながら耐えると力こぶが爆発的に張ります'],
-          speech: '次はバスタオルを使ったセルフ抵抗アームカールです！片方の手で下に強く引っ張りながら巻き上げると、びっくりするくらい力こぶに効きますよ。前半は右腕、後半は左腕でいきましょう！'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "バスタオルを持って【セルフ抵抗アームカール】準備",
+          "image": "./images/exercises/hotel_towel_curl.jpg",
+          "durationSeconds": 50,
+          "pulley": "立位 または ベッド端座位",
+          "attachment": "ホテルのバスタオル",
+          "actionSteps": [
+            "① 片手でタオルの上側を逆手で握る",
+            "② 反対の手でタオルの下端を持ち、下へ強く引っ張る",
+            "③ 前半23秒で右腕、後半22秒で左腕をカール！"
+          ],
+          "setupNote": "反対の手で下へ引っ張るブレーキ負荷をかけると、ダンベル20kg並みの強烈なアームカールになります！",
+          "cues": [
+            "下ろす時も引っ張り合いながら耐えると力こぶが爆発的に張ります"
+          ],
+          "speech": "次はバスタオルを使ったセルフ抵抗アームカールです！片方の手で下に強く引っ張りながら巻き上げると、びっくりするくらい力こぶに効きますよ。前半は右腕、後半は左腕でいきましょう！"
         },
         {
-          type: 'machine',
-          id: 'hotel_fri_towel_curl',
-          phase: 'PHASE 1: HOTEL TOWEL',
-          title: '② バスタオル・セルフ抵抗カール（前半右・後半左）',
-          image: './images/exercises/hotel_towel_curl.jpg',
-          targetMuscle: '上腕二頭筋・前腕（力こぶ）',
-          sets: 4,
-          workSeconds: 46,
-          restSeconds: 50,
-          hidePlates: true,
-          pulley: '立位 または 座位',
-          attachment: 'バスタオル自己抵抗',
-          actionSteps: ['① 下の手でタオルを全力で引き下げて抵抗を作る', '② 上の腕の肘を固定して肩までグッと巻き上げる', '③ 残り23秒で左右を入れ替える！'],
-          setupNote: 'イラストのように上下の手で綱引きをしながら力こぶを収縮させます！',
-          cues: ['呼吸を止めずに「フーッ」と吐きながら巻き上げる'],
-          speechIntro: '2種目目、タオル抵抗アームカール、スタートです！下の手でしっかり重さを作って、力こぶをパンパンに張らせていきましょう！'
+          "type": "machine",
+          "id": "hotel_fri_towel_curl",
+          "phase": "PHASE 1: HOTEL TOWEL",
+          "title": "② バスタオル・セルフ抵抗カール（前半右・後半左）",
+          "image": "./images/exercises/hotel_towel_curl.jpg",
+          "targetMuscle": "上腕二頭筋・前腕（力こぶ）",
+          "sets": 4,
+          "workSeconds": 46,
+          "restSeconds": 50,
+          "hidePlates": true,
+          "pulley": "立位 または 座位",
+          "attachment": "バスタオル自己抵抗",
+          "actionSteps": [
+            "① 下の手でタオルを全力で引き下げて抵抗を作る",
+            "② 上の腕の肘を固定して肩までグッと巻き上げる",
+            "③ 残り23秒で左右を入れ替える！"
+          ],
+          "setupNote": "イラストのように上下の手で綱引きをしながら力こぶを収縮させます！",
+          "cues": [
+            "呼吸を止めずに「フーッ」と吐きながら巻き上げる"
+          ],
+          "speechIntro": "2種目目、タオル抵抗アームカール、スタートです！下の手でしっかり重さを作って、力こぶをパンパンに張らせていきましょう！"
         },
         {
-          type: 'setup',
-          phase: 'SETUP',
-          title: '仰向けになって【3秒スロークランチ】準備',
-          image: './images/exercises/hotel_floor_crunch.jpg',
-          durationSeconds: 45,
-          pulley: '床バスタオル または ベッド上',
-          attachment: '仰向け・膝を軽く立てる',
-          actionSteps: ['① 床のバスタオル（またはベッド）に仰向けになる', '② 膝を楽な角度に立て、両手を耳の横に添える', '③ 腰を床にピタッと押し付ける'],
-          setupNote: 'マシン・アブクランチの代替として「3秒かけて上げ・2秒止め・3秒で戻す」超高密度クランチを行います！',
-          cues: ['反動ゼロで行うと自重でもシックスパックが焼けるように効きます'],
-          speech: '3種目目は高密度スロークランチです！仰向けになって、反動を使わずにゆっくりお腹を丸める準備をしてくださいね。'
+          "type": "setup",
+          "phase": "SETUP",
+          "title": "仰向けになって【3秒スロークランチ】準備",
+          "image": "./images/exercises/hotel_floor_crunch.jpg",
+          "durationSeconds": 45,
+          "pulley": "床バスタオル または ベッド上",
+          "attachment": "仰向け・膝を軽く立てる",
+          "actionSteps": [
+            "① 床のバスタオル（またはベッド）に仰向けになる",
+            "② 膝を楽な角度に立て、両手を耳の横に添える",
+            "③ 腰を床にピタッと押し付ける"
+          ],
+          "setupNote": "マシン・アブクランチの代替として「3秒かけて上げ・2秒止め・3秒で戻す」超高密度クランチを行います！",
+          "cues": [
+            "反動ゼロで行うと自重でもシックスパックが焼けるように効きます"
+          ],
+          "speech": "3種目目は高密度スロークランチです！仰向けになって、反動を使わずにゆっくりお腹を丸める準備をしてくださいね。"
         },
         {
-          type: 'machine',
-          id: 'hotel_fri_slow_crunch',
-          phase: 'PHASE 1: HOTEL ABS',
-          title: '③ 高密度スロークランチ（2秒ピークストップ）',
-          image: './images/exercises/hotel_floor_crunch.jpg',
-          targetMuscle: '腹直筋（シックスパック）',
-          sets: 3,
-          workSeconds: 45,
-          restSeconds: 45,
-          hidePlates: true,
-          pulley: '床バスタオル または ベッド上',
-          attachment: '自重スローテンション',
-          actionSteps: ['① 息を吐きながら3秒かけて肩甲骨を床から浮かす', '② 一番縮んだ位置で息を吐き切り2秒ピタッと止める', '③ 肩甲骨がつく寸前まで3秒かけて戻す'],
-          setupNote: 'イラストのようにおへそを覗き込み、一番上で「2秒ストップ」を入れることで加重並みの刺激を入れます！',
-          cues: ['首を引っ張らず、みぞおちを折り曲げる意識で'],
-          speechIntro: '3種目目、高密度スロークランチいきましょう！一番上で2秒ピタッと止めると、お腹に強烈に効いてきますよ。スタートです！'
+          "type": "machine",
+          "id": "hotel_fri_slow_crunch",
+          "phase": "PHASE 1: HOTEL ABS",
+          "title": "③ 高密度スロークランチ（2秒ピークストップ）",
+          "image": "./images/exercises/hotel_floor_crunch.jpg",
+          "targetMuscle": "腹直筋（シックスパック）",
+          "sets": 3,
+          "workSeconds": 45,
+          "restSeconds": 45,
+          "hidePlates": true,
+          "pulley": "床バスタオル または ベッド上",
+          "attachment": "自重スローテンション",
+          "actionSteps": [
+            "① 息を吐きながら3秒かけて肩甲骨を床から浮かす",
+            "② 一番縮んだ位置で息を吐き切り2秒ピタッと止める",
+            "③ 肩甲骨がつく寸前まで3秒かけて戻す"
+          ],
+          "setupNote": "イラストのようにおへそを覗き込み、一番上で「2秒ストップ」を入れることで加重並みの刺激を入れます！",
+          "cues": [
+            "首を引っ張らず、みぞおちを折り曲げる意識で"
+          ],
+          "speechIntro": "3種目目、高密度スロークランチいきましょう！一番上で2秒ピタッと止めると、お腹に強烈に効いてきますよ。スタートです！"
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ホテル筋トレ完走！静音パンチ＆腹筋コンボへ',
-          image: './images/exercises/transition_mat_water.jpg',
-          durationSeconds: 45,
-          pulley: '客室省スペース',
-          attachment: '静音コンボ準備',
-          actionSteps: ['① 水分補給をする', '② 足を固定して上半身3分ボクシング', '③ 続けて寝たまま腹筋フィニッシュ'],
-          setupNote: 'パンプした腕で静かにパンチを繰り出し、そのままフロア腹筋で締めくくります！',
-          cues: ['足音ゼロ・膝屈伸ゼロで進めます'],
-          speech: '腕と腹筋パート完走、ナイスパンプです！お水を飲んだら、パンプした腕で静かに3分間パンチを打ち込んでいきましょう！'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ホテル筋トレ完走！静音パンチ＆腹筋コンボへ",
+          "image": "./images/exercises/transition_mat_water.jpg",
+          "durationSeconds": 45,
+          "pulley": "客室省スペース",
+          "attachment": "静音コンボ準備",
+          "actionSteps": [
+            "① 水分補給をする",
+            "② 足を固定して上半身3分ボクシング",
+            "③ 続けて寝たまま腹筋フィニッシュ"
+          ],
+          "setupNote": "パンプした腕で静かにパンチを繰り出し、そのままフロア腹筋で締めくくります！",
+          "cues": [
+            "足音ゼロ・膝屈伸ゼロで進めます"
+          ],
+          "speech": "腕と腹筋パート完走、ナイスパンプです！お水を飲んだら、パンプした腕で静かに3分間パンチを打ち込んでいきましょう！"
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT HIIT (1/3)',
-          badge: '無音パンチ 1/3',
-          title: '【3分ボクシングダンス】パンプした腕で打ち込むボクササイズ',
-          channel: 'Marina Takewaki',
-          videoId: 'DpANRK3AldY',
-          startSeconds: 10,
-          durationSeconds: 195,
-          note: '足は固定（またはベッド端座り）で上半身パンチ連打！',
-          speech: '華金コンボ1本目、3分ボクシングスタートです！足音を出さずにシャープなパンチを繰り出しましょう！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT HIIT (1/3)",
+          "badge": "無音パンチ 1/3",
+          "title": "【3分ボクシングダンス】パンプした腕で打ち込むボクササイズ",
+          "channel": "Marina Takewaki",
+          "videoId": "DpANRK3AldY",
+          "startSeconds": 10,
+          "durationSeconds": 165,
+          "note": "足は固定（またはベッド端座り）で上半身パンチ連打！",
+          "speech": "華金コンボ1本目、3分ボクシングスタートです！足音を出さずにシャープなパンチを繰り出しましょう！",
+          "endSeconds": 175
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT HIIT (2/3)',
-          badge: 'フロア下腹 2/3',
-          title: '【3分下腹】寝たまま下腹のお肉をごっそり落とす簡単筋トレ',
-          channel: 'Marina Takewaki',
-          videoId: 'kcj40PNGgbQ',
-          startSeconds: 18,
-          durationSeconds: 195,
-          note: 'そのまま仰向けになって下腹部を追い込みます！',
-          speech: '2本目は仰向けになって、寝たまま3分間の下腹トレーニングです！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT HIIT (2/3)",
+          "badge": "フロア下腹 2/3",
+          "title": "【3分下腹】寝たまま下腹のお肉をごっそり落とす簡単筋トレ",
+          "channel": "Marina Takewaki",
+          "videoId": "kcj40PNGgbQ",
+          "startSeconds": 16,
+          "durationSeconds": 185,
+          "note": "そのまま仰向けになって下腹部を追い込みます！",
+          "speech": "2本目は仰向けになって、寝たまま3分間の下腹トレーニングです！",
+          "endSeconds": 201
         },
         {
-          type: 'video',
-          phase: 'PHASE 2: SILENT HIIT (3/3)',
-          badge: 'ラスト2分腹筋 3/3',
-          title: '【毎日2分】もっと！腹筋を割るフィニッシャー',
-          channel: 'のがちゃんねる',
-          videoId: 'ygeKbuKSk30',
-          startSeconds: 5,
-          durationSeconds: 130,
-          note: 'ラスト2分を乗り切れば極上のストレッチタイムです！',
-          speech: 'ラスト2分間の腹筋フィニッシャーです！あと少し、一緒に頑張りましょう！'
+          "type": "video",
+          "phase": "PHASE 2: SILENT HIIT (3/3)",
+          "badge": "ラスト2分腹筋 3/3",
+          "title": "【毎日2分】もっと！腹筋を割るフィニッシャー",
+          "channel": "のがちゃんねる",
+          "videoId": "ygeKbuKSk30",
+          "startSeconds": 4,
+          "durationSeconds": 129,
+          "note": "ラスト2分を乗り切れば極上のストレッチタイムです！",
+          "speech": "ラスト2分間の腹筋フィニッシャーです！あと少し、一緒に頑張りましょう！",
+          "endSeconds": 133
         },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: '金曜フィニッシュ！出張疲れを癒やす股割りへ',
-          image: './images/exercises/transition_split_prep.jpg',
-          durationSeconds: 30,
-          pulley: 'ベッド上 または 床タオル',
-          attachment: '開脚ストレッチ',
-          actionSteps: ['① 大きく深呼吸する', '② ベッドの上でゆったり開脚準備', '③ 1週間の疲れをリセット'],
-          setupNote: '出張先でも完璧に40分やり切りました！最後は気持ちよく股関節を伸ばしましょう。',
-          cues: ['息を吐くたびに全身の力を抜きます'],
-          speech: '出張先での金曜メニュー完走、本当にお疲れ様でした！最後はベッドの上でゆったりと股割りストレッチをして、1週間の疲れを癒やしてくださいね。'
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "金曜フィニッシュ！出張疲れを癒やす股割りへ",
+          "image": "./images/exercises/transition_split_prep.jpg",
+          "durationSeconds": 30,
+          "pulley": "ベッド上 または 床タオル",
+          "attachment": "開脚ストレッチ",
+          "actionSteps": [
+            "① 大きく深呼吸する",
+            "② ベッドの上でゆったり開脚準備",
+            "③ 1週間の疲れをリセット"
+          ],
+          "setupNote": "出張先でも完璧に40分やり切りました！最後は気持ちよく股関節を伸ばしましょう。",
+          "cues": [
+            "息を吐くたびに全身の力を抜きます"
+          ],
+          "speech": "出張先での金曜メニュー完走、本当にお疲れ様でした！最後はベッドの上でゆったりと股割りストレッチをして、1週間の疲れを癒やしてくださいね。"
         },
-        { type: 'daily_stretch', phase: 'PHASE 3: SPLIT STRETCH' },
         {
-          type: 'transition',
-          phase: 'TRANSITION',
-          title: 'ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ',
-          image: './images/exercises/meditation_prep.jpg',
-          durationSeconds: 25,
-          pulley: 'ホテルベッド上（あぐら or 仰向け）',
-          attachment: '5分間マインドフルネス瞑想',
-          actionSteps: ['① ベッドの上で楽な姿勢になる', '② 照明を少し落として目を閉じる', '③ 深い呼吸だけに意識を向ける'],
-          setupNote: '出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。',
-          cues: ['ベッドに仰向けになってそのまま脱力しても最高に整います'],
-          speech: 'ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。'
+          "type": "daily_stretch",
+          "phase": "PHASE 3: SPLIT STRETCH"
         },
-        { type: 'daily_meditation', phase: 'PHASE 4: 5min MEDITATION' }
+        {
+          "type": "transition",
+          "phase": "TRANSITION",
+          "title": "ストレッチ完了！ベッドの上で仕上げの5分間瞑想へ",
+          "image": "./images/exercises/meditation_prep.jpg",
+          "durationSeconds": 25,
+          "pulley": "ホテルベッド上（あぐら or 仰向け）",
+          "attachment": "5分間マインドフルネス瞑想",
+          "actionSteps": [
+            "① ベッドの上で楽な姿勢になる",
+            "② 照明を少し落として目を閉じる",
+            "③ 深い呼吸だけに意識を向ける"
+          ],
+          "setupNote": "出張の移動や仕事の緊張も、最後の5分間瞑想で完全にオフへ切り替えます。",
+          "cues": [
+            "ベッドに仰向けになってそのまま脱力しても最高に整います"
+          ],
+          "speech": "ストレッチお疲れ様でした！最後はベッドの上で5分間の瞑想をして、お仕事の緊張も頭の中もスッキリ整えていきましょう。楽な姿勢でそっと目を閉じてくださいね。"
+        },
+        {
+          "type": "daily_meditation",
+          "phase": "PHASE 4: 5min MEDITATION"
+        }
       ]
     }
   }

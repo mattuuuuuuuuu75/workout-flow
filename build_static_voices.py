@@ -87,24 +87,42 @@ def collect_all_texts():
         "40分セッション完走、本当にお疲れ様でした！今日も素晴らしい積み重ねでしたね。最後に開脚の記録も残しておきましょう！",
         "瞑想まで含めたフルセッション完走、本当にお疲れ様でした！体も心もスッキリ整いましたね。最後に今日の記録も残しておきましょう！",
         "仕上げの5分間は、マイ瞑想音楽、の時間です。ゆっくりと深い呼吸を続けながら、穏やかな時間をお過ごしください。",
+        "おはようございます！今朝は身体をいたわる15分ケア編成ですね。まずは深く息を吸って、肩と骨盤まわりをゆったりほぐしていきましょう。",
+        "それでは股割り・柔軟ケアに入りましょう。朝一番の身体をやさしく目覚めさせるように、息を吐きながら伸ばしていきますよ。",
+        "ストレッチお疲れ様でした！最後は5分間の瞑想で、頭と自律神経をスッキリ整えていきましょう。",
+        "ナイスチャレンジです！ピンを1枚上げて、丁寧なフォームで効かせていきましょう！",
     ]
     for t in fixed:
         texts.add(t)
 
     data_js = open(os.path.join(BASE_DIR, "data.js"), "r", encoding="utf-8").read()
-    stretch_section = data_js.split("meditationPool:")[0]
-    # Extract category for stretchPool (+ custom stretch category)
-    for m in re.finditer(r"category:\s*'([^']+)'", stretch_section):
-        cat = m.group(1).strip()
-        texts.add(f"本日の股割りストレッチは、{cat}、のメニューです！息をふーっと吐きながら、気持ちよく伸ばしていきましょうね。")
+    json_match = re.search(r"window\.WORKOUT_DATA\s*=\s*(\{.*\})\s*;?\s*$", data_js, re.S)
+    if json_match:
+        wd = json.loads(json_match.group(1))
+        for sp in wd.get("stretchPool", []):
+            cat = (sp.get("category") or "").strip()
+            if cat:
+                texts.add(f"本日の股割りストレッチは、{cat}、のメニューです！息をふーっと吐きながら、気持ちよく伸ばしていきましょうね。")
+        for mp in wd.get("meditationPool", []):
+            if mp.get("speech"):
+                texts.add(mp["speech"].strip())
+        for group_key in ("homePlans", "hotelPlans"):
+            for plan in (wd.get(group_key) or {}).values():
+                for blk in plan.get("blocks", []):
+                    for k in ("speech", "speechIntro"):
+                        if blk.get(k):
+                            texts.add(blk[k].strip())
+    else:
+        stretch_section = data_js.split("meditationPool")[0]
+        for m in re.finditer(r"""['"]?category['"]?:\s*['"]([^'"]+)['"]""", stretch_section):
+            cat = m.group(1).strip()
+            texts.add(f"本日の股割りストレッチは、{cat}、のメニューです！息をふーっと吐きながら、気持ちよく伸ばしていきましょうね。")
+        for m in re.finditer(r"""['"]?(?:speech|speechIntro)['"]?:\s*['"]([^'"]+)['"]""", data_js):
+            val = m.group(1).strip()
+            if val:
+                texts.add(val)
+
     texts.add("本日の股割りストレッチは、マイ追加動画、のメニューです！息をふーっと吐きながら、気持ちよく伸ばしていきましょうね。")
-
-    # Extract speech / speechIntro strings
-    for m in re.finditer(r"(?:speech|speechIntro):\s*'([^']+)'", data_js):
-        val = m.group(1).strip()
-        if val:
-            texts.add(val)
-
     return sorted(texts)
 
 
