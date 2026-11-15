@@ -39,6 +39,9 @@
       </div>
 
       <div class="topbar-right">
+        <button class="icon-btn" id="openSyncModalBtn" title="Notion クラウド同期ステータス・端末連携設定" aria-label="クラウド同期">
+          <span id="syncIconEmoji">☁️</span> <span class="btn-sublabel" id="syncStatusLabel">未連携</span>
+        </button>
         <button class="icon-btn" id="voiceToggleBtn" title="ショウコさん音声ガイド ON/OFF" aria-label="音声切り替え">
           🎙️ <span class="btn-sublabel">ショウコON</span>
         </button>
@@ -171,7 +174,7 @@
         <!-- 自宅IROTEC プレート枚数メモ -->
         <div class="plate-selector" id="plateSelector">
           <div class="widget-heading-row">
-            <span class="widget-heading-title">ピン位置メモ（自動保存）</span>
+            <span class="widget-heading-title" id="plateHeadingTitle">ピン位置メモ（Notion同期）</span>
             <span class="plate-kg-hint" id="plateKgHint">60 lbs / 約27.0 kg</span>
           </div>
           <div class="plate-stepper-row">
@@ -284,29 +287,43 @@
     </div>
   </div>
 
-  <!-- ==================== モーダル3：完走 ＆ 股割り・Googleヘルス記録 ==================== -->
+  <!-- ==================== モーダル3：完走 ＆ 股割り・Notion自動連携記録 ==================== -->
   <div class="modal-backdrop hidden" id="logModal">
     <div class="modal-sheet">
       <div class="modal-header">
         <div>
           <h3 id="logModalHeading">🏆 ワークアウト記録 ＆ 股割りトラッカー</h3>
-          <p class="modal-sub">週間スタンプ・開脚の進捗・Google Fit / Health Connect 記録用サマリー</p>
+          <p class="modal-sub">週間スタンプ・開脚レベル・Notion「🏃 健康ダッシュボード」＆ライフログ自動同期</p>
         </div>
         <button class="close-modal-btn" data-close="logModal">✕</button>
       </div>
       <div class="modal-body">
         <div class="health-summary-box">
-          <h4>💚 Google ヘルス（Fitness）記録目安（本日の構成）</h4>
+          <div class="sync-summary-header">
+            <h4>☁️ Notion 健康ダッシュボード ＆ ライフログ自動連携</h4>
+            <span class="sync-pill-badge" id="logModalSyncBadge">未連携</span>
+          </div>
           <div class="health-metrics-row">
             <div class="h-metric"><span>筋力トレーニング</span><strong id="hmStrength">--分</strong></div>
             <div class="h-metric"><span>HIIT・有酸素</span><strong id="hmCardio">--分</strong></div>
             <div class="h-metric"><span>柔軟・ヨガ</span><strong id="hmFlex">--分</strong></div>
             <div class="h-metric"><span>マインドフルネス瞑想</span><strong id="hmMeditation">5分</strong></div>
           </div>
+          <div class="quick-record-actions">
+            <button type="button" class="quick-rec-btn primary" id="manualSaveSessionBtn">
+              ✅ 本日のメニュー＆5分瞑想をNotionに記録
+            </button>
+            <button type="button" class="quick-rec-btn meditation" id="manualSaveMeditationBtn">
+              🧘 5分間の瞑想のみ単体で記録
+            </button>
+          </div>
+          <p class="sync-feedback-msg" id="logSyncFeedback">
+            セッション完走時（または上のボタン）で、Notion「健康ダッシュボード」とマインドフルネス瞑想ログ・全端末へ自動同期されます。
+          </p>
         </div>
 
         <div class="weekly-stamp-box">
-          <h4>📅 今週の継続スタンプ（自宅・ホテル合算）</h4>
+          <h4>📅 今週の継続スタンプ（自宅・ホテル・全端末合算）</h4>
           <div class="stamp-row" id="weeklyStampRow"></div>
         </div>
 
@@ -321,6 +338,46 @@
           </div>
           <div class="recent-logs" id="recentLogsList"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== モーダル4：Notion クラウド同期・マルチ端末設定 ==================== -->
+  <div class="modal-backdrop hidden" id="syncModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div>
+          <h3>☁️ Notion クラウド同期 ＆ マルチ端末設定</h3>
+          <p class="modal-sub">スマホ・タブレット・PC・出張先ブラウザ間でウェイト・達成記録・開脚Lv・瞑想を自動同期します</p>
+        </div>
+        <button class="close-modal-btn" data-close="syncModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="health-summary-box">
+          <div class="sync-summary-header">
+            <h4>📡 現在の同期ステータス</h4>
+            <span class="sync-pill-badge" id="syncModalBadge">未連携</span>
+          </div>
+          <p class="sync-feedback-msg" id="syncModalDetail">
+            Notion「🏃 健康ダッシュボード」内の専用ワンクリック同期リンクから開くと、自動でこの端末のブラウザに同期キーが設定されます。
+          </p>
+          <div class="quick-record-actions">
+            <button type="button" class="quick-rec-btn primary" id="syncNowBtn">
+              🔄 今すぐクラウドと最新データを同期
+            </button>
+          </div>
+        </div>
+
+        <form class="add-video-form" id="syncKeyForm">
+          <h4>🔑 端末連携キーの手動設定・更新</h4>
+          <p class="sync-feedback-msg">
+            新しい端末で手動連携する場合は、Notion「🏃 健康ダッシュボード」に記載の同期キーを入力してください（一度保存するとこのブラウザに記憶されます）。
+          </p>
+          <div class="form-row">
+            <input type="password" id="syncKeyInput" placeholder="同期キーを入力（#key=... の値）" autocomplete="off" />
+            <button type="submit" class="primary-sm-btn">保存して同期</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

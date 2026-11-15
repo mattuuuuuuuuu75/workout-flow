@@ -7,6 +7,7 @@
 
   const DATA = window.WORKOUT_DATA;
   const STATIC_VOICES = window.SHOKO_AUDIO_MANIFEST || {};
+  const RELAY_BASE_URL = 'https://workout-flow-gw-6z0fumwa.an.gateway.dev';
   const STORAGE_KEYS = {
     locationMode: 'flow40_location_mode_v2',
     plates: 'flow40_irotec_plates_v1',
@@ -14,8 +15,38 @@
     lastStretchId: 'flow40_last_stretch_id_v1',
     lastMeditationId: 'flow40_last_meditation_id_v1',
     logs: 'flow40_workout_logs_v1',
-    voiceEnabled: 'flow40_voice_enabled_v1'
+    voiceEnabled: 'flow40_voice_enabled_v1',
+    syncKey: 'flow40_sync_key_v1',
+    pendingQueue: 'flow40_sync_pending_v1',
+    lastSyncedAt: 'flow40_last_synced_at_v1'
   };
+
+  function getTodayJst() {
+    return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+  }
+
+  function consumeSyncKeyFromUrl() {
+    let foundKey = '';
+    try {
+      if (window.location.hash && window.location.hash.length > 1) {
+        const hp = new URLSearchParams(window.location.hash.slice(1));
+        foundKey = (hp.get('key') || hp.get('syncKey') || '').trim();
+      }
+      const sp = new URLSearchParams(window.location.search);
+      if (!foundKey) {
+        foundKey = (sp.get('key') || sp.get('syncKey') || '').trim();
+      }
+      if (foundKey) {
+        localStorage.setItem(STORAGE_KEYS.syncKey, foundKey);
+        sp.delete('key');
+        sp.delete('syncKey');
+        const qs = sp.toString();
+        const cleanUrl = window.location.pathname + (qs ? '?' + qs : '');
+        window.history.replaceState(null, '', cleanUrl);
+      }
+    } catch (_) {}
+    return foundKey || (localStorage.getItem(STORAGE_KEYS.syncKey) || '').trim();
+  }
 
   // -------------------- State --------------------
   const state = {
@@ -34,6 +65,11 @@
     plateMap: loadJson(STORAGE_KEYS.plates, {}),
     customStretches: loadJson(STORAGE_KEYS.customStretches, []),
     logs: loadJson(STORAGE_KEYS.logs, []),
+    syncKey: consumeSyncKeyFromUrl(),
+    syncStatus: 'unconfigured',
+    lastSyncedAt: localStorage.getItem(STORAGE_KEYS.lastSyncedAt) || '',
+    lastPullMs: 0,
+    plateSyncTimers: {},
     timerHandle: null,
     demoLoopHandle: null,
     wakeLock: null,
@@ -56,6 +92,9 @@
     overallRemainText: document.getElementById('overallRemainText'),
     overallProgressBar: document.getElementById('overallProgressBar'),
     openTimelineBtn: document.getElementById('openTimelineBtn'),
+    openSyncModalBtn: document.getElementById('openSyncModalBtn'),
+    syncIconEmoji: document.getElementById('syncIconEmoji'),
+    syncStatusLabel: document.getElementById('syncStatusLabel'),
     voiceToggleBtn: document.getElementById('voiceToggleBtn'),
     openPoolModalBtn: document.getElementById('openPoolModalBtn'),
     openLogModalBtn: document.getElementById('openLogModalBtn'),
@@ -93,6 +132,7 @@
     wakeIndicator: document.getElementById('wakeIndicator'),
 
     plateSelector: document.getElementById('plateSelector'),
+    plateHeadingTitle: document.getElementById('plateHeadingTitle'),
     plateKgHint: document.getElementById('plateKgHint'),
     plateMinusBtn: document.getElementById('plateMinusBtn'),
     platePlusBtn: document.getElementById('platePlusBtn'),
@@ -128,13 +168,24 @@
 
     logModal: document.getElementById('logModal'),
     logModalHeading: document.getElementById('logModalHeading'),
+    logModalSyncBadge: document.getElementById('logModalSyncBadge'),
     hmStrength: document.getElementById('hmStrength'),
     hmCardio: document.getElementById('hmCardio'),
     hmFlex: document.getElementById('hmFlex'),
     hmMeditation: document.getElementById('hmMeditation'),
+    manualSaveSessionBtn: document.getElementById('manualSaveSessionBtn'),
+    manualSaveMeditationBtn: document.getElementById('manualSaveMeditationBtn'),
+    logSyncFeedback: document.getElementById('logSyncFeedback'),
     weeklyStampRow: document.getElementById('weeklyStampRow'),
     splitLevelBtns: document.getElementById('splitLevelBtns'),
-    recentLogsList: document.getElementById('recentLogsList')
+    recentLogsList: document.getElementById('recentLogsList'),
+
+    syncModal: document.getElementById('syncModal'),
+    syncModalBadge: document.getElementById('syncModalBadge'),
+    syncModalDetail: document.getElementById('syncModalDetail'),
+    syncNowBtn: document.getElementById('syncNowBtn'),
+    syncKeyForm: document.getElementById('syncKeyForm'),
+    syncKeyInput: document.getElementById('syncKeyInput')
   };
 
   // -------------------- Helpers --------------------
@@ -1031,25 +1082,359 @@
     loadStep(nextIdx, state.isRunning);
   }
 
+  // -------------------- Notion Cloud Sync & Multi-Device State --------------------
+  function computeCurrentSessionMetrics() {
+    const plan = getActivePlan(state.selectedDay);
+    const hasWorkStep = state.steps.some((s) => s.themePhase === 'WORK');
+    let secStrength = 0;
+    let secCardio = 0;
+    let secFlex = 0;
+    let secMeditation = 0;
+
+    state.steps.forEach((s) => {
+      if (s.themePhase === 'WORK' || s.themePhase === 'REST') {
+        secStrength += s.durationSeconds;
+      } else if (s.themePhase === 'SETUP' || s.themePhase === 'PREP') {
+        if (hasWorkStep) secStrength += s.durationSeconds;
+        else secFlex += s.durationSeconds;
+      } else if (s.themePhase === 'HIIT') {
+        secCardio += s.durationSeconds;
+      } else if (s.themePhase === 'STRETCH') {
+        secFlex += s.durationSeconds;
+      } else if (s.themePhase === 'MEDITATION') {
+        secMeditation += s.durationSeconds;
+      }
+    });
+
+    const weightsMap = {};
+    const weightParts = [];
+    if (state.locationMode === 'home' && Array.isArray(plan.blocks)) {
+      plan.blocks.forEach((b) => {
+        if (b.type === 'machine' && b.id && !b.hidePlates) {
+          const p = getPlatesForExercise(b.id, b.defaultPlates);
+          const det = formatPlateDetail(p);
+          weightsMap[b.id] = { title: b.title, plates: p, kg: Number(det.kg) };
+          const shortTitle = b.title.replace(/（.*?）/g, (m) =>
+            m.includes('横') ? '(横)' : m.includes('縦') ? '(縦)' : ''
+          );
+          weightParts.push(`${shortTitle}: ${p}枚(${det.kg}kg)`);
+        }
+      });
+    }
+
+    const medObj = getAllMeditations().find((m) => m.id === state.selectedMeditationId);
+    return {
+      strengthMin: Math.round(secStrength / 60),
+      cardioMin: Math.round(secCardio / 60),
+      flexMin: Math.round(secFlex / 60),
+      meditationMin: Math.max(5, Math.round(secMeditation / 60) || 5),
+      weightsMap,
+      weightsSummary: weightParts.join(' / '),
+      meditationTitle: medObj ? medObj.title : '5分間の瞑想'
+    };
+  }
+
+  function updateSyncUI(feedbackMessage) {
+    if (!el.openSyncModalBtn) return;
+
+    el.openSyncModalBtn.classList.remove('sync-on', 'sync-busy', 'sync-err');
+    const badges = [el.logModalSyncBadge, el.syncModalBadge].filter(Boolean);
+    badges.forEach((b) => b.classList.remove('connected', 'syncing', 'error'));
+
+    const hasKey = Boolean(state.syncKey);
+    if (!hasKey) {
+      state.syncStatus = 'unconfigured';
+      el.syncIconEmoji.textContent = '☁️';
+      el.syncStatusLabel.textContent = '未連携';
+      badges.forEach((b) => {
+        b.textContent = '端末ローカル保存のみ（未連携）';
+      });
+      if (el.plateHeadingTitle) el.plateHeadingTitle.textContent = 'ピン位置メモ（端末保存）';
+      if (el.syncModalDetail) {
+        el.syncModalDetail.textContent =
+          'Notion「🏃 健康ダッシュボード」上部の専用ワンクリックリンクから開くと、スマホ・PC・タブレット間で自動同期が有効になります。';
+      }
+    } else if (state.syncStatus === 'syncing') {
+      el.openSyncModalBtn.classList.add('sync-busy');
+      el.syncIconEmoji.textContent = '🔄';
+      el.syncStatusLabel.textContent = '同期中';
+      badges.forEach((b) => {
+        b.textContent = '🔄 Notion同期中...';
+        b.classList.add('syncing');
+      });
+    } else if (state.syncStatus === 'unauthorized') {
+      el.openSyncModalBtn.classList.add('sync-err');
+      el.syncIconEmoji.textContent = '⚠️';
+      el.syncStatusLabel.textContent = '要再設定';
+      badges.forEach((b) => {
+        b.textContent = '⚠️ 同期キー不一致';
+        b.classList.add('error');
+      });
+      if (el.syncModalDetail) {
+        el.syncModalDetail.textContent =
+          '同期キーが一致しません。Notion「🏃 健康ダッシュボード」の専用リンクから再度開くか、正しいキーを入力してください。';
+      }
+    } else if (state.syncStatus === 'offline') {
+      el.openSyncModalBtn.classList.add('sync-busy');
+      el.syncIconEmoji.textContent = '📡';
+      el.syncStatusLabel.textContent = '待機中';
+      badges.forEach((b) => {
+        b.textContent = '📡 オフライン保留中（復帰時自動送信）';
+        b.classList.add('syncing');
+      });
+    } else {
+      state.syncStatus = 'connected';
+      el.openSyncModalBtn.classList.add('sync-on');
+      el.syncIconEmoji.textContent = '☁️';
+      el.syncStatusLabel.textContent = '同期ON';
+      badges.forEach((b) => {
+        b.textContent = '✅ Notion クラウド同期ON';
+        b.classList.add('connected');
+      });
+      if (el.plateHeadingTitle) el.plateHeadingTitle.textContent = 'ピン位置メモ（Notion自動同期）';
+      if (el.syncModalDetail) {
+        const lastTxt = state.lastSyncedAt ? `（最終同期: ${state.lastSyncedAt}）` : '';
+        el.syncModalDetail.textContent = `Notion「🏃 健康ダッシュボード」および全端末と自動同期中です${lastTxt}。`;
+      }
+    }
+
+    if (feedbackMessage && el.logSyncFeedback) {
+      el.logSyncFeedback.textContent = feedbackMessage;
+    }
+  }
+
+  function enqueuePendingSync(endpoint, payload) {
+    const queue = loadJson(STORAGE_KEYS.pendingQueue, []);
+    // 同一エンドポイント＋同一キーの古い保留は最新で上書き
+    const deduped = queue.filter((item) => {
+      if (item.endpoint !== endpoint) return true;
+      if (endpoint === '/api/plates' && item.payload?.exerciseId === payload?.exerciseId) return false;
+      if (endpoint === '/api/session' && item.payload?.date === payload?.date) return false;
+      if (endpoint === '/api/split-level' && item.payload?.date === payload?.date) return false;
+      return true;
+    });
+    deduped.push({ endpoint, payload, queuedAt: Date.now() });
+    saveJson(STORAGE_KEYS.pendingQueue, deduped.slice(-25));
+  }
+
+  async function relayRequest(endpoint, method = 'GET', payload = null, { allowQueue = true } = {}) {
+    if (!state.syncKey || !RELAY_BASE_URL || RELAY_BASE_URL.includes('placeholder')) {
+      return null;
+    }
+
+    state.syncStatus = 'syncing';
+    updateSyncUI();
+
+    try {
+      const resp = await fetch(RELAY_BASE_URL + endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Workout-Key': state.syncKey
+        },
+        body: payload ? JSON.stringify(payload) : undefined
+      });
+
+      if (resp.status === 401) {
+        state.syncStatus = 'unauthorized';
+        updateSyncUI('⚠️ 同期キーが無効です。右上の「☁️」から同期キーを確認してください。');
+        return null;
+      }
+
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) {
+        throw new Error(data.error || `HTTP ${resp.status}`);
+      }
+
+      const nowStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+      state.lastSyncedAt = nowStr;
+      localStorage.setItem(STORAGE_KEYS.lastSyncedAt, nowStr);
+      state.syncStatus = 'connected';
+      updateSyncUI();
+      return data;
+    } catch (err) {
+      if (method === 'POST' && allowQueue) {
+        enqueuePendingSync(endpoint, payload);
+      }
+      state.syncStatus = 'offline';
+      updateSyncUI('📡 通信待機中：この端末に保存しました（オンライン復帰時に自動でNotionへ送信されます）。');
+      return null;
+    }
+  }
+
+  async function flushPendingSyncQueue() {
+    if (!state.syncKey) return;
+    const queue = loadJson(STORAGE_KEYS.pendingQueue, []);
+    if (!queue.length) return;
+
+    const remain = [];
+    for (const item of queue) {
+      const res = await relayRequest(item.endpoint, 'POST', item.payload, { allowQueue: false });
+      if (!res) {
+        remain.push(item);
+      }
+    }
+    saveJson(STORAGE_KEYS.pendingQueue, remain);
+  }
+
+  async function pullCloudState({ silent = false } = {}) {
+    if (!state.syncKey) {
+      updateSyncUI();
+      return;
+    }
+
+    await flushPendingSyncQueue();
+    const data = await relayRequest('/api/state', 'GET', null, { allowQueue: false });
+    if (!data) return;
+
+    state.lastPullMs = Date.now();
+
+    // 1. IROTEC ピン枚数マージ（クラウド側の最新マスタを反映）
+    if (data.plates && typeof data.plates === 'object') {
+      state.plateMap = { ...state.plateMap, ...data.plates };
+      saveJson(STORAGE_KEYS.plates, state.plateMap);
+    }
+
+    // 2. カスタム追加YouTubeストレッチ動画マージ
+    if (Array.isArray(data.customStretches) && data.customStretches.length > 0) {
+      const byVid = new Map();
+      [...state.customStretches, ...data.customStretches].forEach((c) => {
+        if (c && c.videoId) byVid.set(c.videoId, c);
+      });
+      state.customStretches = [...byVid.values()];
+      saveJson(STORAGE_KEYS.customStretches, state.customStretches);
+    }
+
+    // 3. セッション＆開脚ログマージ（日付キーで統合・最新順ソート）
+    if (Array.isArray(data.logs)) {
+      const logMap = new Map();
+      state.logs.forEach((l) => {
+        if (l && l.date) logMap.set(l.date, { ...l });
+      });
+      data.logs.forEach((cl) => {
+        if (!cl || !cl.date) return;
+        const prev = logMap.get(cl.date) || {};
+        logMap.set(cl.date, {
+          ...prev,
+          ...cl,
+          splitLevel: cl.splitLevel || prev.splitLevel || null,
+          meditationDone: Boolean(cl.meditationDone || prev.meditationDone)
+        });
+      });
+      state.logs = [...logMap.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+      saveJson(STORAGE_KEYS.logs, state.logs);
+    }
+
+    updateStreakBadge();
+    renderCurrentStep();
+    if (!el.logModal.classList.contains('hidden')) {
+      renderWeeklyStamps();
+      renderSplitHistory();
+    }
+    if (!silent) {
+      updateSyncUI('✅ Notion「健康ダッシュボード」から最新のウェイト・記録を同期しました！');
+    }
+  }
+
+  function upsertLocalLog(dateStr, patch) {
+    const idx = state.logs.findIndex((l) => l.date === dateStr);
+    if (idx >= 0) {
+      state.logs[idx] = { ...state.logs[idx], ...patch };
+    } else {
+      state.logs.unshift({ date: dateStr, splitLevel: null, ...patch });
+    }
+    state.logs.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    saveJson(STORAGE_KEYS.logs, state.logs);
+  }
+
+  async function syncFullSessionToCloud({ fromManualBtn = false } = {}) {
+    const todayIso = getTodayJst();
+    const plan = getActivePlan(state.selectedDay);
+    const metrics = computeCurrentSessionMetrics();
+    const existing = state.logs.find((l) => l.date === todayIso);
+
+    upsertLocalLog(todayIso, {
+      dayKey: state.selectedDay,
+      locationMode: state.locationMode,
+      theme: plan.shortTheme,
+      strengthMin: metrics.strengthMin,
+      cardioMin: metrics.cardioMin,
+      flexMin: metrics.flexMin,
+      meditationMin: metrics.meditationMin,
+      meditationDone: true,
+      weightsSummary: metrics.weightsSummary,
+      splitLevel: existing?.splitLevel || null
+    });
+    updateStreakBadge();
+    renderWeeklyStamps();
+
+    const res = await relayRequest('/api/session', 'POST', {
+      date: todayIso,
+      locationMode: state.locationMode,
+      dayKey: state.selectedDay,
+      dayLabel: plan.dayLabel,
+      theme: plan.shortTheme,
+      strengthMin: metrics.strengthMin,
+      cardioMin: metrics.cardioMin,
+      flexMin: metrics.flexMin,
+      meditationMin: metrics.meditationMin,
+      meditationDone: true,
+      splitLevel: existing?.splitLevel || undefined,
+      weightsMap: metrics.weightsMap,
+      weightsSummary: metrics.weightsSummary,
+      meditationTitle: metrics.meditationTitle
+    });
+
+    if (res) {
+      updateSyncUI(
+        fromManualBtn
+          ? '✅ 本日のワークアウト＆5分瞑想をNotion「健康ダッシュボード」とマインドフルネスログへ記録しました！'
+          : '🎉 Notion「健康ダッシュボード」＆5分瞑想ログへ自動保存しました！下の開脚レベルもタップで追記できます。'
+      );
+    }
+  }
+
+  async function syncStandaloneMeditationToCloud() {
+    const todayIso = getTodayJst();
+    const plan = getActivePlan(state.selectedDay);
+    const medObj = getAllMeditations().find((m) => m.id === state.selectedMeditationId);
+    const existing = state.logs.find((l) => l.date === todayIso);
+
+    upsertLocalLog(todayIso, {
+      dayKey: existing?.dayKey ?? state.selectedDay,
+      locationMode: existing?.locationMode || state.locationMode,
+      theme: existing?.theme || '5分間の瞑想',
+      meditationMin: Math.max(5, existing?.meditationMin || 5),
+      meditationDone: true
+    });
+    updateStreakBadge();
+    renderWeeklyStamps();
+
+    const res = await relayRequest('/api/meditation', 'POST', {
+      date: todayIso,
+      locationMode: state.locationMode,
+      dayKey: state.selectedDay,
+      dayLabel: plan.dayLabel,
+      meditationMin: 5,
+      meditationDone: true,
+      meditationOnly: !existing,
+      meditationTitle: medObj ? medObj.title : '5分間の瞑想'
+    });
+
+    if (res) {
+      updateSyncUI('🧘 本日の「5分間の瞑想」をNotion（健康ダッシュボード＆マインドフルネスログ）へ記録しました！');
+    } else if (!state.syncKey) {
+      updateSyncUI('📝 この端末に瞑想を記録しました（Notion連携は右上の「☁️」から有効化できます）。');
+    }
+  }
+
   function completeWorkoutSession() {
     pauseSession();
     playCalmChime();
     speakShoko('瞑想まで含めたフルセッション完走、本当にお疲れ様でした！体も心もスッキリ整いましたね。最後に今日の記録も残しておきましょう！');
 
-    const todayIso = new Date().toISOString().slice(0, 10);
-    const plan = getActivePlan(state.selectedDay);
-    const existing = state.logs.find((l) => l.date === todayIso);
-    if (!existing) {
-      state.logs.unshift({
-        date: todayIso,
-        dayKey: state.selectedDay,
-        theme: plan.shortTheme,
-        splitLevel: null
-      });
-      saveJson(STORAGE_KEYS.logs, state.logs);
-    }
-    updateStreakBadge();
     openLogModal(true);
+    syncFullSessionToCloud({ fromManualBtn: false });
   }
 
   // -------------------- Plate Adjustment --------------------
@@ -1061,11 +1446,23 @@
         : state.steps.slice(state.currentIndex + 1).find((s) => s.exerciseId && !s.hidePlates);
     if (!targetStep) return;
 
-    const cur = getPlatesForExercise(targetStep.exerciseId, targetStep.defaultPlates);
+    const exId = targetStep.exerciseId;
+    const cur = getPlatesForExercise(exId, targetStep.defaultPlates);
     const next = Math.max(1, Math.min(DATA.maxPlates, cur + delta));
-    state.plateMap[targetStep.exerciseId] = next;
+    state.plateMap[exId] = next;
     saveJson(STORAGE_KEYS.plates, state.plateMap);
     renderCurrentStep();
+
+    if (state.syncKey) {
+      clearTimeout(state.plateSyncTimers[exId]);
+      state.plateSyncTimers[exId] = setTimeout(() => {
+        relayRequest('/api/plates', 'POST', {
+          exerciseId: exId,
+          plates: next,
+          exerciseName: targetStep.title
+        });
+      }, 650);
+    }
   }
 
   // -------------------- Shuffle Daily Stretch / Meditation --------------------
@@ -1211,43 +1608,47 @@
     return m ? m[1] : null;
   }
 
+  function renderWeeklyStamps() {
+    const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
+    const todayStr = getTodayJst();
+    const todayUtc = new Date(todayStr + 'T00:00:00Z');
+    const dowFromMon = (todayUtc.getUTCDay() + 6) % 7; // Mon=0 .. Sun=6
+    const monUtc = new Date(todayUtc);
+    monUtc.setUTCDate(todayUtc.getUTCDate() - dowFromMon);
+
+    const logDates = new Set(state.logs.map((l) => l.date));
+    el.weeklyStampRow.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monUtc);
+      d.setUTCDate(monUtc.getUTCDate() + i);
+      const dIso = d.toISOString().slice(0, 10);
+      const done = logDates.has(dIso);
+      const cell = document.createElement('div');
+      cell.className = 'stamp-cell' + (done ? ' done' : '');
+      cell.title = dIso;
+      cell.innerHTML = `<div>${dayNames[i]}</div><div>${done ? '✅' : '・'}</div>`;
+      el.weeklyStampRow.appendChild(cell);
+    }
+  }
+
   function openLogModal(justFinished = false) {
     el.logModalHeading.textContent = justFinished
       ? '🎉 筋トレ・股割り・5分瞑想 フル完走！お疲れ様でした！'
       : '🏆 ワークアウト記録 ＆ 股割りトラッカー';
 
-    let secStrength = 0;
-    let secCardio = 0;
-    let secFlex = 0;
-    let secMeditation = 0;
-    state.steps.forEach((s) => {
-      if (s.themePhase === 'WORK' || s.themePhase === 'REST' || s.themePhase === 'SETUP' || s.themePhase === 'PREP') {
-        secStrength += s.durationSeconds;
-      } else if (s.themePhase === 'HIIT') {
-        secCardio += s.durationSeconds;
-      } else if (s.themePhase === 'STRETCH') {
-        secFlex += s.durationSeconds;
-      } else if (s.themePhase === 'MEDITATION') {
-        secMeditation += s.durationSeconds;
-      }
-    });
-    el.hmStrength.textContent = `${Math.round(secStrength / 60)} 分`;
-    el.hmCardio.textContent = `${Math.round(secCardio / 60)} 分`;
-    el.hmFlex.textContent = `${Math.round(secFlex / 60)} 分`;
-    el.hmMeditation.textContent = `${Math.round(secMeditation / 60)} 分`;
+    const m = computeCurrentSessionMetrics();
+    el.hmStrength.textContent = `${m.strengthMin} 分`;
+    el.hmCardio.textContent = `${m.cardioMin} 分`;
+    el.hmFlex.textContent = `${m.flexMin} 分`;
+    el.hmMeditation.textContent = `${m.meditationMin} 分`;
 
-    const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
-    const dayKeys = [1, 2, 3, 4, 5, 6, 0];
-    const recentDates = new Set(state.logs.slice(0, 7).map((l) => l.dayKey));
-    el.weeklyStampRow.innerHTML = '';
-    dayKeys.forEach((dk, i) => {
-      const done = recentDates.has(dk);
-      const cell = document.createElement('div');
-      cell.className = 'stamp-cell' + (done ? ' done' : '');
-      cell.innerHTML = `<div>${dayNames[i]}</div><div>${done ? '✅' : '・'}</div>`;
-      el.weeklyStampRow.appendChild(cell);
+    const todayRec = state.logs.find((l) => l.date === getTodayJst());
+    el.splitLevelBtns.querySelectorAll('button').forEach((b) => {
+      b.classList.toggle('saved', Boolean(todayRec && Number(b.dataset.level) === Number(todayRec.splitLevel)));
     });
 
+    updateSyncUI();
+    renderWeeklyStamps();
     renderSplitHistory();
     el.logModal.classList.remove('hidden');
   }
@@ -1260,12 +1661,17 @@
       4: '💪 Lv.4 肘がついた！',
       5: '🔥 Lv.5 胸ペター達成！'
     };
-    const withSplit = state.logs.filter((l) => l.splitLevel).slice(0, 6);
-    el.recentLogsList.innerHTML = withSplit.length
-      ? withSplit
-          .map((l) => `<div>📅 ${l.date}（${l.theme}）：<strong>${levelLabels[l.splitLevel]}</strong></div>`)
+    const recent = state.logs.slice(0, 6);
+    el.recentLogsList.innerHTML = recent.length
+      ? recent
+          .map((l) => {
+            const locIcon = l.locationMode === 'hotel' ? '🏨' : '🏠';
+            const medTag = l.meditationDone ? ' ・ 🧘瞑想済' : '';
+            const splitTag = l.splitLevel ? ` ・ <strong>${levelLabels[l.splitLevel]}</strong>` : '';
+            return `<div>📅 ${l.date} ${locIcon}（${l.theme || '実践'}）${medTag}${splitTag}</div>`;
+          })
           .join('')
-      : '<div>まだ開脚レベルの記録がありません。上のボタンからワンタップで残せます！</div>';
+      : '<div>まだ記録がありません。セッション完走または上の記録ボタンから残せます！</div>';
   }
 
   function updateStreakBadge() {
@@ -1358,6 +1764,51 @@
 
     el.openLogModalBtn.addEventListener('click', () => openLogModal(false));
 
+    el.openSyncModalBtn.addEventListener('click', () => {
+      updateSyncUI();
+      if (el.syncKeyInput) {
+        el.syncKeyInput.value = state.syncKey || '';
+      }
+      el.syncModal.classList.remove('hidden');
+    });
+
+    el.syncNowBtn.addEventListener('click', () => {
+      pullCloudState({ silent: false });
+    });
+
+    el.syncKeyForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let raw = (el.syncKeyInput.value || '').trim();
+      const m = raw.match(/(?:key|syncKey)=([A-Za-z0-9_-]+)/);
+      if (m) raw = m[1];
+      state.syncKey = raw;
+      if (raw) {
+        localStorage.setItem(STORAGE_KEYS.syncKey, raw);
+        pullCloudState({ silent: false });
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.syncKey);
+        updateSyncUI();
+      }
+    });
+
+    el.manualSaveSessionBtn.addEventListener('click', () => {
+      syncFullSessionToCloud({ fromManualBtn: true });
+    });
+
+    el.manualSaveMeditationBtn.addEventListener('click', () => {
+      syncStandaloneMeditationToCloud();
+    });
+
+    window.addEventListener('online', () => {
+      if (state.syncKey) pullCloudState({ silent: true });
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state.syncKey && Date.now() - state.lastPullMs > 45000) {
+        pullCloudState({ silent: true });
+      }
+    });
+
     document.querySelectorAll('.close-modal-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const target = document.getElementById(btn.dataset.close);
@@ -1398,25 +1849,41 @@
       el.customVideoUrl.value = '';
       el.customVideoTitle.value = '';
       applySelectedStretch(newEntry.id);
+      if (state.syncKey) {
+        relayRequest('/api/custom-stretches', 'POST', { customStretches: state.customStretches });
+      }
     });
 
     el.splitLevelBtns.querySelectorAll('button').forEach((btn) => {
       btn.addEventListener('click', () => {
         const lv = Number(btn.dataset.level);
-        const todayIso = new Date().toISOString().slice(0, 10);
+        const todayIso = getTodayJst();
         const plan = getActivePlan(state.selectedDay);
-        let rec = state.logs.find((l) => l.date === todayIso);
-        if (!rec) {
-          rec = { date: todayIso, dayKey: state.selectedDay, theme: plan.shortTheme, splitLevel: lv };
-          state.logs.unshift(rec);
-        } else {
-          rec.splitLevel = lv;
-        }
-        saveJson(STORAGE_KEYS.logs, state.logs);
+        upsertLocalLog(todayIso, {
+          dayKey: state.selectedDay,
+          locationMode: state.locationMode,
+          theme: plan.shortTheme,
+          splitLevel: lv
+        });
         el.splitLevelBtns.querySelectorAll('button').forEach((b) => b.classList.remove('saved'));
         btn.classList.add('saved');
         updateStreakBadge();
+        renderWeeklyStamps();
         renderSplitHistory();
+        if (state.syncKey) {
+          relayRequest('/api/split-level', 'POST', {
+            date: todayIso,
+            splitLevel: lv,
+            dayKey: state.selectedDay,
+            dayLabel: plan.dayLabel,
+            locationMode: state.locationMode,
+            theme: plan.shortTheme
+          }).then((res) => {
+            if (res) {
+              updateSyncUI(`🤸 開脚レベル Lv.${lv} をNotion「健康ダッシュボード」へ保存しました！`);
+            }
+          });
+        }
       });
     });
   }
@@ -1431,10 +1898,14 @@
   // -------------------- Boot --------------------
   function init() {
     updateVoiceBtnUI();
+    updateSyncUI();
     updateStreakBadge();
     bindEvents();
     initYouTubeApi();
     selectDay(state.selectedDay);
+    if (state.syncKey) {
+      pullCloudState({ silent: true });
+    }
   }
 
   init();
