@@ -1,5 +1,6 @@
 // ============================================================================
-// 筋トレNOW スタジオ v3 — 建設NOWニュースUI × 厳密図解 × ショウコさん音声 × 仕上げ5分瞑想
+// 筋トレNOW スタジオ v4 — 朝一スマート・コーチング仕様
+// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × PixelWatch睡眠HRV連動 × 漸進負荷ナビ × 時短切替）
 // ============================================================================
 
 (function () {
@@ -10,7 +11,11 @@
   const RELAY_BASE_URL = 'https://workout-flow-gw-6z0fumwa.an.gateway.dev';
   const STORAGE_KEYS = {
     locationMode: 'flow40_location_mode_v2',
+    durationMode: 'flow40_duration_mode_v1',
+    durationModeDate: 'flow40_duration_mode_date_v1',
     plates: 'flow40_irotec_plates_v1',
+    rpeMap: 'flow40_rpe_map_v1',
+    morningCond: 'flow40_morning_cond_v1',
     customStretches: 'flow40_custom_stretches_v1',
     lastStretchId: 'flow40_last_stretch_id_v1',
     lastMeditationId: 'flow40_last_meditation_id_v1',
@@ -51,6 +56,7 @@
   // -------------------- State --------------------
   const state = {
     locationMode: resolveInitialLocation(), // 'home' | 'hotel'
+    durationMode: resolveInitialDurationMode(), // 'full' | 'short' | 'care'
     selectedDay: resolveInitialDay(),
     selectedStretchId: null,
     selectedMeditationId: null,
@@ -63,6 +69,8 @@
     voiceEnabled: loadBool(STORAGE_KEYS.voiceEnabled, true),
     showDemoPip: false,
     plateMap: loadJson(STORAGE_KEYS.plates, {}),
+    rpeMap: loadJson(STORAGE_KEYS.rpeMap, {}),
+    morningCondition: loadJson(STORAGE_KEYS.morningCond, null),
     customStretches: loadJson(STORAGE_KEYS.customStretches, []),
     logs: loadJson(STORAGE_KEYS.logs, []),
     syncKey: consumeSyncKeyFromUrl(),
@@ -87,6 +95,9 @@
     body: document.body,
     locHomeBtn: document.getElementById('locHomeBtn'),
     locHotelBtn: document.getElementById('locHotelBtn'),
+    durFullBtn: document.getElementById('durFullBtn'),
+    durShortBtn: document.getElementById('durShortBtn'),
+    durCareBtn: document.getElementById('durCareBtn'),
     daySwitcher: document.getElementById('daySwitcher'),
     overallStepText: document.getElementById('overallStepText'),
     overallRemainText: document.getElementById('overallRemainText'),
@@ -120,6 +131,12 @@
     idleHeroBanner: document.getElementById('idleHeroBanner'),
     heroStartBtn: document.getElementById('heroStartBtn'),
 
+    morningConditionBar: document.getElementById('morningConditionBar'),
+    mcBadge: document.getElementById('mcBadge'),
+    mcVitals: document.getElementById('mcVitals'),
+    mcMessage: document.getElementById('mcMessage'),
+    mcActionBtn: document.getElementById('mcActionBtn'),
+
     phasePill: document.getElementById('phasePill'),
     setDots: document.getElementById('setDots'),
     currentStepTitle: document.getElementById('currentStepTitle'),
@@ -134,9 +151,17 @@
     plateSelector: document.getElementById('plateSelector'),
     plateHeadingTitle: document.getElementById('plateHeadingTitle'),
     plateKgHint: document.getElementById('plateKgHint'),
+    overloadBanner: document.getElementById('overloadBanner'),
+    overloadText: document.getElementById('overloadText'),
+    overloadAcceptBtn: document.getElementById('overloadAcceptBtn'),
     plateMinusBtn: document.getElementById('plateMinusBtn'),
     platePlusBtn: document.getElementById('platePlusBtn'),
     plateCountNum: document.getElementById('plateCountNum'),
+
+    rpeFeedbackBox: document.getElementById('rpeFeedbackBox'),
+    rpeHeadingTitle: document.getElementById('rpeHeadingTitle'),
+    rpeStreakHint: document.getElementById('rpeStreakHint'),
+    rpeBtnRow: document.getElementById('rpeBtnRow'),
 
     hotelTipBox: document.getElementById('hotelTipBox'),
     hotelTipText: document.getElementById('hotelTipText'),
@@ -178,6 +203,9 @@
     logSyncFeedback: document.getElementById('logSyncFeedback'),
     weeklyStampRow: document.getElementById('weeklyStampRow'),
     splitLevelBtns: document.getElementById('splitLevelBtns'),
+    splitQuickChips: document.getElementById('splitQuickChips'),
+    splitMemoForm: document.getElementById('splitMemoForm'),
+    splitMemoInput: document.getElementById('splitMemoInput'),
     recentLogsList: document.getElementById('recentLogsList'),
 
     syncModal: document.getElementById('syncModal'),
@@ -197,13 +225,28 @@
     return saved === 'hotel' ? 'hotel' : 'home';
   }
 
+  function resolveInitialDurationMode() {
+    const params = new URLSearchParams(window.location.search);
+    const qMode = params.get('mode') || params.get('dur');
+    if (qMode === 'full' || qMode === 'short' || qMode === 'care') return qMode;
+    // 同じ日のリロードなら選択維持、翌朝になったら標準「通常フル」へリセット
+    const savedDate = localStorage.getItem(STORAGE_KEYS.durationModeDate);
+    const savedMode = localStorage.getItem(STORAGE_KEYS.durationMode);
+    if (savedDate === getTodayJst() && (savedMode === 'short' || savedMode === 'care')) {
+      return savedMode;
+    }
+    return 'full';
+  }
+
   function resolveInitialDay() {
     const params = new URLSearchParams(window.location.search);
     const qDay = params.get('day');
     if (qDay !== null && DATA.homePlans[Number(qDay)]) {
       return Number(qDay);
     }
-    return new Date().getDay();
+    // JSTの曜日を採用
+    const jstDay = new Date(Date.now() + 9 * 3600 * 1000).getUTCDay();
+    return jstDay;
   }
 
   function getActivePlan(dayKey) {
@@ -261,6 +304,10 @@
     return { lbs, kg, text: `${lbs} lbs / 約${kg} kg` };
   }
 
+  function cleanExerciseShortTitle(title) {
+    return String(title || '').replace(/^[①②③④⑤]\s*/, '');
+  }
+
   // -------------------- 日替わり股割り ＆ 5分瞑想ローテーション選出 --------------------
   function pickSmartStretch(dayKey) {
     const pool = getAllStretches();
@@ -292,7 +339,7 @@
     return candidate.id;
   }
 
-  // -------------------- タイムライン構築 --------------------
+  // -------------------- タイムライン構築（通常40分 / 時短20分 / ケア15分 対応） --------------------
   function buildSessionSteps(dayKey, stretchIdOverride, meditationIdOverride) {
     const plan = getActivePlan(dayKey);
     const stretchPool = getAllStretches();
@@ -306,6 +353,92 @@
     state.selectedMeditationId = chosenMedId;
     const medObj = medPool.find((m) => m.id === chosenMedId) || medPool[0];
 
+    const durMode = state.durationMode || 'full';
+
+    // ① 🧘 ケア＆瞑想 15分編成（疲労蓄積朝・睡眠不足朝でもゼロにしない回復専用コース）
+    if (durMode === 'care') {
+      const careSteps = [
+        {
+          kind: 'warmup',
+          themePhase: 'PREP',
+          phaseLabel: 'MORNING CARE PREP',
+          title: '🌅 朝一リカバリー深呼吸 ＆ 肩・骨盤ゆらし',
+          image: './images/exercises/warmup_shoulder_roll.jpg',
+          actionSteps: ['① 鼻から4秒かけて深く吸う', '② 口から6秒かけて脱力しながら吐く', '③ 肩と股関節をやさしく揺らす'],
+          subtitle: '無理に追い込まず、朝の関節ケアと自律神経リセットに特化した15分編成です。',
+          setupNote: '今朝は身体を労わる15分ケア編成です。深い呼吸で全身に酸素を巡らせましょう。',
+          durationSeconds: 35,
+          pulley: 'ヨガマット / ベッド可',
+          attachment: 'リカバリー・ケア編成',
+          cues: ['疲労がある朝でも「ゼロにしない」ことが最大の継続力になります'],
+          speechText: 'おはようございます！今朝は身体をいたわる15分ケア編成ですね。まずは深く息を吸って、肩と骨盤まわりをゆったりほぐしていきましょう。'
+        }
+      ];
+
+      if (stretchObj) {
+        careSteps.push({
+          kind: 'video',
+          isDailyStretch: true,
+          isDailyMeditation: false,
+          stretchId: stretchObj.id,
+          themePhase: 'STRETCH',
+          phaseLabel: 'PHASE 1: SPLIT & CARE',
+          badge: `${stretchObj.badge}（朝一ケア編成）`,
+          title: stretchObj.title,
+          subtitle: `${stretchObj.channel}｜${stretchObj.focus}`,
+          channel: stretchObj.channel,
+          videoId: stretchObj.videoId,
+          startSeconds: stretchObj.startSeconds || 0,
+          durationSeconds: Math.min(stretchObj.durationSeconds, 540),
+          safetyTip: '🤸 朝はまだ筋肉が硬めなので、痛気持ちいい6〜7割の伸びで呼吸を続けます',
+          speechText: `それでは股割り・柔軟ケアに入りましょう。朝一番の身体をやさしく目覚めさせるように、息を吐きながら伸ばしていきますよ。`
+        });
+      }
+
+      careSteps.push({
+        kind: 'transition',
+        themePhase: 'SETUP',
+        phaseLabel: 'TRANSITION',
+        title: 'ストレッチ完了！姿勢を整えて仕上げの5分間瞑想へ',
+        image: './images/exercises/meditation_prep.jpg',
+        actionSteps: ['① あぐら（または仰向け）で楽にする', '② 肩の力を抜き目を軽く閉じる', '③ 自然な鼻呼吸へ切り替える'],
+        subtitle: '最後は5分間の瞑想で自律神経を整えて1日をスタートします。',
+        setupNote: '最後は5分間の瞑想で頭をクリアに整えて朝のルーティン完了です。',
+        durationSeconds: 20,
+        pulley: 'ヨガマット（あぐら or 仰向け）',
+        attachment: '5分間マインドフルネス瞑想',
+        cues: ['膝が気になる場合は足を伸ばすか仰向けでもOKです'],
+        speechText: 'ストレッチお疲れ様でした！最後は5分間の瞑想で、頭と自律神経をスッキリ整えていきましょう。'
+      });
+
+      if (medObj) {
+        careSteps.push({
+          kind: 'video',
+          isDailyStretch: false,
+          isDailyMeditation: true,
+          meditationId: medObj.id,
+          themePhase: 'MEDITATION',
+          phaseLabel: 'PHASE 2: 5min MEDITATION',
+          badge: `${medObj.badge}`,
+          title: medObj.title,
+          subtitle: `${medObj.channel}｜${medObj.focus}`,
+          channel: medObj.channel,
+          videoId: medObj.videoId,
+          startSeconds: medObj.startSeconds || 0,
+          durationSeconds: medObj.durationSeconds,
+          safetyTip: '🧘 5分間瞑想：目を閉じて肩の力を抜き、ゆっくりと自然な呼吸に意識を向けます',
+          speechText:
+            medObj.speech ||
+            '仕上げの5分間は、瞑想タイムです。ゆっくりと深い呼吸を続けながら、穏やかな時間をお過ごしください。'
+        });
+      }
+      return careSteps;
+    }
+
+    // ② ⏱️ 通常フル(40分) または ⚡ 時短ショート(20分)
+    const isShort = durMode === 'short';
+    const hasMachineBlocks = plan.blocks.some((b) => b.type === 'machine');
+
     const steps = [];
     const restVoices = [
       '休憩しましょう！深く息を吸って、ゆっくり吐いてくださいね。',
@@ -318,10 +451,33 @@
       4: 'ラスト、セット4です！反動を使わずに最後まで絞り切っていきましょう。スタートです！'
     };
 
-    plan.blocks.forEach((block) => {
+    let lastFinishedMachine = null;
+    let shortNonMachineVideoCount = 0;
+
+    plan.blocks.forEach((block, blockIdx) => {
+      // 時短20分モードの最適化フィルタ
+      if (isShort) {
+        if (hasMachineBlocks) {
+          // 筋トレ日はHIIT動画とその直前のマット移動トランジションをスキップし、2セット集中＋股割り6分＋瞑想5分へ直結
+          if (block.type === 'video') return;
+          const nextBlock = plan.blocks[blockIdx + 1];
+          if (block.type === 'transition' && nextBlock && nextBlock.type === 'video') return;
+        } else {
+          // 水・土・日の動画中心日はメイン動画1本(最大6分)＋開脚(最大5分)＋瞑想5分に凝縮
+          if (block.type === 'video') {
+            shortNonMachineVideoCount += 1;
+            if (shortNonMachineVideoCount > 1 && plan.blocks.some((b) => b.type === 'daily_stretch')) {
+              return;
+            }
+            if (shortNonMachineVideoCount > 2) return;
+          }
+        }
+      }
+
       if (block.type === 'warmup' || block.type === 'setup' || block.type === 'transition') {
         const themePhase = block.type === 'warmup' ? 'PREP' : 'SETUP';
-        steps.push({
+        const durSec = isShort ? Math.min(block.durationSeconds, block.type === 'transition' ? 22 : 30) : block.durationSeconds;
+        const stepObj = {
           kind: block.type,
           themePhase,
           phaseLabel: block.phase,
@@ -330,39 +486,53 @@
           actionSteps: block.actionSteps || [],
           subtitle: block.setupNote,
           setupNote: block.setupNote,
-          durationSeconds: block.durationSeconds,
+          durationSeconds: durSec,
           pulley: block.pulley || 'マット / 準備',
           attachment: block.attachment || '準備・移動',
           cues: block.cues || [],
           speechText: block.speech || `${block.title}。${block.setupNote || ''}`
-        });
+        };
+        if (lastFinishedMachine && !lastFinishedMachine.hidePlates) {
+          stepObj.prevExerciseId = lastFinishedMachine.id;
+          stepObj.prevExerciseTitle = lastFinishedMachine.title;
+          stepObj.prevDefaultPlates = lastFinishedMachine.defaultPlates;
+        }
+        lastFinishedMachine = null;
+        steps.push(stepObj);
       } else if (block.type === 'machine') {
         const switchHalfway = block.title.includes('前半右・後半左');
-        for (let s = 1; s <= block.sets; s++) {
+        const totalSets = isShort ? Math.min(2, block.sets) : block.sets;
+        const workSec = isShort ? Math.min(40, block.workSeconds) : block.workSeconds;
+        const restSec = isShort ? Math.min(35, block.restSeconds) : block.restSeconds;
+
+        for (let s = 1; s <= totalSets; s++) {
           steps.push({
             kind: 'work',
             themePhase: 'WORK',
-            phaseLabel: block.phase,
+            phaseLabel: isShort ? `${block.phase} (時短2Set)` : block.phase,
             exerciseId: block.id,
             hidePlates: Boolean(block.hidePlates),
             switchHalfway,
             title: block.title,
             image: block.image || './images/exercises/irotec_chest_wide.jpg',
             actionSteps: block.actionSteps || [],
-            subtitle: `${block.targetMuscle}｜セット ${s} / ${block.sets}`,
+            subtitle: `${block.targetMuscle}｜セット ${s} / ${totalSets}`,
             setIndex: s,
-            totalSets: block.sets,
-            durationSeconds: block.workSeconds,
+            totalSets,
+            durationSeconds: workSec,
             defaultPlates: block.defaultPlates,
             pulley: block.pulley,
             attachment: block.attachment,
             demoRange: block.demoRange || [30, 60],
             setupNote: block.setupNote,
             cues: block.cues || [],
-            speechText: s === 1 ? (block.speechIntro || `${block.title}、スタートです！`) : (setStartVoices[s] || `セット${s}、スタートです！`)
+            speechText:
+              s === 1
+                ? block.speechIntro || `${block.title}、スタートです！`
+                : setStartVoices[s] || `セット${s}、スタートです！`
           });
 
-          if (s < block.sets) {
+          if (s < totalSets) {
             steps.push({
               kind: 'rest',
               themePhase: 'REST',
@@ -371,11 +541,11 @@
               hidePlates: Boolean(block.hidePlates),
               title: `${block.title}（休憩）`,
               image: block.image || './images/exercises/irotec_chest_wide.jpg',
-              actionSteps: ['① 深い呼吸で酸素を送る', `② 次は セット ${s + 1} / ${block.sets}`, '③ 開始3秒前に合図します'],
-              subtitle: `次は セット ${s + 1} / ${block.sets}`,
+              actionSteps: ['① 深い呼吸で酸素を送る', `② 次は セット ${s + 1} / ${totalSets}`, '③ 手応えメモも1タップ記録OK'],
+              subtitle: `次は セット ${s + 1} / ${totalSets}`,
               setIndex: s,
-              totalSets: block.sets,
-              durationSeconds: block.restSeconds,
+              totalSets,
+              durationSeconds: restSec,
               defaultPlates: block.defaultPlates,
               pulley: block.pulley,
               attachment: block.attachment,
@@ -386,7 +556,9 @@
             });
           }
         }
+        lastFinishedMachine = block;
       } else if (block.type === 'video') {
+        lastFinishedMachine = null;
         const isRelaxOrStretch =
           block.phase.includes('YOGA') ||
           block.phase.includes('STRETCH') ||
@@ -395,6 +567,7 @@
           block.phase.includes('RESET') ||
           block.phase.includes('SPLIT') ||
           block.phase.includes('HIP');
+        const vidDur = isShort ? Math.min(block.durationSeconds, 360) : block.durationSeconds;
         steps.push({
           kind: 'video',
           isDailyStretch: false,
@@ -407,13 +580,15 @@
           channel: block.channel,
           videoId: block.videoId,
           startSeconds: block.startSeconds || 0,
-          durationSeconds: block.durationSeconds,
+          durationSeconds: vidDur,
           safetyTip: isRelaxOrStretch
             ? '🧘 呼吸を止めず、膝に違和感がある角度は無理せず緩めてキープ'
             : '🛡️ 膝保護：スクワット・ジャンプが出たら上半身パンチやツイストに置換OK',
           speechText: block.speech || `${block.title}、スタートです！`
         });
       } else if (block.type === 'daily_stretch' && stretchObj) {
+        lastFinishedMachine = null;
+        const stretchDur = isShort ? Math.min(stretchObj.durationSeconds, 360) : stretchObj.durationSeconds;
         steps.push({
           kind: 'video',
           isDailyStretch: true,
@@ -421,17 +596,18 @@
           stretchId: stretchObj.id,
           themePhase: 'STRETCH',
           phaseLabel: block.phase,
-          badge: `${stretchObj.badge}（日替わり選出）`,
+          badge: `${stretchObj.badge}${isShort ? '（時短6分）' : '（日替わり選出）'}`,
           title: stretchObj.title,
           subtitle: `${stretchObj.channel}｜${stretchObj.focus}`,
           channel: stretchObj.channel,
           videoId: stretchObj.videoId,
           startSeconds: stretchObj.startSeconds || 0,
-          durationSeconds: stretchObj.durationSeconds,
+          durationSeconds: stretchDur,
           safetyTip: '🤸 股割りタイム：痛気持ちいい7割の伸びで、吐く息ごとに力を抜きます',
           speechText: `本日の股割りストレッチは、${stretchObj.category}、のメニューです！息をふーっと吐きながら、気持ちよく伸ばしていきましょうね。`
         });
       } else if (block.type === 'daily_meditation' && medObj) {
+        lastFinishedMachine = null;
         steps.push({
           kind: 'video',
           isDailyStretch: false,
@@ -457,7 +633,7 @@
     return steps;
   }
 
-  // -------------------- ショウコさん音声 (同梱MP3最優先 ＋ ローカルTTSフォールバック) --------------------
+  // -------------------- ショウコさん音声 --------------------
   function ensureAudioUnlocked() {
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -545,7 +721,6 @@
   }
 
   function prefetchSessionVoices() {
-    // すでに静的MP3マニフェストに含まれているセリフはサーバー先読み不要
     if (
       !window.location.protocol.startsWith('http') ||
       window.location.hostname.endsWith('github.io')
@@ -719,6 +894,54 @@
     el.locHotelBtn.classList.toggle('active', state.locationMode === 'hotel');
   }
 
+  function renderDurationToggle() {
+    if (!el.durFullBtn) return;
+    el.durFullBtn.classList.toggle('active', state.durationMode === 'full');
+    el.durShortBtn.classList.toggle('active', state.durationMode === 'short');
+    el.durCareBtn.classList.toggle('active', state.durationMode === 'care');
+
+    if (el.heroStartBtn) {
+      if (state.durationMode === 'short') {
+        el.heroStartBtn.textContent = '▶ 朝一スタート（⚡時短20分：2Set＋股割り＋5分瞑想）';
+      } else if (state.durationMode === 'care') {
+        el.heroStartBtn.textContent = '▶ 朝一スタート（🧘ケア15分：股割り＋5分瞑想）';
+      } else {
+        el.heroStartBtn.textContent = '▶ 朝一セッション開始（筋トレ・股割り・5分瞑想）';
+      }
+    }
+  }
+
+  function renderMorningCondition() {
+    if (!el.morningConditionBar) return;
+    const mc = state.morningCondition;
+    if (!mc || !mc.badge) {
+      el.morningConditionBar.classList.add('hidden');
+      return;
+    }
+
+    el.morningConditionBar.classList.remove('hidden', 'tier-boost', 'tier-recovery');
+    if (mc.tier === 'boost') el.morningConditionBar.classList.add('tier-boost');
+    if (mc.tier === 'recovery') el.morningConditionBar.classList.add('tier-recovery');
+
+    el.mcBadge.textContent = mc.badge;
+    el.mcVitals.textContent = mc.vitalsSummary || '';
+    el.mcMessage.textContent = mc.message || '';
+
+    if (mc.tier === 'recovery' && state.durationMode === 'full') {
+      el.mcActionBtn.classList.remove('hidden');
+      el.mcActionBtn.textContent = mc.recommendedMode === 'care' ? '🧘 ケア15mへ切替' : '⚡ 時短20mへ切替';
+      el.mcActionBtn.dataset.targetMode = mc.recommendedMode || 'short';
+    } else if (state.durationMode !== 'full') {
+      el.mcActionBtn.classList.remove('hidden');
+      el.mcActionBtn.textContent =
+        state.durationMode === 'short' ? '✓ 時短20m中 (通常へ)' : '✓ ケア15m中 (通常へ)';
+      el.mcActionBtn.dataset.targetMode = 'full';
+    } else {
+      el.mcActionBtn.classList.add('hidden');
+      el.mcActionBtn.dataset.targetMode = '';
+    }
+  }
+
   function renderDaySwitcher() {
     const order = [1, 2, 3, 4, 5, 6, 0];
     el.daySwitcher.innerHTML = '';
@@ -769,6 +992,96 @@
     });
   }
 
+  function resolveRpeTargetForStep(step) {
+    if (!step || state.locationMode !== 'home') return null;
+    if (step.kind === 'rest' && step.exerciseId && !step.hidePlates) {
+      return {
+        exerciseId: step.exerciseId,
+        title: step.title.replace(/（休憩）$/, ''),
+        defaultPlates: step.defaultPlates
+      };
+    }
+    if (step.kind === 'work' && step.exerciseId && !step.hidePlates && step.setIndex === step.totalSets) {
+      return {
+        exerciseId: step.exerciseId,
+        title: step.title,
+        defaultPlates: step.defaultPlates
+      };
+    }
+    if ((step.kind === 'setup' || step.kind === 'transition') && step.prevExerciseId) {
+      return {
+        exerciseId: step.prevExerciseId,
+        title: step.prevExerciseTitle || step.prevExerciseId,
+        defaultPlates: step.prevDefaultPlates || 5
+      };
+    }
+    return null;
+  }
+
+  function renderOverloadAndRpe(step, activePlateStep) {
+    // 1. 漸進性過負荷（ピン＋1枚提案）バナー
+    if (el.overloadBanner) {
+      el.overloadBanner.classList.add('hidden');
+      if (activePlateStep && state.locationMode === 'home' && !activePlateStep.hidePlates) {
+        const exId = activePlateStep.exerciseId;
+        const rpe = state.rpeMap[exId] || {};
+        const curPlates = getPlatesForExercise(exId, activePlateStep.defaultPlates);
+        const todayIso = getTodayJst();
+        if (
+          Number(rpe.easyStreak || 0) >= 2 &&
+          rpe.lastUpgradeDate !== todayIso &&
+          curPlates < DATA.maxPlates
+        ) {
+          const nextPlates = curPlates + 1;
+          const nextDet = formatPlateDetail(nextPlates);
+          el.overloadBanner.classList.remove('hidden');
+          el.overloadBanner.dataset.exerciseId = exId;
+          el.overloadBanner.dataset.nextPlates = String(nextPlates);
+          el.overloadBanner.dataset.exerciseName = activePlateStep.title;
+          el.overloadText.textContent = `🚀 前回${rpe.easyStreak}連続「余裕😊」！${curPlates}→${nextPlates}枚目(${nextDet.kg}kg)へ上げますか？`;
+        }
+      }
+    }
+
+    // 2. 手応えワンタップ（休憩中・最終セット・直後の移行中に表示）
+    if (el.rpeFeedbackBox) {
+      const target = resolveRpeTargetForStep(step);
+      if (!target) {
+        el.rpeFeedbackBox.classList.add('hidden');
+      } else {
+        el.rpeFeedbackBox.classList.remove('hidden');
+        el.rpeFeedbackBox.dataset.exerciseId = target.exerciseId;
+        el.rpeFeedbackBox.dataset.exerciseName = target.title;
+        el.rpeFeedbackBox.dataset.defaultPlates = String(target.defaultPlates || 5);
+
+        const shortName = cleanExerciseShortTitle(target.title);
+        el.rpeHeadingTitle.textContent =
+          step.kind === 'setup' || step.kind === 'transition'
+            ? `直前「${shortName}」の手応えは？`
+            : `「${shortName}」の手応えメモ`;
+
+        const rpeInfo = state.rpeMap[target.exerciseId] || {};
+        const todayIso = getTodayJst();
+        const ratedToday = rpeInfo.lastRatedDate === todayIso ? rpeInfo.lastRpe : null;
+
+        el.rpeBtnRow.querySelectorAll('.rpe-btn').forEach((btn) => {
+          btn.classList.toggle('selected', Boolean(ratedToday && btn.dataset.rpe === ratedToday));
+        });
+
+        const streak = Number(rpeInfo.easyStreak || 0);
+        if (streak >= 2) {
+          el.rpeStreakHint.textContent = '🔥 次回＋1枚UP提案ON！';
+        } else if (streak === 1) {
+          el.rpeStreakHint.textContent = '✨ あと1回「余裕」で＋1枚提案';
+        } else if (ratedToday) {
+          el.rpeStreakHint.textContent = '✓ 本日の手応え記録済';
+        } else {
+          el.rpeStreakHint.textContent = '余裕2連続で次回＋1枚提案';
+        }
+      }
+    }
+  }
+
   function renderCurrentStep() {
     const plan = getActivePlan(state.selectedDay);
     const step = state.steps[state.currentIndex];
@@ -780,14 +1093,15 @@
       state.locationMode === 'hotel' && state.selectedDay >= 1 && state.selectedDay <= 5
         ? '🏨 ホテル｜'
         : '🏠 自宅｜';
-    el.dayTag.textContent = `${locBadge}${plan.dayLabel}・${plan.shortTheme}`;
-    // 濃紺H2見出しには現在表示中の種目・ステップ名を一致表示
+    const durSuffix =
+      state.durationMode === 'short' ? ' [⚡時短20m]' : state.durationMode === 'care' ? ' [🧘ケア15m]' : '';
+    el.dayTag.textContent = `${locBadge}${plan.dayLabel}・${plan.shortTheme}${durSuffix}`;
     el.workoutMainTitle.textContent = step.title;
     el.idleHeroBanner.classList.toggle('hidden', state.hasStartedOnce);
 
-    // 自宅モードのみIROTEC実演小窓ボタンを表示
     const canShowIrotecDemo =
       state.locationMode === 'home' &&
+      state.durationMode !== 'care' &&
       state.selectedDay !== 3 &&
       state.selectedDay !== 6 &&
       state.selectedDay !== 0;
@@ -827,7 +1141,6 @@
         }
       }
 
-      // 3ステップ動作チップ
       el.actionStepsRow.innerHTML = '';
       const chips = step.actionSteps && step.actionSteps.length ? step.actionSteps : (step.cues || []).slice(0, 3);
       chips.slice(0, 3).forEach((txt) => {
@@ -840,7 +1153,6 @@
       el.setupInstruction.textContent = step.speechText || step.setupNote || '';
     }
 
-    // 右ペイン：濃紺コールアウト枠
     el.phasePill.textContent = step.phaseLabel;
     el.currentStepTitle.textContent = step.title;
     el.currentStepSub.textContent = step.subtitle || '';
@@ -860,7 +1172,7 @@
     if (!state.isRunning) {
       el.timerStateLabel.textContent = state.hasStartedOnce
         ? '\\ PAUSED・一時停止中 /'
-        : '\\ READY・スタート待機中 /';
+        : '\\ READY・朝一スタート待機中 /';
     } else if (step.totalSets) {
       el.timerStateLabel.textContent =
         step.kind === 'rest'
@@ -881,7 +1193,6 @@
 
     updateTimerUI();
 
-    // コンテキストパネル切り替え
     const activePlateStep =
       step.exerciseId && !step.hidePlates
         ? step
@@ -902,16 +1213,24 @@
       } else {
         el.shuffleStretchBtn.textContent = '🎲 別の股割り動画へ';
       }
+      if (el.rpeFeedbackBox) el.rpeFeedbackBox.classList.add('hidden');
     } else if (activePlateStep) {
       el.plateSelector.classList.remove('hidden');
       const pCount = getPlatesForExercise(activePlateStep.exerciseId, activePlateStep.defaultPlates);
       const pDetail = formatPlateDetail(pCount);
       el.plateCountNum.textContent = pCount;
       el.plateKgHint.textContent = pDetail.text;
+      renderOverloadAndRpe(step, activePlateStep);
     } else {
-      el.hotelTipBox.classList.remove('hidden');
-      el.hotelTipText.textContent =
-        (step.cues && step.cues[0]) || '反動を使わずゆっくり動かすことで、器具なしでもしっかり筋肉に効きます。';
+      const rpeTarget = resolveRpeTargetForStep(step);
+      if (rpeTarget) {
+        renderOverloadAndRpe(step, null);
+      } else {
+        if (el.rpeFeedbackBox) el.rpeFeedbackBox.classList.add('hidden');
+        el.hotelTipBox.classList.remove('hidden');
+        el.hotelTipText.textContent =
+          (step.cues && step.cues[0]) || '反動を使わずゆっくり動かすことで、器具なしでもしっかり筋肉に効きます。';
+      }
     }
 
     const nextStep = state.steps[state.currentIndex + 1];
@@ -925,6 +1244,7 @@
       ? '▶ 再開'
       : '▶ スタート';
 
+    renderMorningCondition();
     renderOverallProgress();
   }
 
@@ -951,7 +1271,26 @@
     state.stepTotalSec = state.steps[0].durationSeconds;
     state.remainingSec = state.stepTotalSec;
     renderLocationToggle();
+    renderDurationToggle();
     renderDaySwitcher();
+    renderCurrentStep();
+    syncYouTubeForStep(state.steps[0], false);
+    prefetchSessionVoices();
+  }
+
+  function setDurationMode(mode) {
+    if (!['full', 'short', 'care'].includes(mode) || state.durationMode === mode) return;
+    pauseSession();
+    state.durationMode = mode;
+    localStorage.setItem(STORAGE_KEYS.durationMode, mode);
+    localStorage.setItem(STORAGE_KEYS.durationModeDate, getTodayJst());
+    state.hasStartedOnce = false;
+    state.steps = buildSessionSteps(state.selectedDay, state.selectedStretchId, state.selectedMeditationId);
+    state.currentIndex = 0;
+    state.stepTotalSec = state.steps[0].durationSeconds;
+    state.remainingSec = state.stepTotalSec;
+    renderDurationToggle();
+    renderMorningCondition();
     renderCurrentStep();
     syncYouTubeForStep(state.steps[0], false);
     prefetchSessionVoices();
@@ -970,6 +1309,7 @@
     state.stepTotalSec = state.steps[0].durationSeconds;
     state.remainingSec = state.stepTotalSec;
     renderLocationToggle();
+    renderDurationToggle();
     renderDaySwitcher();
     renderCurrentStep();
     syncYouTubeForStep(state.steps[0], false);
@@ -1051,13 +1391,11 @@
 
     const step = state.steps[state.currentIndex];
 
-    // 片腕ずつ行うホテルタオル種目の折り返し合図
     if (step.switchHalfway && state.remainingSec === Math.floor(state.stepTotalSec / 2)) {
       playBeep(987.77, 130, 0.14);
       speakShoko('はい、ここで左右の手を入れ替えましょう！反対側も丁寧に効かせていきますよ！');
     }
 
-    // 瞑想中は静寂を守るためカウントダウン電子音を鳴らさない
     if (step.themePhase !== 'MEDITATION' && state.remainingSec > 0 && state.remainingSec <= 3) {
       playBeep(880, 95, step.kind === 'video' ? 0.07 : 0.13);
     }
@@ -1108,16 +1446,20 @@
 
     const weightsMap = {};
     const weightParts = [];
-    if (state.locationMode === 'home' && Array.isArray(plan.blocks)) {
+    if (state.locationMode === 'home' && state.durationMode !== 'care' && Array.isArray(plan.blocks)) {
       plan.blocks.forEach((b) => {
         if (b.type === 'machine' && b.id && !b.hidePlates) {
           const p = getPlatesForExercise(b.id, b.defaultPlates);
           const det = formatPlateDetail(p);
-          weightsMap[b.id] = { title: b.title, plates: p, kg: Number(det.kg) };
+          const rpeObj = state.rpeMap[b.id] || {};
+          const todayRpe = rpeObj.lastRatedDate === getTodayJst() ? rpeObj.lastRpe : undefined;
+          weightsMap[b.id] = { title: b.title, plates: p, kg: Number(det.kg), rpe: todayRpe };
           const shortTitle = b.title.replace(/（.*?）/g, (m) =>
             m.includes('横') ? '(横)' : m.includes('縦') ? '(縦)' : ''
           );
-          weightParts.push(`${shortTitle}: ${p}枚(${det.kg}kg)`);
+          const rpeIcon =
+            todayRpe === 'easy' ? '😊' : todayRpe === 'good' ? '👍' : todayRpe === 'hard' ? '🔥' : '';
+          weightParts.push(`${shortTitle}: ${p}枚(${det.kg}kg)${rpeIcon}`);
         }
       });
     }
@@ -1205,7 +1547,6 @@
 
   function enqueuePendingSync(endpoint, payload) {
     const queue = loadJson(STORAGE_KEYS.pendingQueue, []);
-    // 同一エンドポイント＋同一キーの古い保留は最新で上書き
     const deduped = queue.filter((item) => {
       if (item.endpoint !== endpoint) return true;
       if (endpoint === '/api/plates' && item.payload?.exerciseId === payload?.exerciseId) return false;
@@ -1289,10 +1630,20 @@
 
     state.lastPullMs = Date.now();
 
-    // 1. IROTEC ピン枚数マージ（クラウド側の最新マスタを反映）
+    // 0. 朝一 Pixel Watch 睡眠・HRV コンディション反映
+    if (data.morningCondition) {
+      state.morningCondition = data.morningCondition;
+      saveJson(STORAGE_KEYS.morningCond, data.morningCondition);
+    }
+
+    // 1. IROTEC ピン枚数 ＆ 漸進性過負荷RPEマージ
     if (data.plates && typeof data.plates === 'object') {
       state.plateMap = { ...state.plateMap, ...data.plates };
       saveJson(STORAGE_KEYS.plates, state.plateMap);
+    }
+    if (data.rpeMap && typeof data.rpeMap === 'object') {
+      state.rpeMap = { ...state.rpeMap, ...data.rpeMap };
+      saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
     }
 
     // 2. カスタム追加YouTubeストレッチ動画マージ
@@ -1305,7 +1656,7 @@
       saveJson(STORAGE_KEYS.customStretches, state.customStretches);
     }
 
-    // 3. セッション＆開脚ログマージ（日付キーで統合・最新順ソート）
+    // 3. セッション＆開脚ログマージ
     if (Array.isArray(data.logs)) {
       const logMap = new Map();
       state.logs.forEach((l) => {
@@ -1318,6 +1669,7 @@
           ...prev,
           ...cl,
           splitLevel: cl.splitLevel || prev.splitLevel || null,
+          splitMemo: cl.splitMemo || prev.splitMemo || '',
           meditationDone: Boolean(cl.meditationDone || prev.meditationDone)
         });
       });
@@ -1326,13 +1678,14 @@
     }
 
     updateStreakBadge();
+    renderMorningCondition();
     renderCurrentStep();
     if (!el.logModal.classList.contains('hidden')) {
       renderWeeklyStamps();
       renderSplitHistory();
     }
     if (!silent) {
-      updateSyncUI('✅ Notion「健康ダッシュボード」から最新のウェイト・記録を同期しました！');
+      updateSyncUI('✅ Notion「健康ダッシュボード」＆Pixel Watch体調データを最新同期しました！');
     }
   }
 
@@ -1341,7 +1694,7 @@
     if (idx >= 0) {
       state.logs[idx] = { ...state.logs[idx], ...patch };
     } else {
-      state.logs.unshift({ date: dateStr, splitLevel: null, ...patch });
+      state.logs.unshift({ date: dateStr, splitLevel: null, splitMemo: '', ...patch });
     }
     state.logs.sort((a, b) => String(b.date).localeCompare(String(a.date)));
     saveJson(STORAGE_KEYS.logs, state.logs);
@@ -1356,6 +1709,7 @@
     upsertLocalLog(todayIso, {
       dayKey: state.selectedDay,
       locationMode: state.locationMode,
+      durationMode: state.durationMode,
       theme: plan.shortTheme,
       strengthMin: metrics.strengthMin,
       cardioMin: metrics.cardioMin,
@@ -1363,7 +1717,8 @@
       meditationMin: metrics.meditationMin,
       meditationDone: true,
       weightsSummary: metrics.weightsSummary,
-      splitLevel: existing?.splitLevel || null
+      splitLevel: existing?.splitLevel || null,
+      splitMemo: existing?.splitMemo || ''
     });
     updateStreakBadge();
     renderWeeklyStamps();
@@ -1371,6 +1726,7 @@
     const res = await relayRequest('/api/session', 'POST', {
       date: todayIso,
       locationMode: state.locationMode,
+      durationMode: state.durationMode,
       dayKey: state.selectedDay,
       dayLabel: plan.dayLabel,
       theme: plan.shortTheme,
@@ -1380,6 +1736,7 @@
       meditationMin: metrics.meditationMin,
       meditationDone: true,
       splitLevel: existing?.splitLevel || undefined,
+      splitMemo: existing?.splitMemo || undefined,
       weightsMap: metrics.weightsMap,
       weightsSummary: metrics.weightsSummary,
       meditationTitle: metrics.meditationTitle
@@ -1388,8 +1745,8 @@
     if (res) {
       updateSyncUI(
         fromManualBtn
-          ? '✅ 本日のワークアウト＆5分瞑想をNotion「健康ダッシュボード」とマインドフルネスログへ記録しました！'
-          : '🎉 Notion「健康ダッシュボード」＆5分瞑想ログへ自動保存しました！下の開脚レベルもタップで追記できます。'
+          ? '✅ 朝一ワークアウト＆5分瞑想をNotion「健康ダッシュボード」とマインドフルネスログへ記録しました！'
+          : '🎉 Notion「健康ダッシュボード」＆5分瞑想ログへ自動保存しました！下の開脚レベル・柔軟メモも記録できます。'
       );
     }
   }
@@ -1403,6 +1760,7 @@
     upsertLocalLog(todayIso, {
       dayKey: existing?.dayKey ?? state.selectedDay,
       locationMode: existing?.locationMode || state.locationMode,
+      durationMode: existing?.durationMode || state.durationMode,
       theme: existing?.theme || '5分間の瞑想',
       meditationMin: Math.max(5, existing?.meditationMin || 5),
       meditationDone: true
@@ -1413,6 +1771,7 @@
     const res = await relayRequest('/api/meditation', 'POST', {
       date: todayIso,
       locationMode: state.locationMode,
+      durationMode: existing?.durationMode || state.durationMode,
       dayKey: state.selectedDay,
       dayLabel: plan.dayLabel,
       meditationMin: 5,
@@ -1437,7 +1796,7 @@
     syncFullSessionToCloud({ fromManualBtn: false });
   }
 
-  // -------------------- Plate Adjustment --------------------
+  // -------------------- Plate Adjustment & Progressive Overload RPE --------------------
   function adjustPlates(delta) {
     const step = state.steps[state.currentIndex];
     const targetStep =
@@ -1459,9 +1818,86 @@
         relayRequest('/api/plates', 'POST', {
           exerciseId: exId,
           plates: next,
-          exerciseName: targetStep.title
+          exerciseName: targetStep.title,
+          rpeInfo: state.rpeMap[exId] || undefined
         });
       }, 650);
+    }
+  }
+
+  function acceptOverloadUpgrade() {
+    if (!el.overloadBanner) return;
+    const exId = el.overloadBanner.dataset.exerciseId;
+    const nextPlates = Number(el.overloadBanner.dataset.nextPlates);
+    const exName = el.overloadBanner.dataset.exerciseName || exId;
+    if (!exId || !nextPlates) return;
+
+    const todayIso = getTodayJst();
+    state.plateMap[exId] = nextPlates;
+    const updatedRpe = {
+      ...(state.rpeMap[exId] || {}),
+      easyStreak: 0,
+      lastUpgradeDate: todayIso,
+      lastRpe: 'good'
+    };
+    state.rpeMap[exId] = updatedRpe;
+    saveJson(STORAGE_KEYS.plates, state.plateMap);
+    saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
+
+    ensureAudioUnlocked();
+    playBeep(1046.5, 130, 0.12);
+    speakShoko('ナイスチャレンジです！ピンを1枚上げて、丁寧なフォームで効かせていきましょう！');
+    renderCurrentStep();
+
+    if (state.syncKey) {
+      relayRequest('/api/plates', 'POST', {
+        exerciseId: exId,
+        plates: nextPlates,
+        exerciseName: exName,
+        rpeInfo: updatedRpe
+      });
+    }
+  }
+
+  function recordExerciseRpe(rpeValue) {
+    if (!el.rpeFeedbackBox || !['easy', 'good', 'hard'].includes(rpeValue)) return;
+    const exId = el.rpeFeedbackBox.dataset.exerciseId;
+    const exName = el.rpeFeedbackBox.dataset.exerciseName || exId;
+    const defPlates = Number(el.rpeFeedbackBox.dataset.defaultPlates || 5);
+    if (!exId) return;
+
+    const todayIso = getTodayJst();
+    const prev = state.rpeMap[exId] || {};
+    // 同日中の押し直しでストリークが二重加算されないよう基準値を保持
+    const baseStreak =
+      prev.baseStreakDate === todayIso ? Number(prev.baseStreak || 0) : Number(prev.easyStreak || 0);
+    const nextEasyStreak = rpeValue === 'easy' ? baseStreak + 1 : 0;
+
+    const updatedRpe = {
+      ...prev,
+      lastRpe: rpeValue,
+      easyStreak: nextEasyStreak,
+      baseStreak,
+      baseStreakDate: todayIso,
+      lastRatedDate: todayIso
+    };
+    state.rpeMap[exId] = updatedRpe;
+    saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
+
+    playBeep(rpeValue === 'easy' ? 1046.5 : 880, 80, 0.08);
+    renderCurrentStep();
+
+    const curPlates = getPlatesForExercise(exId, defPlates);
+    if (state.syncKey) {
+      clearTimeout(state.plateSyncTimers[exId]);
+      state.plateSyncTimers[exId] = setTimeout(() => {
+        relayRequest('/api/plates', 'POST', {
+          exerciseId: exId,
+          plates: curPlates,
+          exerciseName: exName,
+          rpeInfo: updatedRpe
+        });
+      }, 400);
     }
   }
 
@@ -1525,7 +1961,9 @@
   // -------------------- Modals --------------------
   function openTimelineModal() {
     const plan = getActivePlan(state.selectedDay);
-    el.timelineModalTitle.textContent = `${plan.dayLabel}｜${plan.title}`;
+    const durTag =
+      state.durationMode === 'short' ? '（⚡時短20分）' : state.durationMode === 'care' ? '（🧘ケア15分）' : '';
+    el.timelineModalTitle.textContent = `${plan.dayLabel}｜${plan.title}${durTag}`;
     el.timelineList.innerHTML = '';
 
     state.steps.forEach((s, idx) => {
@@ -1554,7 +1992,6 @@
   }
 
   function renderPoolModal() {
-    // 1) 5分間瞑想プール
     const medPool = getAllMeditations();
     el.meditationPoolGrid.innerHTML = '';
     medPool.forEach((item) => {
@@ -1577,7 +2014,6 @@
       el.meditationPoolGrid.appendChild(card);
     });
 
-    // 2) 股割りストレッチプール
     const pool = getAllStretches();
     el.stretchPoolGrid.innerHTML = '';
     pool.forEach((item) => {
@@ -1612,7 +2048,7 @@
     const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
     const todayStr = getTodayJst();
     const todayUtc = new Date(todayStr + 'T00:00:00Z');
-    const dowFromMon = (todayUtc.getUTCDay() + 6) % 7; // Mon=0 .. Sun=6
+    const dowFromMon = (todayUtc.getUTCDay() + 6) % 7;
     const monUtc = new Date(todayUtc);
     monUtc.setUTCDate(todayUtc.getUTCDate() - dowFromMon);
 
@@ -1631,9 +2067,17 @@
     }
   }
 
+  function syncSplitQuickChipsUI(memoStr) {
+    if (!el.splitQuickChips) return;
+    const current = String(memoStr || '');
+    el.splitQuickChips.querySelectorAll('.split-chip').forEach((chip) => {
+      chip.classList.toggle('active', current.includes(chip.dataset.memo));
+    });
+  }
+
   function openLogModal(justFinished = false) {
     el.logModalHeading.textContent = justFinished
-      ? '🎉 筋トレ・股割り・5分瞑想 フル完走！お疲れ様でした！'
+      ? '🎉 朝一ルーティン完走！お疲れ様でした！'
       : '🏆 ワークアウト記録 ＆ 股割りトラッカー';
 
     const m = computeCurrentSessionMetrics();
@@ -1647,28 +2091,77 @@
       b.classList.toggle('saved', Boolean(todayRec && Number(b.dataset.level) === Number(todayRec.splitLevel)));
     });
 
+    const curMemo = todayRec?.splitMemo || '';
+    if (el.splitMemoInput) el.splitMemoInput.value = curMemo;
+    syncSplitQuickChipsUI(curMemo);
+
     updateSyncUI();
     renderWeeklyStamps();
     renderSplitHistory();
     el.logModal.classList.remove('hidden');
   }
 
+  function saveSplitProgress({ splitLevel, splitMemo }) {
+    const todayIso = getTodayJst();
+    const plan = getActivePlan(state.selectedDay);
+    const existing = state.logs.find((l) => l.date === todayIso);
+    const nextLv = splitLevel !== undefined ? splitLevel : existing?.splitLevel || null;
+    const nextMemo = splitMemo !== undefined ? splitMemo : existing?.splitMemo || '';
+
+    upsertLocalLog(todayIso, {
+      dayKey: existing?.dayKey ?? state.selectedDay,
+      locationMode: existing?.locationMode || state.locationMode,
+      durationMode: existing?.durationMode || state.durationMode,
+      theme: existing?.theme || plan.shortTheme,
+      splitLevel: nextLv,
+      splitMemo: nextMemo
+    });
+
+    updateStreakBadge();
+    renderWeeklyStamps();
+    renderSplitHistory();
+    syncSplitQuickChipsUI(nextMemo);
+
+    if (state.syncKey) {
+      relayRequest('/api/split-level', 'POST', {
+        date: todayIso,
+        splitLevel: nextLv || undefined,
+        splitMemo: nextMemo,
+        dayKey: state.selectedDay,
+        dayLabel: plan.dayLabel,
+        locationMode: state.locationMode,
+        durationMode: state.durationMode,
+        theme: plan.shortTheme
+      }).then((res) => {
+        if (res) {
+          const lvPart = nextLv ? `Lv.${nextLv}` : '';
+          const memoPart = nextMemo ? `「${nextMemo}」` : '';
+          updateSyncUI(`🤸 開脚進捗 ${lvPart} ${memoPart} をNotion「健康ダッシュボード」へ保存しました！`);
+        }
+      });
+    } else {
+      updateSyncUI('📝 開脚進捗をこの端末に保存しました。');
+    }
+  }
+
   function renderSplitHistory() {
     const levelLabels = {
-      1: '🌱 Lv.1 骨盤立て練習中',
+      1: '🌱 Lv.1 骨盤立て',
       2: '🖐️ Lv.2 指先タッチ',
-      3: '✋ Lv.3 手のひらタッチ',
+      3: '✋ Lv.3 手のひら',
       4: '💪 Lv.4 肘がついた！',
-      5: '🔥 Lv.5 胸ペター達成！'
+      5: '🔥 Lv.5 胸ペター！'
     };
     const recent = state.logs.slice(0, 6);
     el.recentLogsList.innerHTML = recent.length
       ? recent
           .map((l) => {
             const locIcon = l.locationMode === 'hotel' ? '🏨' : '🏠';
+            const durIcon = l.durationMode === 'short' ? '⚡時短 ' : l.durationMode === 'care' ? '🧘ケア ' : '';
             const medTag = l.meditationDone ? ' ・ 🧘瞑想済' : '';
             const splitTag = l.splitLevel ? ` ・ <strong>${levelLabels[l.splitLevel]}</strong>` : '';
-            return `<div>📅 ${l.date} ${locIcon}（${l.theme || '実践'}）${medTag}${splitTag}</div>`;
+            const memoTag = l.splitMemo ? ` ・ 💬${l.splitMemo}` : '';
+            return `<div>📅 ${l.date} ${locIcon}${durIcon}（${l.theme || '実践'}）${medTag}${splitTag}${memoTag}</div>`;
           })
           .join('')
       : '<div>まだ記録がありません。セッション完走または上の記録ボタンから残せます！</div>';
@@ -1682,6 +2175,17 @@
   function bindEvents() {
     el.locHomeBtn.addEventListener('click', () => setLocationMode('home'));
     el.locHotelBtn.addEventListener('click', () => setLocationMode('hotel'));
+
+    if (el.durFullBtn) el.durFullBtn.addEventListener('click', () => setDurationMode('full'));
+    if (el.durShortBtn) el.durShortBtn.addEventListener('click', () => setDurationMode('short'));
+    if (el.durCareBtn) el.durCareBtn.addEventListener('click', () => setDurationMode('care'));
+
+    if (el.mcActionBtn) {
+      el.mcActionBtn.addEventListener('click', () => {
+        const target = el.mcActionBtn.dataset.targetMode;
+        if (target) setDurationMode(target);
+      });
+    }
 
     el.heroStartBtn.addEventListener('click', () => startSession());
     el.playPauseBtn.addEventListener('click', () => {
@@ -1710,6 +2214,16 @@
 
     el.plateMinusBtn.addEventListener('click', () => adjustPlates(-1));
     el.platePlusBtn.addEventListener('click', () => adjustPlates(1));
+
+    if (el.overloadAcceptBtn) {
+      el.overloadAcceptBtn.addEventListener('click', acceptOverloadUpgrade);
+    }
+
+    if (el.rpeBtnRow) {
+      el.rpeBtnRow.querySelectorAll('.rpe-btn').forEach((btn) => {
+        btn.addEventListener('click', () => recordExerciseRpe(btn.dataset.rpe));
+      });
+    }
 
     el.toggleDemoPipBtn.addEventListener('click', () => {
       state.showDemoPip = !state.showDemoPip;
@@ -1857,35 +2371,35 @@
     el.splitLevelBtns.querySelectorAll('button').forEach((btn) => {
       btn.addEventListener('click', () => {
         const lv = Number(btn.dataset.level);
-        const todayIso = getTodayJst();
-        const plan = getActivePlan(state.selectedDay);
-        upsertLocalLog(todayIso, {
-          dayKey: state.selectedDay,
-          locationMode: state.locationMode,
-          theme: plan.shortTheme,
-          splitLevel: lv
-        });
         el.splitLevelBtns.querySelectorAll('button').forEach((b) => b.classList.remove('saved'));
         btn.classList.add('saved');
-        updateStreakBadge();
-        renderWeeklyStamps();
-        renderSplitHistory();
-        if (state.syncKey) {
-          relayRequest('/api/split-level', 'POST', {
-            date: todayIso,
-            splitLevel: lv,
-            dayKey: state.selectedDay,
-            dayLabel: plan.dayLabel,
-            locationMode: state.locationMode,
-            theme: plan.shortTheme
-          }).then((res) => {
-            if (res) {
-              updateSyncUI(`🤸 開脚レベル Lv.${lv} をNotion「健康ダッシュボード」へ保存しました！`);
-            }
-          });
-        }
+        saveSplitProgress({ splitLevel: lv });
       });
     });
+
+    if (el.splitQuickChips) {
+      el.splitQuickChips.querySelectorAll('.split-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const phrase = chip.dataset.memo;
+          const curVal = (el.splitMemoInput?.value || '').trim();
+          const parts = curVal ? curVal.split(' / ').map((s) => s.trim()).filter(Boolean) : [];
+          const idx = parts.indexOf(phrase);
+          if (idx >= 0) parts.splice(idx, 1);
+          else parts.push(phrase);
+          const nextMemo = parts.join(' / ');
+          if (el.splitMemoInput) el.splitMemoInput.value = nextMemo;
+          saveSplitProgress({ splitMemo: nextMemo });
+        });
+      });
+    }
+
+    if (el.splitMemoForm) {
+      el.splitMemoForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nextMemo = (el.splitMemoInput?.value || '').trim();
+        saveSplitProgress({ splitMemo: nextMemo });
+      });
+    }
   }
 
   function updateVoiceBtnUI() {
@@ -1900,6 +2414,7 @@
     updateVoiceBtnUI();
     updateSyncUI();
     updateStreakBadge();
+    renderMorningCondition();
     bindEvents();
     initYouTubeApi();
     selectDay(state.selectedDay);

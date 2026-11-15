@@ -26,6 +26,13 @@
           <button type="button" class="loc-btn active" data-loc="home" id="locHomeBtn">🏠 自宅</button>
           <button type="button" class="loc-btn" data-loc="hotel" id="locHotelBtn">🏨 ホテル</button>
         </div>
+
+        <!-- ⏱️ 朝一ルーティン尺切り替えスイッチ（通常 / 時短20分 / ケア15分） -->
+        <div class="loc-toggle dur-toggle" id="durToggle" role="group" aria-label="セッション編成切り替え">
+          <button type="button" class="loc-btn active" data-dur="full" id="durFullBtn" title="通常フル編成（約40〜45分）">⏱️ 通常</button>
+          <button type="button" class="loc-btn" data-dur="short" id="durShortBtn" title="忙しい朝の時短編成（約20分・2セット＋開脚＋瞑想）">⚡ 時短20m</button>
+          <button type="button" class="loc-btn" data-dur="care" id="durCareBtn" title="疲労日の関節ケア＆瞑想編成（約15分・開脚＋5分瞑想）">🧘 ケア15m</button>
+        </div>
       </div>
 
       <div class="topbar-center">
@@ -142,8 +149,20 @@
       </div>
     </section>
 
-    <!-- 右ペイン：サイドバー（濃紺注目タイマー枠 ＆ ピン位置メモ ＆ 操作ボタン） -->
+    <!-- 右ペイン：サイドバー（朝一コンディション ＆ 濃紺注目タイマー枠 ＆ ピン位置/手応え ＆ 操作ボタン） -->
     <aside class="control-pane">
+      <!-- 🌅 朝一 Pixel Watch 睡眠・HRV コンディション自動連動バー -->
+      <div class="morning-cond-bar hidden" id="morningConditionBar">
+        <div class="mc-main-row">
+          <span class="mc-badge" id="mcBadge">🟢 朝一リカバリー良好</span>
+          <span class="mc-vitals" id="mcVitals">睡眠 --h ・ HRV --ms</span>
+        </div>
+        <div class="mc-sub-row">
+          <span class="mc-msg" id="mcMessage">通常40分編成で着実に積み上げましょう！</span>
+          <button type="button" class="mc-action-btn hidden" id="mcActionBtn">⚡ 時短20mへ切替</button>
+        </div>
+      </div>
+
       <!-- ① 建設NOWニュース右カラム風：濃紺コールアウト枠 (#152232) ＋ 白内枠タイマー -->
       <div class="timer-callout-card" id="timerCard">
         <div class="callout-top-meta">
@@ -171,11 +190,15 @@
 
       <!-- ② サイドバー小見出し付き白カード（左5pxオレンジ縦線） -->
       <div class="context-panel">
-        <!-- 自宅IROTEC プレート枚数メモ -->
+        <!-- 自宅IROTEC プレート枚数メモ ＆ 漸進性過負荷ナビ -->
         <div class="plate-selector" id="plateSelector">
           <div class="widget-heading-row">
             <span class="widget-heading-title" id="plateHeadingTitle">ピン位置メモ（Notion同期）</span>
             <span class="plate-kg-hint" id="plateKgHint">60 lbs / 約27.0 kg</span>
+          </div>
+          <div class="overload-banner hidden" id="overloadBanner">
+            <span class="overload-text" id="overloadText">🚀 前回2連続「余裕😊」！＋1枚UP候補です</span>
+            <button type="button" class="overload-accept-btn" id="overloadAcceptBtn">＋1枚挑戦</button>
           </div>
           <div class="plate-stepper-row">
             <button class="stepper-btn" id="plateMinusBtn" aria-label="1枚軽くする">－</button>
@@ -184,6 +207,19 @@
               <span class="plate-unit">枚目</span>
             </div>
             <button class="stepper-btn" id="platePlusBtn" aria-label="1枚重くする">＋</button>
+          </div>
+        </div>
+
+        <!-- 手応えワンタップ（休憩中・セット完了直後に表示 → 次回ウェイト自動提案） -->
+        <div class="rpe-feedback-box hidden" id="rpeFeedbackBox">
+          <div class="widget-heading-row">
+            <span class="widget-heading-title" id="rpeHeadingTitle">手応えワンタップ（次回重量ナビ）</span>
+            <span class="rpe-streak-hint" id="rpeStreakHint"></span>
+          </div>
+          <div class="rpe-btn-row" id="rpeBtnRow">
+            <button type="button" class="rpe-btn easy" data-rpe="easy">😊 余裕</button>
+            <button type="button" class="rpe-btn good" data-rpe="good">👍 適正</button>
+            <button type="button" class="rpe-btn hard" data-rpe="hard">🔥 限界</button>
           </div>
         </div>
 
@@ -328,13 +364,27 @@
         </div>
 
         <div class="split-tracker-box">
-          <h4>🤸 今日の「股割り・開脚前屈」到達レベルを記録</h4>
+          <h4>🤸 今日の「股割り・開脚前屈」到達レベル ＆ 柔軟メモ</h4>
           <div class="split-level-btns" id="splitLevelBtns">
             <button type="button" data-level="1">🌱 Lv.1 硬め・骨盤立て練習中</button>
             <button type="button" data-level="2">🖐️ Lv.2 前屈で指先が床につく</button>
             <button type="button" data-level="3">✋ Lv.3 手のひらが床につく</button>
             <button type="button" data-level="4">💪 Lv.4 肘が床についた！</button>
             <button type="button" data-level="5">🔥 Lv.5 胸・おでこペター達成！</button>
+          </div>
+          <div class="split-detail-row">
+            <div class="split-quick-chips" id="splitQuickChips">
+              <button type="button" class="split-chip" data-memo="床まで拳2個">✊ 床まで拳2個</button>
+              <button type="button" class="split-chip" data-memo="床まで拳1個">✊ 床まで拳1個</button>
+              <button type="button" class="split-chip" data-memo="肘が床に接近">📏 肘が床に接近</button>
+              <button type="button" class="split-chip" data-memo="開脚120°突破">📐 開脚120°突破</button>
+              <button type="button" class="split-chip" data-memo="開脚140°突破">📐 開脚140°突破</button>
+              <button type="button" class="split-chip" data-memo="股関節の詰まり軽減">✨ 詰まり軽減</button>
+            </div>
+            <form class="split-memo-form" id="splitMemoForm">
+              <input type="text" id="splitMemoInput" placeholder="細かな変化メモ（例: 右内ももが伸びやすくなった・床まであと拳1つ）" maxlength="120" />
+              <button type="submit" class="primary-sm-btn">メモ保存</button>
+            </form>
           </div>
           <div class="recent-logs" id="recentLogsList"></div>
         </div>
