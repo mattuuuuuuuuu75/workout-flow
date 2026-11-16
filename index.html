@@ -9,7 +9,7 @@
   <title>筋トレNOW スタジオ｜自宅IROTEC ＆ 出張ホテル対応</title>
   <link rel="icon" type="image/png" href="./images/shoko_avatar.png" />
   <link rel="manifest" href="./manifest.json" />
-  <link rel="stylesheet" href="./styles.css?v=4.2" />
+  <link rel="stylesheet" href="./styles.css?v=4.3" />
 </head>
 <body data-phase="IDLE">
   <!-- ==================== 建設NOWニュース風 2段ヘッダー ==================== -->
@@ -203,12 +203,12 @@
           <div class="set-log-strip hidden" id="setLogStrip" role="tablist" aria-label="セットごとの重量と回数"></div>
           <div class="twin-stepper-grid" id="twinStepperGrid">
             <div class="plate-stepper-row" id="plateStepperWrap">
-              <button class="stepper-btn" id="plateMinusBtn" aria-label="1枚軽くする">－</button>
+              <button class="stepper-btn" id="plateMinusBtn" aria-label="負荷を1段階下げる">－</button>
               <div class="plate-count-box">
                 <span class="plate-num" id="plateCountNum">6</span>
-                <span class="plate-unit">枚目</span>
+                <span class="plate-unit" id="plateUnitLabel">枚目</span>
               </div>
-              <button class="stepper-btn" id="platePlusBtn" aria-label="1枚重くする">＋</button>
+              <button class="stepper-btn" id="platePlusBtn" aria-label="負荷を1段階上げる">＋</button>
             </div>
             <div class="plate-stepper-row reps-stepper-row" id="repsStepperWrap">
               <button class="stepper-btn" id="repsMinusBtn" aria-label="回数を1回減らす">－</button>
@@ -219,6 +219,7 @@
               <button class="stepper-btn" id="repsPlusBtn" aria-label="回数を1回増やす">＋</button>
             </div>
           </div>
+          <p class="hotel-inline-cue hidden" id="hotelInlineCue"></p>
         </div>
 
         <!-- セット回数1タップ ＆ 手応えワンタップ（休憩中・セット完了直後に表示 → 次回ウェイト自動提案） -->
@@ -460,8 +461,8 @@
     </div>
   </div>
 
-  <script src="./data.js?v=4.2"></script>
-  <script src="./audio_manifest.js?v=4.2"></script>
-  <script src="./app.js?v=4.2"></script>
+  <script src="./data.js?v=4.3"></script>
+  <script src="./audio_manifest.js?v=4.3"></script>
+  <script src="./app.js?v=4.3"></script>
 </body>
 </html>

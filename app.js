@@ -1,6 +1,6 @@
 // ============================================================================
-// 筋トレNOW スタジオ v4.2 — セット別「重量×回数」個別記録 ＆ 次回「最高枚数」初期セット仕様
-// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × PixelWatch睡眠HRV連動 × セット別重量×回数 × 動画タイマー完全ロック）
+// 筋トレNOW スタジオ v4.3 — iPad ＆ スマホ完全レスポンシブ × 出張ホテル負荷選択・セット別記録仕様
+// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × 自宅枚数＆出張負荷Lvセット別記録 × 動画タイマー完全ロック）
 // ============================================================================
 
 (function () {
@@ -14,6 +14,7 @@
     durationMode: 'flow40_duration_mode_v1',
     durationModeDate: 'flow40_duration_mode_date_v1',
     plates: 'flow40_irotec_plates_v1',
+    loadMap: 'flow40_bodyweight_load_v1',
     repsMap: 'flow40_reps_map_v1',
     sessionSetRepsLegacy: 'flow40_session_set_reps_v1',
     sessionSets: 'flow40_session_sets_v2',
@@ -27,6 +28,17 @@
     syncKey: 'flow40_sync_key_v1',
     pendingQueue: 'flow40_sync_pending_v1',
     lastSyncedAt: 'flow40_last_synced_at_v1'
+  };
+
+  // 出張ホテル・自重種目用の5段階負荷レベル定義
+  const MAX_LOAD_LV = 5;
+  const DEFAULT_LOAD_LV = 3;
+  const BODYWEIGHT_LOAD_LEVELS = {
+    1: { short: '軽め', detail: '膝つき・浅め角度（フォーム確認）' },
+    2: { short: 'やや軽', detail: '通常角度・反動なしテンポ' },
+    3: { short: '標準', detail: '標準負荷・3秒スロー戻し' },
+    4: { short: '強め', detail: '足上げ高角度・タオル全力張力' },
+    5: { short: '最大', detail: '片側高負荷・1秒静止・ジム重量' }
   };
 
   function getTodayJst() {
@@ -142,7 +154,8 @@
     hasStartedOnce: false,
     voiceEnabled: loadBool(STORAGE_KEYS.voiceEnabled, true),
     showDemoPip: false,
-    plateMap: initialPlateMap, // 各エクササイズの「次回初期セット枚数（＝直近セッションの最高枚数）」
+    plateMap: initialPlateMap, // 自宅マシンの「次回初期セット枚数（＝最高枚数）」
+    loadMap: loadJson(STORAGE_KEYS.loadMap, {}), // 出張ホテル・自重種目の「次回初期負荷Lv（＝最高Lv）」
     repsMap: loadJson(STORAGE_KEYS.repsMap, {}),
     todaySets: loadTodaySessionSets(initialPlateMap), // { [exId]: { [setIdx]: { plates, reps } } }
     editingSetOverride: null,
@@ -241,10 +254,12 @@
     plateMinusBtn: document.getElementById('plateMinusBtn'),
     platePlusBtn: document.getElementById('platePlusBtn'),
     plateCountNum: document.getElementById('plateCountNum'),
+    plateUnitLabel: document.getElementById('plateUnitLabel'),
     repsStepperWrap: document.getElementById('repsStepperWrap'),
     repsMinusBtn: document.getElementById('repsMinusBtn'),
     repsPlusBtn: document.getElementById('repsPlusBtn'),
     repsCountNum: document.getElementById('repsCountNum'),
+    hotelInlineCue: document.getElementById('hotelInlineCue'),
 
     rpeFeedbackBox: document.getElementById('rpeFeedbackBox'),
     rpeHeadingTitle: document.getElementById('rpeHeadingTitle'),
@@ -360,12 +375,26 @@
     return DATA.meditationPool || [];
   }
 
-  // 次回初期セット用（＝最高枚数）を取得
+  // 次回初期セット用（＝最高枚数 / 最高負荷Lv）を取得
   function getPresetPlatesForExercise(exId, defaultPlates) {
     if (exId && typeof state.plateMap[exId] === 'number' && state.plateMap[exId] > 0) {
       return state.plateMap[exId];
     }
     return defaultPlates || HOME_PLATE_EXERCISES[exId]?.defaultPlates || 5;
+  }
+
+  function getPresetLoadLevelForExercise(exId) {
+    const v = Number(state.loadMap[exId] || state.rpeMap[exId]?.lastLoadLv || 0);
+    if (exId && Number.isFinite(v) && v >= 1 && v <= MAX_LOAD_LV) {
+      return Math.round(v);
+    }
+    return DEFAULT_LOAD_LV;
+  }
+
+  function formatLoadLevelDetail(lv) {
+    const cleanLv = Math.max(1, Math.min(MAX_LOAD_LV, Math.round(Number(lv) || DEFAULT_LOAD_LV)));
+    const meta = BODYWEIGHT_LOAD_LEVELS[cleanLv] || BODYWEIGHT_LOAD_LEVELS[DEFAULT_LOAD_LV];
+    return { lv: cleanLv, short: meta.short, detail: meta.detail };
   }
 
   function formatPlateDetail(plates) {
@@ -385,7 +414,7 @@
     return fallbackReps;
   }
 
-  // -------------------- セット別「重量×回数」データヘルパー --------------------
+  // -------------------- セット別「重量(負荷Lv)×回数」データヘルパー --------------------
   function getTodaySetEntry(exId, setIndex) {
     if (!exId || !setIndex) return null;
     const entry = state.todaySets[exId]?.[setIndex];
@@ -397,7 +426,6 @@
     if (cur && Number.isFinite(Number(cur.plates)) && Number(cur.plates) > 0) {
       return Math.round(Number(cur.plates));
     }
-    // 直前セットから自動引き継ぎ（例: Set3で11枚に落としたらSet4も自動で11枚から開始）
     for (let s = (setIndex || 1) - 1; s >= 1; s--) {
       const prev = getTodaySetEntry(exId, s);
       if (prev && Number.isFinite(Number(prev.plates)) && Number(prev.plates) > 0) {
@@ -405,6 +433,20 @@
       }
     }
     return getPresetPlatesForExercise(exId, defaultPlates);
+  }
+
+  function getEffectiveLoadLevelForSet(exId, setIndex) {
+    const cur = getTodaySetEntry(exId, setIndex);
+    if (cur && Number.isFinite(Number(cur.loadLv)) && Number(cur.loadLv) > 0) {
+      return Math.round(Number(cur.loadLv));
+    }
+    for (let s = (setIndex || 1) - 1; s >= 1; s--) {
+      const prev = getTodaySetEntry(exId, s);
+      if (prev && Number.isFinite(Number(prev.loadLv)) && Number(prev.loadLv) > 0) {
+        return Math.round(Number(prev.loadLv));
+      }
+    }
+    return getPresetLoadLevelForExercise(exId);
   }
 
   function getEffectiveRepsForSet(exId, setIndex, fallbackReps = 10) {
@@ -430,6 +472,9 @@
     const basePlates = isWeightEx
       ? existing.plates || getEffectivePlatesForSet(exId, setIndex, defaultPlates)
       : null;
+    const baseLoadLv = !isWeightEx
+      ? existing.loadLv || getEffectiveLoadLevelForSet(exId, setIndex)
+      : null;
 
     const nextEntry = {
       plates:
@@ -438,6 +483,12 @@
             ? Math.max(1, Math.min(DATA.maxPlates, Math.round(Number(patch.plates))))
             : null
           : basePlates,
+      loadLv:
+        patch.loadLv !== undefined
+          ? patch.loadLv !== null
+            ? Math.max(1, Math.min(MAX_LOAD_LV, Math.round(Number(patch.loadLv))))
+            : null
+          : baseLoadLv,
       reps:
         patch.reps !== undefined
           ? patch.reps !== null
@@ -449,12 +500,19 @@
     saveTodaySessionSets(state.todaySets);
   }
 
-  function ensureSetPlatesInitialized(exId, setIndex, defaultPlates) {
-    if (!exId || !setIndex || !HOME_PLATE_EXERCISES[exId]) return;
+  function ensureSetLoadInitialized(exId, setIndex, defaultPlates, isWeightEx = true) {
+    if (!exId || !setIndex) return;
     const cur = getTodaySetEntry(exId, setIndex);
-    if (!cur || !cur.plates) {
-      const inherited = getEffectivePlatesForSet(exId, setIndex, defaultPlates);
-      upsertTodaySetEntry(exId, setIndex, { plates: inherited }, defaultPlates, true);
+    if (isWeightEx && HOME_PLATE_EXERCISES[exId]) {
+      if (!cur || !cur.plates) {
+        const inherited = getEffectivePlatesForSet(exId, setIndex, defaultPlates);
+        upsertTodaySetEntry(exId, setIndex, { plates: inherited }, defaultPlates, true);
+      }
+    } else if (!isWeightEx) {
+      if (!cur || !cur.loadLv) {
+        const inheritedLv = getEffectiveLoadLevelForSet(exId, setIndex);
+        upsertTodaySetEntry(exId, setIndex, { loadLv: inheritedLv }, defaultPlates, false);
+      }
     }
   }
 
@@ -467,12 +525,14 @@
         const setNum = Number(k);
         if (!Number.isFinite(setNum) || setNum < 1 || !v || typeof v !== 'object') return null;
         const p = Number.isFinite(Number(v.plates)) && Number(v.plates) > 0 ? Math.round(Number(v.plates)) : null;
+        const lv = Number.isFinite(Number(v.loadLv)) && Number(v.loadLv) > 0 ? Math.round(Number(v.loadLv)) : null;
         const r = Number.isFinite(Number(v.reps)) && Number(v.reps) > 0 ? Math.round(Number(v.reps)) : null;
-        if (p === null && r === null) return null;
+        if (p === null && lv === null && r === null) return null;
         return {
           set: setNum,
           plates: p,
           kg: p !== null ? Number((p * DATA.plateStepKg).toFixed(1)) : null,
+          loadLv: lv,
           reps: r
         };
       })
@@ -480,7 +540,6 @@
       .sort((a, b) => a.set - b.set);
   }
 
-  // 本日の記録から「次回初期セット用の最高枚数」を算出
   function computeMaxPlatesForExercise(exId, defaultPlates) {
     const sets = getTodayCleanSetsList(exId);
     const pVals = sets.map((s) => s.plates).filter((p) => typeof p === 'number' && p > 0);
@@ -490,9 +549,15 @@
     return getPresetPlatesForExercise(exId, defaultPlates);
   }
 
-  // セット配列をコンパクトで見やすい日本語表記へ整形
-  // 例1(同重量): 13枚(58.5kg)×10/9/8/7回
-  // 例2(重量変化あり): 13枚(58.5kg)×8/6回→11枚(49.5kg)×10/9回
+  function computeMaxLoadLevelForExercise(exId) {
+    const sets = getTodayCleanSetsList(exId);
+    const lvVals = sets.map((s) => s.loadLv).filter((lv) => typeof lv === 'number' && lv > 0);
+    if (lvVals.length > 0) {
+      return Math.max(...lvVals);
+    }
+    return getPresetLoadLevelForExercise(exId);
+  }
+
   function formatExerciseSetsSummary(exId, { includeKg = false, defaultPlates = 5, defaultReps = 10, isWeightEx = true } = {}) {
     const sets = getTodayCleanSetsList(exId);
     const recordedWithReps = sets.filter((s) => s.reps !== null);
@@ -513,7 +578,6 @@
           return `${firstP}枚${kgPart}×${singleRep}回`;
         }
 
-        // セット間で重量を変えた場合は連続同一枚数でグルーピング
         const groups = [];
         sets.forEach((s) => {
           const p = s.plates || firstP;
@@ -534,7 +598,6 @@
           .join('→');
       }
 
-      // まだ本日セット記録がない場合は前回記録を表示
       const presetP = getPresetPlatesForExercise(exId, defaultPlates);
       const det = formatPlateDetail(presetP);
       const kgPart = includeKg ? `(${det.kg}kg)` : '';
@@ -549,33 +612,68 @@
       return `${presetP}枚${kgPart}×${getDefaultRepsForExercise(exId, defaultReps)}回`;
     }
 
-    // 自重・ホテル種目
-    if (recordedWithReps.length >= 2) {
-      return `${recordedWithReps.map((s) => s.reps).join('/')}回`;
+    // 出張ホテル・自重種目（負荷Lv.1〜5 × 回数）
+    if (sets.length > 0) {
+      const lvVals = sets.map((s) => s.loadLv || getPresetLoadLevelForExercise(exId));
+      const firstLv = lvVals[0];
+      const allSameLv = lvVals.every((lv) => lv === firstLv);
+
+      if (allSameLv) {
+        const lvMeta = formatLoadLevelDetail(firstLv);
+        const descPart = includeKg ? `(${lvMeta.short})` : '';
+        if (recordedWithReps.length >= 2) {
+          return `Lv.${firstLv}${descPart}×${recordedWithReps.map((s) => s.reps).join('/')}回`;
+        }
+        const singleRep = recordedWithReps[0]?.reps || getDefaultRepsForExercise(exId, defaultReps);
+        return `Lv.${firstLv}${descPart}×${singleRep}回`;
+      }
+
+      const groups = [];
+      sets.forEach((s) => {
+        const lv = s.loadLv || firstLv;
+        const repLabel = s.reps !== null ? String(s.reps) : `${getDefaultRepsForExercise(exId, defaultReps)}`;
+        const prev = groups[groups.length - 1];
+        if (prev && prev.lv === lv) {
+          prev.repsList.push(repLabel);
+        } else {
+          groups.push({ lv, repsList: [repLabel] });
+        }
+      });
+      return groups
+        .map((g) => {
+          const lvMeta = formatLoadLevelDetail(g.lv);
+          const descPart = includeKg ? `(${lvMeta.short})` : '';
+          return `Lv.${g.lv}${descPart}×${g.repsList.join('/')}回`;
+        })
+        .join('→');
     }
-    if (recordedWithReps.length === 1) {
-      return `${recordedWithReps[0].reps}回`;
-    }
-    return `${getDefaultRepsForExercise(exId, defaultReps)}回`;
+
+    const presetLv = getPresetLoadLevelForExercise(exId);
+    const lvMeta = formatLoadLevelDetail(presetLv);
+    const descPart = includeKg ? `(${lvMeta.short})` : '';
+    return `Lv.${presetLv}${descPart}×${getDefaultRepsForExercise(exId, defaultReps)}回`;
   }
 
-  // 最高枚数で全セット10回以上クリアできたか判定（途中ドロップまたは10回未満があれば現最高枚数を維持）
-  function hasSubTenOrDroppedWeight(exId) {
+  function hasSubTenOrDroppedWeight(exId, isWeightEx = true) {
     if (!exId) return false;
     const sets = getTodayCleanSetsList(exId);
     if (sets.length > 0) {
-      const pVals = sets.map((s) => s.plates).filter((p) => typeof p === 'number' && p > 0);
-      const maxP = pVals.length ? Math.max(...pVals) : 0;
-      if (pVals.some((p) => p < maxP)) return true;
+      const loadVals = sets
+        .map((s) => (isWeightEx ? s.plates : s.loadLv))
+        .filter((v) => typeof v === 'number' && v > 0);
+      const maxL = loadVals.length ? Math.max(...loadVals) : 0;
+      if (loadVals.some((v) => v < maxL)) return true;
       if (sets.some((s) => s.reps !== null && s.reps < 10)) return true;
       if (sets.some((s) => s.reps !== null)) return false;
     }
 
     const prevLastSets = state.rpeMap[exId]?.lastSets;
     if (Array.isArray(prevLastSets) && prevLastSets.length > 0) {
-      const pVals = prevLastSets.map((s) => Number(s.plates)).filter((n) => n > 0);
-      const maxP = pVals.length ? Math.max(...pVals) : 0;
-      if (pVals.some((p) => p < maxP)) return true;
+      const loadVals = prevLastSets
+        .map((s) => Number(isWeightEx ? s.plates : s.loadLv))
+        .filter((n) => n > 0);
+      const maxL = loadVals.length ? Math.max(...loadVals) : 0;
+      if (loadVals.some((v) => v < maxL)) return true;
       if (prevLastSets.some((s) => Number(s.reps) > 0 && Number(s.reps) < 10)) return true;
     }
 
@@ -590,7 +688,7 @@
       if (nums.some((n) => n < 10)) return true;
     }
 
-    return getDefaultRepsForExercise(exId, 10) < 10;
+    return getDefaultRepsForExercise(exId, isWeightEx ? 10 : 12) < 10;
   }
 
   function cleanExerciseShortTitle(title) {
@@ -1304,6 +1402,12 @@
       });
       el.daySwitcher.appendChild(btn);
     });
+    requestAnimationFrame(() => {
+      const act = el.daySwitcher.querySelector('.day-pill.active');
+      if (act && typeof act.scrollIntoView === 'function') {
+        act.scrollIntoView({ block: 'nearest', inline: 'center' });
+      }
+    });
   }
 
   function renderOverallProgress() {
@@ -1349,11 +1453,11 @@
         hidePlates: Boolean(step.hidePlates || state.locationMode === 'hotel'),
         setIndex: step.setIndex || 1,
         totalSets: step.totalSets || 3,
+        cues: step.cues || [],
         isLiveSet: true
       };
     }
 
-    // 種目終了直後の移行・次種目セットアップ中：直前種目の最終セット調整を優先しつつ次種目も案内
     if ((step.kind === 'setup' || step.kind === 'transition') && step.prevExerciseId) {
       return {
         exerciseId: step.prevExerciseId,
@@ -1362,26 +1466,27 @@
         hidePlates: Boolean(step.prevHidePlates || state.locationMode === 'hotel'),
         setIndex: step.prevTotalSets || 3,
         totalSets: step.prevTotalSets || 3,
+        cues: step.cues || [],
         isLiveSet: true,
         isPostExercise: true
       };
     }
 
-    if (state.locationMode === 'home') {
-      const upcoming = state.steps
-        .slice(state.currentIndex + 1)
-        .find((s) => s.exerciseId && !s.hidePlates);
-      if (upcoming) {
-        return {
-          exerciseId: upcoming.exerciseId,
-          title: upcoming.title,
-          defaultPlates: upcoming.defaultPlates || 5,
-          hidePlates: false,
-          setIndex: 1,
-          totalSets: upcoming.totalSets || 3,
-          isLiveSet: false
-        };
-      }
+    // 自宅でも出張ホテルでも、スタート前・ウォームアップ時から最初の種目の負荷＆回数を事前確認・調整可能にする
+    const upcoming = state.steps
+      .slice(state.currentIndex + 1)
+      .find((s) => Boolean(s.exerciseId));
+    if (upcoming) {
+      return {
+        exerciseId: upcoming.exerciseId,
+        title: upcoming.title,
+        defaultPlates: upcoming.defaultPlates || 5,
+        hidePlates: Boolean(upcoming.hidePlates || state.locationMode === 'hotel'),
+        setIndex: 1,
+        totalSets: upcoming.totalSets || 3,
+        cues: upcoming.cues || step.cues || [],
+        isLiveSet: false
+      };
     }
     return null;
   }
@@ -1450,9 +1555,6 @@
 
     for (let s = 1; s <= total; s++) {
       const entry = getTodaySetEntry(activeTarget.exerciseId, s);
-      const effP = activeTarget.hidePlates
-        ? null
-        : getEffectivePlatesForSet(activeTarget.exerciseId, s, activeTarget.defaultPlates);
       const hasRep = entry && entry.reps !== null;
       const isEditing = s === editingSet;
 
@@ -1464,11 +1566,14 @@
         (isEditing ? ' editing' : '');
 
       if (activeTarget.hidePlates) {
-        btn.textContent = hasRep ? `S${s} ${entry.reps}回` : `S${s} --`;
+        const effLv = getEffectiveLoadLevelForSet(activeTarget.exerciseId, s);
+        btn.textContent = hasRep ? `S${s} Lv${effLv}×${entry.reps}` : `S${s} Lv${effLv}`;
+        btn.title = `タップして Set ${s} の負荷Lv・回数を編集`;
       } else {
+        const effP = getEffectivePlatesForSet(activeTarget.exerciseId, s, activeTarget.defaultPlates);
         btn.textContent = hasRep ? `S${s} ${effP}枚×${entry.reps}` : `S${s} ${effP}枚`;
+        btn.title = `タップして Set ${s} の重量・回数を編集`;
       }
-      btn.title = `タップして Set ${s} の重量・回数を編集`;
       btn.addEventListener('click', () => {
         state.editingSetExId = activeTarget.exerciseId;
         state.editingSetOverride = s;
@@ -1479,32 +1584,54 @@
   }
 
   function renderOverloadAndRpe(step, activeTarget) {
-    // 1. 漸進性過負荷（ピン＋1枚提案）バナー — 最高枚数で全セット10回以上＆2連続「余裕」時のみ解禁
+    // 1. 漸進性過負荷（ピン＋1枚 / ホテル負荷＋1Lv提案）バナー
     if (el.overloadBanner) {
       el.overloadBanner.classList.add('hidden');
-      if (activeTarget && !activeTarget.hidePlates && state.locationMode === 'home' && !activeTarget.isPostExercise) {
+      if (activeTarget && !activeTarget.isPostExercise) {
         const exId = activeTarget.exerciseId;
+        const isWeightEx = !activeTarget.hidePlates && Boolean(HOME_PLATE_EXERCISES[exId]);
         const rpe = state.rpeMap[exId] || {};
-        const curMaxPlates = computeMaxPlatesForExercise(exId, activeTarget.defaultPlates);
         const todayIso = getTodayJst();
-        if (
-          Number(rpe.easyStreak || 0) >= 2 &&
-          !hasSubTenOrDroppedWeight(exId) &&
-          rpe.lastUpgradeDate !== todayIso &&
-          curMaxPlates < DATA.maxPlates
-        ) {
-          const nextPlates = curMaxPlates + 1;
-          const nextDet = formatPlateDetail(nextPlates);
-          el.overloadBanner.classList.remove('hidden');
-          el.overloadBanner.dataset.exerciseId = exId;
-          el.overloadBanner.dataset.nextPlates = String(nextPlates);
-          el.overloadBanner.dataset.exerciseName = activeTarget.title;
-          el.overloadText.textContent = `🚀 全Set10回＆${rpe.easyStreak}連続「余裕😊」！${curMaxPlates}→${nextPlates}枚目(${nextDet.kg}kg)へ上げますか？`;
+
+        if (isWeightEx) {
+          const curMaxPlates = computeMaxPlatesForExercise(exId, activeTarget.defaultPlates);
+          if (
+            Number(rpe.easyStreak || 0) >= 2 &&
+            !hasSubTenOrDroppedWeight(exId, true) &&
+            rpe.lastUpgradeDate !== todayIso &&
+            curMaxPlates < DATA.maxPlates
+          ) {
+            const nextPlates = curMaxPlates + 1;
+            const nextDet = formatPlateDetail(nextPlates);
+            el.overloadBanner.classList.remove('hidden');
+            el.overloadBanner.dataset.exerciseId = exId;
+            el.overloadBanner.dataset.nextPlates = String(nextPlates);
+            el.overloadBanner.dataset.isWeightEx = '1';
+            el.overloadBanner.dataset.exerciseName = activeTarget.title;
+            el.overloadText.textContent = `🚀 全Set10回＆${rpe.easyStreak}連続「余裕😊」！${curMaxPlates}→${nextPlates}枚目(${nextDet.kg}kg)へ上げますか？`;
+          }
+        } else {
+          const curMaxLv = computeMaxLoadLevelForExercise(exId);
+          if (
+            Number(rpe.easyStreak || 0) >= 2 &&
+            !hasSubTenOrDroppedWeight(exId, false) &&
+            rpe.lastUpgradeDate !== todayIso &&
+            curMaxLv < MAX_LOAD_LV
+          ) {
+            const nextLv = curMaxLv + 1;
+            const nextMeta = formatLoadLevelDetail(nextLv);
+            el.overloadBanner.classList.remove('hidden');
+            el.overloadBanner.dataset.exerciseId = exId;
+            el.overloadBanner.dataset.nextPlates = String(nextLv);
+            el.overloadBanner.dataset.isWeightEx = '0';
+            el.overloadBanner.dataset.exerciseName = activeTarget.title;
+            el.overloadText.textContent = `🚀 全Setクリア＆${rpe.easyStreak}連続「余裕😊」！Lv.${curMaxLv}→Lv.${nextLv}(${nextMeta.short})へ上げますか？`;
+          }
         }
       }
     }
 
-    // 2. セット別回数1タップ ＆ 手応えワンタップ
+    // 2. セット別回数1タップ ＆ 手応えワンタップ（自宅・ホテル両対応）
     if (el.rpeFeedbackBox) {
       const target = resolveRpeTargetForStep(step);
       if (!target) {
@@ -1527,9 +1654,9 @@
 
         const shortName = cleanExerciseShortTitle(target.title);
         if (step.kind === 'setup' || step.kind === 'transition') {
-          el.rpeHeadingTitle.textContent = `直前「${shortName}」Set ${targetSetIdx} 回数＆手応え`;
+          el.rpeHeadingTitle.textContent = `直前「${shortName}」Set ${targetSetIdx}`;
         } else {
-          el.rpeHeadingTitle.textContent = `Set ${targetSetIdx} の回数 ＆ 手応えワンタップ`;
+          el.rpeHeadingTitle.textContent = `Set ${targetSetIdx} 回数 ＆ 手応え`;
         }
 
         const setEntry = getTodaySetEntry(target.exerciseId, targetSetIdx);
@@ -1542,34 +1669,33 @@
 
         const isHomeWeightEx = !target.hidePlates && Boolean(HOME_PLATE_EXERCISES[target.exerciseId]);
         if (el.rpeBtnRow) {
-          el.rpeBtnRow.classList.toggle('hidden', !isHomeWeightEx);
+          el.rpeBtnRow.classList.remove('hidden');
         }
 
-        const maxP = isHomeWeightEx ? computeMaxPlatesForExercise(target.exerciseId, target.defaultPlates) : null;
+        const rpeInfo = state.rpeMap[target.exerciseId] || {};
+        const todayIso = getTodayJst();
+        const ratedToday = rpeInfo.lastRatedDate === todayIso ? rpeInfo.lastRpe : null;
 
-        if (isHomeWeightEx) {
-          const rpeInfo = state.rpeMap[target.exerciseId] || {};
-          const todayIso = getTodayJst();
-          const ratedToday = rpeInfo.lastRatedDate === todayIso ? rpeInfo.lastRpe : null;
+        el.rpeBtnRow.querySelectorAll('.rpe-btn').forEach((btn) => {
+          btn.classList.toggle('selected', Boolean(ratedToday && btn.dataset.rpe === ratedToday));
+        });
 
-          el.rpeBtnRow.querySelectorAll('.rpe-btn').forEach((btn) => {
-            btn.classList.toggle('selected', Boolean(ratedToday && btn.dataset.rpe === ratedToday));
-          });
+        const streak = Number(rpeInfo.easyStreak || 0);
+        const maxLabel = isHomeWeightEx
+          ? `最高${computeMaxPlatesForExercise(target.exerciseId, target.defaultPlates)}枚`
+          : `最高Lv.${computeMaxLoadLevelForExercise(target.exerciseId)}`;
+        const upUnit = isHomeWeightEx ? '＋1枚' : '＋1Lv';
 
-          const streak = Number(rpeInfo.easyStreak || 0);
-          if (hasSubTenOrDroppedWeight(target.exerciseId)) {
-            el.rpeStreakHint.textContent = `🎯 次回初期: 最高${maxP}枚（全Set10回達成でUP候補）`;
-          } else if (streak >= 2) {
-            el.rpeStreakHint.textContent = '🔥 次回＋1枚UP提案ON！';
-          } else if (streak === 1) {
-            el.rpeStreakHint.textContent = '✨ あと1回「余裕」で＋1枚提案';
-          } else if (ratedToday) {
-            el.rpeStreakHint.textContent = `✓ 次回初期: 最高${maxP}枚`;
-          } else {
-            el.rpeStreakHint.textContent = '全Set10回×余裕2連続で＋1枚提案';
-          }
+        if (hasSubTenOrDroppedWeight(target.exerciseId, isHomeWeightEx)) {
+          el.rpeStreakHint.textContent = `🎯 次回初期: ${maxLabel}`;
+        } else if (streak >= 2) {
+          el.rpeStreakHint.textContent = `🔥 次回${upUnit}提案ON！`;
+        } else if (streak === 1) {
+          el.rpeStreakHint.textContent = `✨ あと1回「余裕」で${upUnit}提案`;
+        } else if (ratedToday) {
+          el.rpeStreakHint.textContent = `✓ 次回初期: ${maxLabel}`;
         } else {
-          el.rpeStreakHint.textContent = 'セットごとの回数を記録';
+          el.rpeStreakHint.textContent = `10回×余裕2連続で${upUnit}提案`;
         }
       }
     }
@@ -1626,18 +1752,27 @@
         el.hwPinDisplay.textContent = `Set${sIdx} ピン：${curPlates}枚目 (約${detail.kg}kg) × ${curReps}回${maxNote}`;
       } else if (step.exerciseId) {
         const sIdx = step.setIndex || 1;
+        const curLv = getEffectiveLoadLevelForSet(step.exerciseId, sIdx);
+        const maxLv = computeMaxLoadLevelForExercise(step.exerciseId);
+        const lvMeta = formatLoadLevelDetail(curLv);
         const curReps = getEffectiveRepsForSet(step.exerciseId, sIdx, 12);
+        const maxNote = maxLv > curLv ? ` [最高Lv.${maxLv}]` : '';
         el.hwPinDisplay.classList.remove('hidden');
-        el.hwPinDisplay.textContent = `Set${sIdx} 目標・記録：${curReps}回`;
+        el.hwPinDisplay.textContent = `Set${sIdx} 負荷：Lv.${curLv}(${lvMeta.short}) × ${curReps}回${maxNote}`;
       } else {
-        const upcomingMachine = state.steps
+        const upcomingEx = state.steps
           .slice(state.currentIndex + 1)
-          .find((s) => s.exerciseId && !s.hidePlates && state.locationMode === 'home');
-        if (upcomingMachine) {
-          const maxPreset = getPresetPlatesForExercise(upcomingMachine.exerciseId, upcomingMachine.defaultPlates);
+          .find((s) => Boolean(s.exerciseId));
+        if (upcomingEx && !upcomingEx.hidePlates && state.locationMode === 'home') {
+          const maxPreset = getPresetPlatesForExercise(upcomingEx.exerciseId, upcomingEx.defaultPlates);
           const detail = formatPlateDetail(maxPreset);
           el.hwPinDisplay.classList.remove('hidden');
           el.hwPinDisplay.textContent = `次種目初期ピン（最高）：${maxPreset}枚目 (約${detail.kg}kg)`;
+        } else if (upcomingEx) {
+          const maxLv = getPresetLoadLevelForExercise(upcomingEx.exerciseId);
+          const lvMeta = formatLoadLevelDetail(maxLv);
+          el.hwPinDisplay.classList.remove('hidden');
+          el.hwPinDisplay.textContent = `次種目初期負荷：Lv.${maxLv} (${lvMeta.short})`;
         } else {
           el.hwPinDisplay.classList.add('hidden');
         }
@@ -1728,26 +1863,44 @@
       if (el.repsCountNum) el.repsCountNum.textContent = String(shownReps);
 
       const shortExTitle = cleanExerciseShortTitle(activeTarget.title);
+      el.plateStepperWrap?.classList.remove('hidden');
+      el.twinStepperGrid?.classList.remove('reps-only');
 
       if (activeTarget.hidePlates) {
-        el.plateStepperWrap?.classList.add('hidden');
-        el.twinStepperGrid?.classList.add('reps-only');
+        const setLv = getEffectiveLoadLevelForSet(activeTarget.exerciseId, editSet);
+        const maxLv = computeMaxLoadLevelForExercise(activeTarget.exerciseId);
+        const lvMeta = formatLoadLevelDetail(setLv);
+        el.plateCountNum.textContent = `Lv.${setLv}`;
+        if (el.plateUnitLabel) el.plateUnitLabel.textContent = lvMeta.short;
+
         if (el.plateHeadingTitle) {
-          el.plateHeadingTitle.textContent = activeTarget.isPostExercise
-            ? `直前「${shortExTitle}」Set ${editSet}`
-            : `Set ${editSet}/${activeTarget.totalSets} 回数メモ`;
+          if (activeTarget.isPostExercise) {
+            el.plateHeadingTitle.textContent = `直前「${shortExTitle}」Set ${editSet}`;
+          } else if (activeTarget.isLiveSet) {
+            el.plateHeadingTitle.textContent = `Set ${editSet}/${activeTarget.totalSets} 負荷Lv ＆ 回数`;
+          } else {
+            el.plateHeadingTitle.textContent = `初期負荷「${shortExTitle}」Set ${editSet}`;
+          }
         }
-        el.plateKgHint.textContent = formatExerciseSetsSummary(activeTarget.exerciseId, {
-          isWeightEx: false,
-          defaultReps: defReps
-        });
+        const maxHint = maxLv > setLv ? ` ｜次回:最高Lv.${maxLv}` : '';
+        el.plateKgHint.textContent = `${lvMeta.detail}${maxHint}`;
+
+        if (el.hotelInlineCue) {
+          const cueTxt = (activeTarget.cues && activeTarget.cues[0]) || (step.cues && step.cues[0]) || '';
+          if (cueTxt) {
+            el.hotelInlineCue.classList.remove('hidden');
+            el.hotelInlineCue.textContent = `💡 ${cueTxt}`;
+          } else {
+            el.hotelInlineCue.classList.add('hidden');
+          }
+        }
       } else {
-        el.plateStepperWrap?.classList.remove('hidden');
-        el.twinStepperGrid?.classList.remove('reps-only');
         const setPlates = getEffectivePlatesForSet(activeTarget.exerciseId, editSet, activeTarget.defaultPlates);
         const maxPlates = computeMaxPlatesForExercise(activeTarget.exerciseId, activeTarget.defaultPlates);
         const pDetail = formatPlateDetail(setPlates);
         el.plateCountNum.textContent = String(setPlates);
+        if (el.plateUnitLabel) el.plateUnitLabel.textContent = '枚目';
+        if (el.hotelInlineCue) el.hotelInlineCue.classList.add('hidden');
 
         if (el.plateHeadingTitle) {
           if (activeTarget.isPostExercise) {
@@ -1874,9 +2027,10 @@
     state.stepTotalSec = step.durationSeconds;
     state.remainingSec = step.durationSeconds;
 
-    // 本番セット突入時：直前セットの枚数を自動引き継ぎ（Set1は前回の最高枚数から開始）
-    if (step.kind === 'work' && step.exerciseId && !step.hidePlates && state.locationMode === 'home') {
-      ensureSetPlatesInitialized(step.exerciseId, step.setIndex || 1, step.defaultPlates);
+    // 本番セット突入時：直前セットの枚数/負荷Lvを自動引き継ぎ（Set1は前回の最高値から開始）
+    if (step.kind === 'work' && step.exerciseId) {
+      const isWeightEx = !step.hidePlates && state.locationMode === 'home' && Boolean(HOME_PLATE_EXERCISES[step.exerciseId]);
+      ensureSetLoadInitialized(step.exerciseId, step.setIndex || 1, step.defaultPlates, isWeightEx);
     }
 
     if (step.isDailyStretch && step.stretchId) {
@@ -1908,8 +2062,9 @@
     state.isRunning = true;
 
     const step = state.steps[state.currentIndex];
-    if (step && step.kind === 'work' && step.exerciseId && !step.hidePlates && state.locationMode === 'home') {
-      ensureSetPlatesInitialized(step.exerciseId, step.setIndex || 1, step.defaultPlates);
+    if (step && step.kind === 'work' && step.exerciseId) {
+      const isWeightEx = !step.hidePlates && state.locationMode === 'home' && Boolean(HOME_PLATE_EXERCISES[step.exerciseId]);
+      ensureSetLoadInitialized(step.exerciseId, step.setIndex || 1, step.defaultPlates, isWeightEx);
     }
     renderCurrentStep();
 
@@ -2099,14 +2254,49 @@
             todayRpe === 'easy' ? '😊' : todayRpe === 'good' ? '👍' : todayRpe === 'hard' ? '🔥' : '';
           weightParts.push(`${shortTitle}: ${summaryCore}${rpeIcon}`);
         } else {
+          // 出張ホテル種目・自重種目もセット別「負荷Lv×回数」を保存・同期
+          const maxLv = computeMaxLoadLevelForExercise(b.id);
           const cleanSets = getTodayCleanSetsList(b.id);
-          const hasExplicitReps = state.repsMap[b.id] !== undefined || cleanSets.some((s) => s.reps !== null);
-          if (hasExplicitReps) {
+          const reps = getDefaultRepsForExercise(b.id, 12);
+          const rpeObj = state.rpeMap[b.id] || {};
+          const todayRpe = rpeObj.lastRatedDate === getTodayJst() ? rpeObj.lastRpe : undefined;
+          const shouldRecord =
+            state.locationMode === 'hotel' ||
+            state.loadMap[b.id] !== undefined ||
+            state.repsMap[b.id] !== undefined ||
+            cleanSets.length > 0 ||
+            Boolean(todayRpe);
+
+          if (shouldRecord) {
             const summaryCore = formatExerciseSetsSummary(b.id, {
-              isWeightEx: false,
-              defaultReps: 12
+              includeKg: true,
+              defaultReps: 12,
+              isWeightEx: false
             });
-            weightParts.push(`${shortTitle}: ${summaryCore}`);
+            const compactSetTxt = formatExerciseSetsSummary(b.id, {
+              includeKg: false,
+              defaultReps: 12,
+              isWeightEx: false
+            });
+            weightsMap[b.id] = {
+              title: b.title,
+              loadLv: maxLv,
+              reps,
+              sets: cleanSets.length ? cleanSets : undefined,
+              setReps: cleanSets.filter((s) => s.reps !== null).map((s) => s.reps),
+              setRepsText: compactSetTxt,
+              rpe: todayRpe,
+              rpeInfo: {
+                ...rpeObj,
+                lastLoadLv: maxLv,
+                lastReps: reps,
+                lastSets: cleanSets.length ? cleanSets : rpeObj.lastSets,
+                setRepsText: compactSetTxt
+              }
+            };
+            const rpeIcon =
+              todayRpe === 'easy' ? '😊' : todayRpe === 'good' ? '👍' : todayRpe === 'hard' ? '🔥' : '';
+            weightParts.push(`${shortTitle}: ${summaryCore}${rpeIcon}`);
           }
         }
       });
@@ -2336,19 +2526,36 @@
           splitMemo: cl.splitMemo || prev.splitMemo || '',
           meditationDone: Boolean(cl.meditationDone || prev.meditationDone)
         });
-        // 当日のセッションログ内にsets配列があれば補完
-        if (cl.date === todayIso && cl.weightsMap && typeof cl.weightsMap === 'object') {
+        // 当日のセッションログ内にsets配列があれば補完し、過去ホテルログからも負荷Lv初期値を復元
+        if (cl.weightsMap && typeof cl.weightsMap === 'object') {
           Object.entries(cl.weightsMap).forEach(([exId, wItem]) => {
-            if (wItem && Array.isArray(wItem.sets) && !state.todaySets[exId]) {
+            if (!wItem || typeof wItem !== 'object') return;
+            if (typeof wItem.loadLv === 'number' && wItem.loadLv >= 1 && !state.loadMap[exId]) {
+              state.loadMap[exId] = Math.round(wItem.loadLv);
+            }
+            if (typeof wItem.reps === 'number' && wItem.reps >= 1 && !state.repsMap[exId]) {
+              state.repsMap[exId] = Math.round(wItem.reps);
+            }
+            if (wItem.rpeInfo && typeof wItem.rpeInfo === 'object' && !state.rpeMap[exId]) {
+              state.rpeMap[exId] = wItem.rpeInfo;
+            }
+            if (cl.date === todayIso && Array.isArray(wItem.sets) && !state.todaySets[exId]) {
               state.todaySets[exId] = {};
               wItem.sets.forEach((s) => {
                 if (s && s.set) {
-                  state.todaySets[exId][s.set] = { plates: s.plates || null, reps: s.reps || null };
+                  state.todaySets[exId][s.set] = {
+                    plates: s.plates || null,
+                    loadLv: s.loadLv || null,
+                    reps: s.reps || null
+                  };
                 }
               });
               saveTodaySessionSets(state.todaySets);
             }
           });
+          saveJson(STORAGE_KEYS.loadMap, state.loadMap);
+          saveJson(STORAGE_KEYS.repsMap, state.repsMap);
+          saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
         }
       });
       state.logs = [...logMap.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)));
@@ -2477,19 +2684,60 @@
     syncFullSessionToCloud({ fromManualBtn: false });
   }
 
-  // -------------------- セット別「重量×回数」更新 ＆ 次回最高枚数プリセット同期 --------------------
-  function recomputeMaxAndSyncExercise(exId, exName, defaultPlates, { immediate = false } = {}) {
-    if (!exId || !HOME_PLATE_EXERCISES[exId]) return;
+  // -------------------- セット別「重量(負荷Lv)×回数」更新 ＆ 次回最高値プリセット同期 --------------------
+  function recomputeMaxAndSyncExercise(exId, exName, defaultPlates, { immediate = false, isWeightEx = true } = {}) {
+    if (!exId) return;
 
     const cleanSets = getTodayCleanSetsList(exId);
+    const recordedWithReps = cleanSets.filter((s) => s.reps !== null);
+
+    if (!isWeightEx || !HOME_PLATE_EXERCISES[exId]) {
+      // 出張ホテル・自重種目：最高負荷Lvと代表回数を保存
+      const maxLv = computeMaxLoadLevelForExercise(exId);
+      state.loadMap[exId] = maxLv;
+      saveJson(STORAGE_KEYS.loadMap, state.loadMap);
+
+      if (recordedWithReps.length > 0) {
+        const lvVals = cleanSets.map((s) => s.loadLv).filter(Boolean);
+        const allSameLv = lvVals.every((lv) => lv === maxLv);
+        let repAtMax;
+        if (allSameLv) {
+          repAtMax = recordedWithReps[recordedWithReps.length - 1].reps;
+        } else {
+          const atMax = recordedWithReps.filter((s) => s.loadLv === maxLv);
+          repAtMax = atMax.length > 0 ? Math.max(...atMax.map((s) => s.reps)) : recordedWithReps[0].reps;
+        }
+        state.repsMap[exId] = repAtMax;
+        saveJson(STORAGE_KEYS.repsMap, state.repsMap);
+      }
+
+      const curReps = getDefaultRepsForExercise(exId, 12);
+      const setSummaryTxt = formatExerciseSetsSummary(exId, {
+        includeKg: false,
+        defaultReps: 12,
+        isWeightEx: false
+      });
+      const prevRpe = state.rpeMap[exId] || {};
+      const holdLoad = hasSubTenOrDroppedWeight(exId, false);
+      state.rpeMap[exId] = {
+        ...prevRpe,
+        lastLoadLv: maxLv,
+        lastReps: curReps,
+        lastSets: cleanSets.length ? cleanSets : prevRpe.lastSets,
+        lastSetDate: cleanSets.length ? getTodayJst() : prevRpe.lastSetDate,
+        setRepsText: setSummaryTxt,
+        easyStreak: holdLoad ? 0 : Number(prevRpe.easyStreak || 0)
+      };
+      saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
+      return;
+    }
+
     const maxPlates = computeMaxPlatesForExercise(exId, defaultPlates || HOME_PLATE_EXERCISES[exId].defaultPlates);
 
     // 次回初期セット枚数は常に「全セット中の最高枚数」を保存
     state.plateMap[exId] = maxPlates;
     saveJson(STORAGE_KEYS.plates, state.plateMap);
 
-    // 最高枚数で実施したセットの代表回数を次回初期回数として保存
-    const recordedWithReps = cleanSets.filter((s) => s.reps !== null);
     if (recordedWithReps.length > 0) {
       const pVals = cleanSets.map((s) => s.plates).filter(Boolean);
       const allSameP = pVals.every((p) => p === maxPlates);
@@ -2513,7 +2761,7 @@
     });
 
     const prevRpe = state.rpeMap[exId] || {};
-    const holdWeight = hasSubTenOrDroppedWeight(exId);
+    const holdWeight = hasSubTenOrDroppedWeight(exId, true);
     const updatedRpe = {
       ...prevRpe,
       lastReps: curReps,
@@ -2550,20 +2798,29 @@
   function adjustPlates(delta) {
     const step = state.steps[state.currentIndex];
     const target = resolveActiveExerciseTarget(step);
-    if (!target || target.hidePlates) return;
+    if (!target) return;
 
     const exId = target.exerciseId;
     const editSet = getActiveEditingSetIndex(target);
-    const curSetPlates = getEffectivePlatesForSet(exId, editSet, target.defaultPlates);
-    const nextPlates = Math.max(1, Math.min(DATA.maxPlates, curSetPlates + delta));
+    const isWeightEx = !target.hidePlates && Boolean(HOME_PLATE_EXERCISES[exId]);
 
-    // まだ前のセットが未初期化のまま途中セットを変更した場合、前セットの枚数を先に確定して保護
-    for (let s = 1; s < editSet; s++) {
-      ensureSetPlatesInitialized(exId, s, target.defaultPlates);
+    if (isWeightEx) {
+      const curSetPlates = getEffectivePlatesForSet(exId, editSet, target.defaultPlates);
+      const nextPlates = Math.max(1, Math.min(DATA.maxPlates, curSetPlates + delta));
+      for (let s = 1; s < editSet; s++) {
+        ensureSetLoadInitialized(exId, s, target.defaultPlates, true);
+      }
+      upsertTodaySetEntry(exId, editSet, { plates: nextPlates }, target.defaultPlates, true);
+      recomputeMaxAndSyncExercise(exId, target.title, target.defaultPlates, { isWeightEx: true });
+    } else {
+      const curLv = getEffectiveLoadLevelForSet(exId, editSet);
+      const nextLv = Math.max(1, Math.min(MAX_LOAD_LV, curLv + delta));
+      for (let s = 1; s < editSet; s++) {
+        ensureSetLoadInitialized(exId, s, target.defaultPlates, false);
+      }
+      upsertTodaySetEntry(exId, editSet, { loadLv: nextLv }, target.defaultPlates, false);
+      recomputeMaxAndSyncExercise(exId, target.title, target.defaultPlates, { isWeightEx: false });
     }
-    upsertTodaySetEntry(exId, editSet, { plates: nextPlates }, target.defaultPlates, true);
-
-    recomputeMaxAndSyncExercise(exId, target.title, target.defaultPlates);
     renderCurrentStep();
   }
 
@@ -2579,18 +2836,14 @@
     const curReps = getEffectiveRepsForSet(exId, editSet, defReps);
     const nextReps = Math.max(1, Math.min(60, curReps + delta));
 
-    if (isWeightEx) {
-      for (let s = 1; s <= editSet; s++) {
-        ensureSetPlatesInitialized(exId, s, target.defaultPlates);
-      }
+    for (let s = 1; s <= editSet; s++) {
+      ensureSetLoadInitialized(exId, s, target.defaultPlates, isWeightEx);
     }
     upsertTodaySetEntry(exId, editSet, { reps: nextReps }, target.defaultPlates, isWeightEx);
     state.repsMap[exId] = nextReps;
     saveJson(STORAGE_KEYS.repsMap, state.repsMap);
 
-    if (isWeightEx) {
-      recomputeMaxAndSyncExercise(exId, target.title, target.defaultPlates);
-    }
+    recomputeMaxAndSyncExercise(exId, target.title, target.defaultPlates, { isWeightEx });
     renderCurrentStep();
   }
 
@@ -2605,19 +2858,11 @@
     const cleanReps = Math.max(1, Math.min(60, Math.round(Number(repsNum) || 10)));
     if (!exId) return;
 
-    if (isWeightEx) {
-      for (let s = 1; s <= setIndex; s++) {
-        ensureSetPlatesInitialized(exId, s, defPlates);
-      }
+    for (let s = 1; s <= setIndex; s++) {
+      ensureSetLoadInitialized(exId, s, defPlates, isWeightEx);
     }
     upsertTodaySetEntry(exId, setIndex, { reps: cleanReps }, defPlates, isWeightEx);
-
-    if (!isWeightEx) {
-      state.repsMap[exId] = cleanReps;
-      saveJson(STORAGE_KEYS.repsMap, state.repsMap);
-    } else {
-      recomputeMaxAndSyncExercise(exId, exName, defPlates);
-    }
+    recomputeMaxAndSyncExercise(exId, exName, defPlates, { isWeightEx });
 
     playBeep(cleanReps >= 10 ? 987.77 : 783.99, 75, 0.08);
     renderCurrentStep();
@@ -2626,14 +2871,24 @@
   function acceptOverloadUpgrade() {
     if (!el.overloadBanner) return;
     const exId = el.overloadBanner.dataset.exerciseId;
-    const nextPlates = Number(el.overloadBanner.dataset.nextPlates);
+    const nextVal = Number(el.overloadBanner.dataset.nextPlates);
+    const isWeightEx = el.overloadBanner.dataset.isWeightEx !== '0';
     const exName = el.overloadBanner.dataset.exerciseName || exId;
-    if (!exId || !nextPlates) return;
+    if (!exId || !nextVal) return;
 
     const todayIso = getTodayJst();
-    state.plateMap[exId] = nextPlates;
-    state.repsMap[exId] = 10;
-    state.todaySets[exId] = { 1: { plates: nextPlates, reps: null } };
+    const defReps = isWeightEx ? 10 : 12;
+
+    if (isWeightEx) {
+      state.plateMap[exId] = nextVal;
+      saveJson(STORAGE_KEYS.plates, state.plateMap);
+      state.todaySets[exId] = { 1: { plates: nextVal, loadLv: null, reps: null } };
+    } else {
+      state.loadMap[exId] = nextVal;
+      saveJson(STORAGE_KEYS.loadMap, state.loadMap);
+      state.todaySets[exId] = { 1: { plates: null, loadLv: nextVal, reps: null } };
+    }
+    state.repsMap[exId] = defReps;
     saveTodaySessionSets(state.todaySets);
 
     const updatedRpe = {
@@ -2641,21 +2896,22 @@
       easyStreak: 0,
       lastUpgradeDate: todayIso,
       lastRpe: 'good',
-      lastReps: 10,
+      lastReps: defReps,
       lastSets: [],
       setRepsText: ''
     };
     state.rpeMap[exId] = updatedRpe;
-    saveJson(STORAGE_KEYS.plates, state.plateMap);
     saveJson(STORAGE_KEYS.repsMap, state.repsMap);
     saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
 
     ensureAudioUnlocked();
     playBeep(1046.5, 130, 0.12);
-    speakShoko('ナイスチャレンジです！ピンを1枚上げて、丁寧なフォームで効かせていきましょう！');
+    if (isWeightEx) {
+      speakShoko('ナイスチャレンジです！ピンを1枚上げて、丁寧なフォームで効かせていきましょう！');
+    }
     renderCurrentStep();
 
-    recomputeMaxAndSyncExercise(exId, exName, nextPlates, { immediate: true });
+    recomputeMaxAndSyncExercise(exId, exName, nextVal, { immediate: true, isWeightEx });
   }
 
   function recordExerciseRpe(rpeValue) {
@@ -2663,13 +2919,15 @@
     const exId = el.rpeFeedbackBox.dataset.exerciseId;
     const exName = el.rpeFeedbackBox.dataset.exerciseName || exId;
     const defPlates = Number(el.rpeFeedbackBox.dataset.defaultPlates || 5);
+    const hidePlates = el.rpeFeedbackBox.dataset.hidePlates === '1';
+    const isWeightEx = !hidePlates && Boolean(HOME_PLATE_EXERCISES[exId]);
     if (!exId) return;
 
     const todayIso = getTodayJst();
     const prev = state.rpeMap[exId] || {};
     const baseStreak =
       prev.baseStreakDate === todayIso ? Number(prev.baseStreak || 0) : Number(prev.easyStreak || 0);
-    const canCountEasy = rpeValue === 'easy' && !hasSubTenOrDroppedWeight(exId);
+    const canCountEasy = rpeValue === 'easy' && !hasSubTenOrDroppedWeight(exId, isWeightEx);
     const nextEasyStreak = canCountEasy ? baseStreak + 1 : 0;
 
     state.rpeMap[exId] = {
@@ -2683,7 +2941,7 @@
     saveJson(STORAGE_KEYS.rpeMap, state.rpeMap);
 
     playBeep(rpeValue === 'easy' ? 1046.5 : 880, 80, 0.08);
-    recomputeMaxAndSyncExercise(exId, exName, defPlates);
+    recomputeMaxAndSyncExercise(exId, exName, defPlates, { isWeightEx });
     renderCurrentStep();
   }
 
@@ -2885,7 +3143,9 @@
       const defReps = isWeightEx ? 10 : 12;
       const maxP = isWeightEx ? computeMaxPlatesForExercise(b.id, b.defaultPlates) : null;
       const maxDet = isWeightEx ? formatPlateDetail(maxP) : null;
-      const holdWeight = isWeightEx && hasSubTenOrDroppedWeight(b.id);
+      const maxLv = !isWeightEx ? computeMaxLoadLevelForExercise(b.id) : null;
+      const maxLvMeta = !isWeightEx ? formatLoadLevelDetail(maxLv) : null;
+      const holdWeight = hasSubTenOrDroppedWeight(b.id, isWeightEx);
 
       const exCard = document.createElement('div');
       exCard.className = 'swe-ex-card';
@@ -2904,18 +3164,17 @@
       }
       topBar.appendChild(titleSpan);
 
-      if (isWeightEx) {
-        const maxBadge = document.createElement('span');
-        maxBadge.className = 'swe-badge-max';
-        maxBadge.textContent = `次回初期: 最高 ${maxP}枚 (${maxDet.kg}kg)`;
-        topBar.appendChild(maxBadge);
-      }
+      const maxBadge = document.createElement('span');
+      maxBadge.className = 'swe-badge-max';
+      maxBadge.textContent = isWeightEx
+        ? `次回初期: 最高 ${maxP}枚 (${maxDet.kg}kg)`
+        : `次回初期: 最高 Lv.${maxLv} (${maxLvMeta.short})`;
+      topBar.appendChild(maxBadge);
       exCard.appendChild(topBar);
 
       const setsGrid = document.createElement('div');
       setsGrid.className = 'swe-sets-grid';
 
-      // 編集開始時に全セットのベースを揃えるヘルパー
       const materializeAllSetsIfNeeded = () => {
         for (let idx = 1; idx <= numSets; idx++) {
           const cur = getTodaySetEntry(b.id, idx);
@@ -2925,6 +3184,7 @@
               idx,
               {
                 plates: isWeightEx ? getEffectivePlatesForSet(b.id, idx, b.defaultPlates) : null,
+                loadLv: !isWeightEx ? getEffectiveLoadLevelForSet(b.id, idx) : null,
                 reps: getEffectiveRepsForSet(b.id, idx, defReps)
               },
               b.defaultPlates,
@@ -2936,6 +3196,7 @@
 
       for (let sIdx = 1; sIdx <= numSets; sIdx++) {
         const sPlates = isWeightEx ? getEffectivePlatesForSet(b.id, sIdx, b.defaultPlates) : null;
+        const sLv = !isWeightEx ? getEffectiveLoadLevelForSet(b.id, sIdx) : null;
         const sReps = getEffectiveRepsForSet(b.id, sIdx, defReps);
 
         const sCard = document.createElement('div');
@@ -2949,9 +3210,9 @@
         const ctrls = document.createElement('div');
         ctrls.className = 'swe-set-ctrls';
 
+        const wStep = document.createElement('div');
+        wStep.className = 'swe-mini-step';
         if (isWeightEx) {
-          const wStep = document.createElement('div');
-          wStep.className = 'swe-mini-step';
           wStep.innerHTML = `
             <button type="button" class="swe-mini-btn" data-act="p-minus" aria-label="Set${sIdx}を1枚減らす">－</button>
             <span class="swe-mini-val">${sPlates}枚</span>
@@ -2960,19 +3221,39 @@
           wStep.querySelector('[data-act="p-minus"]').addEventListener('click', () => {
             materializeAllSetsIfNeeded();
             upsertTodaySetEntry(b.id, sIdx, { plates: Math.max(1, sPlates - 1) }, b.defaultPlates, true);
-            recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates);
+            recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates, { isWeightEx: true });
             renderCurrentStep();
             renderSessionWeightsEditor();
           });
           wStep.querySelector('[data-act="p-plus"]').addEventListener('click', () => {
             materializeAllSetsIfNeeded();
             upsertTodaySetEntry(b.id, sIdx, { plates: Math.min(DATA.maxPlates, sPlates + 1) }, b.defaultPlates, true);
-            recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates);
+            recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates, { isWeightEx: true });
             renderCurrentStep();
             renderSessionWeightsEditor();
           });
-          ctrls.appendChild(wStep);
+        } else {
+          wStep.innerHTML = `
+            <button type="button" class="swe-mini-btn" data-act="lv-minus" aria-label="Set${sIdx}の負荷Lvを下げる">－</button>
+            <span class="swe-mini-val">Lv.${sLv}</span>
+            <button type="button" class="swe-mini-btn" data-act="lv-plus" aria-label="Set${sIdx}の負荷Lvを上げる">＋</button>
+          `;
+          wStep.querySelector('[data-act="lv-minus"]').addEventListener('click', () => {
+            materializeAllSetsIfNeeded();
+            upsertTodaySetEntry(b.id, sIdx, { loadLv: Math.max(1, sLv - 1) }, b.defaultPlates, false);
+            recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates, { isWeightEx: false });
+            renderCurrentStep();
+            renderSessionWeightsEditor();
+          });
+          wStep.querySelector('[data-act="lv-plus"]').addEventListener('click', () => {
+            materializeAllSetsIfNeeded();
+            upsertTodaySetEntry(b.id, sIdx, { loadLv: Math.min(MAX_LOAD_LV, sLv + 1) }, b.defaultPlates, false);
+            recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates, { isWeightEx: false });
+            renderCurrentStep();
+            renderSessionWeightsEditor();
+          });
         }
+        ctrls.appendChild(wStep);
 
         const rStep = document.createElement('div');
         rStep.className = 'swe-mini-step';
@@ -2984,22 +3265,14 @@
         rStep.querySelector('[data-act="r-minus"]').addEventListener('click', () => {
           materializeAllSetsIfNeeded();
           upsertTodaySetEntry(b.id, sIdx, { reps: Math.max(1, sReps - 1) }, b.defaultPlates, isWeightEx);
-          if (isWeightEx) recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates);
-          else {
-            state.repsMap[b.id] = Math.max(1, sReps - 1);
-            saveJson(STORAGE_KEYS.repsMap, state.repsMap);
-          }
+          recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates, { isWeightEx });
           renderCurrentStep();
           renderSessionWeightsEditor();
         });
         rStep.querySelector('[data-act="r-plus"]').addEventListener('click', () => {
           materializeAllSetsIfNeeded();
           upsertTodaySetEntry(b.id, sIdx, { reps: Math.min(60, sReps + 1) }, b.defaultPlates, isWeightEx);
-          if (isWeightEx) recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates);
-          else {
-            state.repsMap[b.id] = Math.min(60, sReps + 1);
-            saveJson(STORAGE_KEYS.repsMap, state.repsMap);
-          }
+          recomputeMaxAndSyncExercise(b.id, b.title, b.defaultPlates, { isWeightEx });
           renderCurrentStep();
           renderSessionWeightsEditor();
         });

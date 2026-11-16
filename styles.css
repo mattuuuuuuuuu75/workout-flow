@@ -103,8 +103,8 @@ button {
 
 /* 1段目：超ダークネイビー・ブランドバー (#0B0F19) */
 .topbar {
-  height: 44px;
-  padding: 0 12px;
+  min-height: 44px;
+  padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -194,6 +194,8 @@ button {
 .session-progress-labels {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
   font-size: 0.67rem;
   font-weight: 800;
   color: #cbd5e1;
@@ -251,11 +253,12 @@ button {
   height: 34px;
   background: var(--brand-orange);
   border-bottom: 2px solid var(--brand-orange-dark);
-  padding: 0 8px;
+  padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
   display: flex;
   align-items: stretch;
   overflow-x: auto;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 .orange-nav-bar::-webkit-scrollbar {
   display: none;
@@ -301,17 +304,20 @@ button {
 /* ==================== メインコックピット（2カラム記事＋サイドバー構造） ==================== */
 .cockpit {
   height: calc(100dvh - 78px);
+  min-height: 0;
   max-width: 1480px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.56fr) minmax(305px, 1fr);
+  grid-template-columns: minmax(0, 1.52fr) minmax(320px, 1fr);
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
 }
 
 /* 左カラム：白カード記事ステージ (#FFFFFF) */
 .stage-pane {
   position: relative;
+  min-height: 0;
+  min-width: 0;
   border-radius: 10px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -328,6 +334,7 @@ button {
   z-index: 1;
   background: #000000;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transition: opacity 0.22s ease;
 }
@@ -340,6 +347,7 @@ button {
 
 .stage-pane.mode-video .yt-stage-container {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   z-index: 5;
 }
@@ -351,6 +359,7 @@ button {
 /* IROTEC実演小窓（PiP） */
 .stage-pane.show-demo-pip .yt-stage-container {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   z-index: 9;
   inset: 58px 14px auto auto;
@@ -544,17 +553,25 @@ body[data-phase="WORK"] .visual-guide-frame {
 
 .idle-floating-cta {
   position: absolute;
+  left: 10px;
+  right: 10px;
   bottom: 12px;
-  right: 12px;
   z-index: 4;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
 }
 .hero-start-btn {
-  padding: 12px 22px;
+  pointer-events: auto;
+  max-width: 100%;
+  padding: 11px 20px;
   border-radius: 999px;
   background: var(--brand-orange);
   color: #ffffff;
   font-weight: 900;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.25;
+  text-align: center;
   box-shadow: 0 6px 20px rgba(234, 88, 12, 0.42);
   transition: transform 0.12s ease, background 0.15s ease;
 }
@@ -687,7 +704,9 @@ body[data-phase="WORK"] .visual-guide-frame {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 9px;
+  gap: 8px;
+  min-height: 0;
+  min-width: 0;
   overflow-y: auto;
 }
 
@@ -837,13 +856,15 @@ body[data-phase="WORK"] .visual-guide-frame {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 3px 6px;
   margin-bottom: 6px;
 }
 .widget-heading-title {
-  font-size: 0.78rem;
+  font-size: 0.77rem;
   font-weight: 900;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 .plate-kg-hint {
   font-size: 0.75rem;
@@ -947,6 +968,16 @@ body[data-phase="WORK"] .visual-guide-frame {
   font-size: 0.72rem;
   font-weight: 800;
   color: var(--text-muted);
+  white-space: nowrap;
+}
+.hotel-inline-cue {
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px dashed var(--border-card);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.35;
 }
 
 .hotel-tip-box {
@@ -1848,30 +1879,187 @@ body[data-phase="WORK"] .visual-guide-frame {
   font-size: 0.76rem;
 }
 
-/* ==================== スマホ横画面（低ハイト: ~480px）最適化 ==================== */
-@media (max-height: 480px) and (orientation: landscape) {
+/* ==================== 1. iPad横画面・中小型ノートPC（900px〜1180px / 低めハイト830px以下） ==================== */
+@media (min-width: 900px) and (max-width: 1180px) {
+  .brand-studio {
+    display: none;
+  }
   .topbar {
+    gap: 6px;
+  }
+  .topbar-left {
+    gap: 6px;
+  }
+  .loc-btn {
+    padding: 4px 7px;
+    font-size: 0.7rem;
+  }
+  .dur-toggle .loc-btn {
+    padding: 4px 6px;
+    font-size: 0.68rem;
+  }
+  .topbar-center {
+    min-width: 120px;
+    max-width: 240px;
+  }
+  .topbar-right {
+    gap: 4px;
+  }
+  .icon-btn {
+    padding: 5px 7px;
+    font-size: 0.7rem;
+  }
+  .cockpit {
+    grid-template-columns: minmax(0, 1.42fr) minmax(320px, 1fr);
+    gap: 10px;
+    padding: 8px 10px;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 830px) and (orientation: landscape) {
+  .control-pane {
+    justify-content: flex-start;
+    gap: 7px;
+  }
+  .timer-callout-card {
+    padding: 9px 10px;
+    gap: 4px;
+  }
+  .timer-white-inner {
+    padding: 7px 9px;
+    gap: 5px;
+  }
+  .timer-digits {
+    font-size: clamp(2rem, 4.1vh, 2.9rem);
+  }
+  .context-panel {
+    padding: 8px 10px;
+  }
+  .rep-quick-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .rep-pill {
+    padding: 5px 4px;
+  }
+}
+
+/* ==================== 2. iPad縦画面・タブレット縦持ち（680px〜1024px・portrait） ==================== */
+@media (min-width: 680px) and (max-width: 1024px) and (orientation: portrait) {
+  .brand-studio {
+    display: none;
+  }
+  #openSyncModalBtn .btn-sublabel,
+  #voiceToggleBtn .btn-sublabel,
+  #openPoolModalBtn .btn-sublabel {
+    display: none;
+  }
+  .topbar {
+    gap: 6px;
+    padding: 0 10px;
+  }
+  .topbar-left {
+    gap: 6px;
+  }
+  .loc-btn {
+    padding: 4px 8px;
+    font-size: 0.71rem;
+  }
+  .dur-toggle .loc-btn {
+    padding: 4px 7px;
+    font-size: 0.69rem;
+  }
+  .topbar-center {
+    min-width: 145px;
+    max-width: 240px;
+  }
+
+  .cockpit {
+    height: calc(100dvh - 78px);
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(320px, 1.12fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  /* 下段コントロールをiPad縦幅に最適化した2カラムダッシュボード配置 */
+  .control-pane {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    grid-auto-flow: dense;
+    align-content: start;
+    gap: 9px 10px;
+    overflow-y: auto;
+  }
+  #morningConditionBar {
+    grid-column: 1 / -1;
+  }
+  #timerCard,
+  .transport-controls,
+  #nextUpBar {
+    grid-column: 1;
+  }
+  .context-panel {
+    grid-column: 2;
+    grid-row: span 3;
+    align-self: start;
+  }
+  .timer-digits {
+    font-size: clamp(2.1rem, 4.2vw, 2.75rem);
+  }
+  .rep-quick-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ==================== 3. スマホ横画面（低ハイト: ~520px・landscape） ==================== */
+@media (max-height: 520px) and (orientation: landscape) {
+  .topbar {
+    min-height: 34px;
     height: 34px;
-    padding: 0 8px;
+    padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
     border-bottom-width: 2px;
+    gap: 6px;
+  }
+  .topbar-left {
+    gap: 5px;
   }
   .brand-studio,
-  .btn-sublabel {
+  #openSyncModalBtn .btn-sublabel,
+  #voiceToggleBtn .btn-sublabel,
+  #openPoolModalBtn .btn-sublabel {
     display: none;
+  }
+  .loc-btn {
+    padding: 3px 6px;
+    font-size: 0.65rem;
+  }
+  .dur-toggle .loc-btn {
+    padding: 3px 5px;
+    font-size: 0.63rem;
+  }
+  .topbar-center {
+    min-width: 85px;
+    max-width: 175px;
+  }
+  .icon-btn {
+    padding: 3px 6px;
+    font-size: 0.68rem;
   }
   .orange-nav-bar {
     height: 26px;
+    padding: 0 max(6px, env(safe-area-inset-right)) 0 max(6px, env(safe-area-inset-left));
   }
   .day-pill {
-    font-size: 0.7rem;
+    font-size: 0.69rem;
     min-width: 64px;
     padding: 0 6px;
   }
   .cockpit {
     height: calc(100dvh - 60px);
-    padding: 5px 6px;
+    padding: 5px max(8px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
     gap: 6px;
-    grid-template-columns: 1.58fr 1fr;
+    grid-template-columns: minmax(0, 1.36fr) minmax(268px, 1fr);
   }
   .coach-board {
     padding: 5px 7px;
@@ -1881,19 +2069,19 @@ body[data-phase="WORK"] .visual-guide-frame {
     padding: 4px 8px;
   }
   .workout-main-title {
-    font-size: 0.86rem;
+    font-size: 0.84rem;
   }
   .action-step-chip {
     padding: 4px 6px;
-    font-size: 0.67rem;
+    font-size: 0.66rem;
   }
   .shoko-caption-bar {
     padding: 3px 7px;
     gap: 6px;
   }
   .shoko-avatar-img {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
   .shoko-avatar-name {
     display: none;
@@ -1902,40 +2090,42 @@ body[data-phase="WORK"] .visual-guide-frame {
     padding: 4px 8px;
   }
   .shoko-line-text {
-    font-size: 0.71rem;
+    font-size: 0.7rem;
     -webkit-line-clamp: 1;
   }
   .replay-voice-btn {
     padding: 4px 8px;
-    font-size: 0.68rem;
+    font-size: 0.67rem;
   }
   .hero-start-btn {
-    padding: 8px 14px;
-    font-size: 0.78rem;
+    padding: 7px 12px;
+    font-size: 0.74rem;
   }
 
   .control-pane {
+    justify-content: flex-start;
     gap: 4px;
+    overflow-y: auto;
   }
   .timer-callout-card {
-    padding: 6px 8px;
+    padding: 5px 8px;
     gap: 3px;
   }
   .current-step-sub {
     display: none;
   }
   .timer-micro-header {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
   }
   .timer-white-inner {
-    padding: 5px 8px;
+    padding: 4px 7px;
     gap: 3px;
   }
   .timer-digits {
-    font-size: 2rem;
+    font-size: 1.72rem;
   }
   .context-panel {
-    padding: 5px 8px;
+    padding: 5px 7px;
   }
   .set-log-strip {
     gap: 3px;
@@ -1943,87 +2133,315 @@ body[data-phase="WORK"] .visual-guide-frame {
   }
   .set-log-chip {
     padding: 2px 2px;
-    font-size: 0.61rem;
+    font-size: 0.6rem;
   }
   .stepper-btn {
     height: 25px;
-    width: 28px;
-    font-size: 0.92rem;
+    width: 27px;
+    font-size: 0.9rem;
   }
   .plate-stepper-row {
     padding: 2px 4px;
     gap: 3px;
   }
   .plate-num {
-    font-size: 1.05rem;
+    font-size: 1rem;
   }
   .plate-unit {
-    font-size: 0.64rem;
+    font-size: 0.62rem;
   }
   .rep-quick-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 3px;
     margin: 3px 0 4px;
   }
   .rep-pill {
-    padding: 3px 1px;
-    font-size: 0.64rem;
+    padding: 3px 2px;
+    font-size: 0.65rem;
   }
   .next-up-bar {
     padding: 4px 8px;
   }
   .ctrl-btn {
     height: 34px;
-    font-size: 0.88rem;
-  }
-  .dur-toggle .loc-btn {
-    padding: 3px 6px;
-    font-size: 0.65rem;
+    font-size: 0.86rem;
   }
   .morning-cond-bar {
     padding: 4px 7px;
     gap: 1px;
   }
-  .mc-msg {
+  .mc-msg,
+  .hotel-inline-cue {
     display: none;
   }
   .rpe-btn {
     padding: 4px 4px;
-    font-size: 0.68rem;
+    font-size: 0.67rem;
   }
 }
 
-/* ==================== 縦画面（スマホ縦持ち時フォールバック） ==================== */
-@media (max-width: 760px) and (orientation: portrait) {
+/* ==================== 4. スマホ縦画面（〜679px・portrait：出張ホテルでも片手操作・横はみ出しゼロ） ==================== */
+@media (max-width: 679px) and (orientation: portrait) {
   html, body {
+    overflow-x: hidden;
     overflow-y: auto;
     height: auto;
     min-height: 100dvh;
   }
+
+  /* 3段グリッドヘッダー：1段目[ロゴ＋アイコン] / 2段目[自宅・ホテル＋通常・時短・ケア] / 3段目[進行バー] */
   .topbar {
-    flex-wrap: wrap;
     height: auto;
-    padding: 8px;
+    padding: 7px 9px 6px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 6px 6px;
+  }
+  .topbar-left {
+    display: contents;
+  }
+  .brand-logo {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .brand-studio {
+    display: none;
+  }
+  .topbar-right {
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: end;
+    gap: 4px;
+  }
+  #openSyncModalBtn .btn-sublabel,
+  #voiceToggleBtn .btn-sublabel,
+  #openPoolModalBtn .btn-sublabel {
+    display: none;
+  }
+  .icon-btn {
+    padding: 5px 7px;
+    font-size: 0.72rem;
+  }
+  #locToggle {
+    grid-row: 2;
+    grid-column: 1;
+    justify-self: start;
+  }
+  #durToggle {
+    grid-row: 2;
+    grid-column: 2;
+    justify-self: end;
+  }
+  .loc-btn {
+    padding: 4px 7px;
+    font-size: 0.69rem;
+  }
+  .dur-toggle .loc-btn {
+    padding: 4px 6px;
+    font-size: 0.66rem;
   }
   .topbar-center {
-    order: 3;
+    grid-row: 3;
+    grid-column: 1 / -1;
     max-width: 100%;
     width: 100%;
-    flex-basis: 100%;
+    min-width: 0;
   }
+  .session-progress-wrap {
+    padding: 1px 2px;
+  }
+
+  .orange-nav-bar {
+    height: 32px;
+    padding: 0 6px;
+  }
+  .day-pill {
+    min-width: 68px;
+    padding: 0 8px;
+    font-size: 0.73rem;
+  }
+
   .cockpit {
     height: auto;
     grid-template-columns: 1fr;
+    gap: 9px;
+    padding: 8px 8px calc(18px + env(safe-area-inset-bottom));
   }
+
+  .coach-board {
+    padding: 8px 9px;
+    gap: 6px;
+  }
+  .coach-board-top {
+    padding: 6px 9px;
+    gap: 6px;
+  }
+  .day-tag {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+  .workout-main-title {
+    font-size: 0.88rem;
+  }
+  .demo-pip-btn {
+    font-size: 0.67rem;
+    padding: 4px 7px;
+  }
+
   .visual-guide-frame {
-    aspect-ratio: 16 / 9;
-  }
-  .action-steps-row {
-    grid-template-columns: 1fr;
+    aspect-ratio: 16 / 10;
+    max-height: 220px;
   }
   .stage-pane.mode-video {
     aspect-ratio: 16 / 9;
+    min-height: 210px;
+  }
+  .stage-pane.show-demo-pip .yt-stage-container {
+    inset: 44px 8px auto auto;
+    width: 48%;
+  }
+  .vhw-chip {
+    font-size: 0.67rem;
+    padding: 3px 7px;
+  }
+  .idle-floating-cta {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    justify-content: center;
+  }
+  .hero-start-btn {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 0.78rem;
+  }
+
+  .action-steps-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .action-step-chip {
+    padding: 5px 8px;
+    font-size: 0.74rem;
+  }
+  .shoko-caption-bar {
+    padding: 5px 8px;
+    gap: 7px;
+  }
+  .shoko-avatar-img {
+    width: 36px;
+    height: 36px;
+  }
+  .shoko-line-text {
+    font-size: 0.75rem;
+  }
+  .replay-voice-btn {
+    padding: 6px 9px;
+    font-size: 0.7rem;
+  }
+
+  /* スマホ縦持ち操作順：1.体調 → 2.タイマー → 3.スタート/スキップ操作 → 4.負荷＆回数パネル → 5.次予告 */
+  .control-pane {
+    overflow: visible;
+    gap: 8px;
+  }
+  #morningConditionBar {
+    order: 1;
+  }
+  #timerCard {
+    order: 2;
+    padding: 9px 10px;
+  }
+  .timer-digits {
+    font-size: 2.25rem;
+  }
+  .transport-controls {
+    order: 3;
+  }
+  .context-panel {
+    order: 4;
+    padding: 9px 10px;
+  }
+  #nextUpBar {
+    order: 5;
+  }
+
+  .set-log-chip {
+    font-size: 0.66rem;
+    padding: 5px 2px;
+  }
+  .stepper-btn {
+    width: 32px;
+    height: 34px;
+  }
+  .plate-num {
+    font-size: 1.18rem;
+  }
+  .plate-unit {
+    font-size: 0.68rem;
+  }
+  .rep-quick-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .rep-pill {
+    padding: 7px 3px;
+    font-size: 0.74rem;
+  }
+  .rpe-btn {
+    padding: 8px 6px;
+    font-size: 0.74rem;
+  }
+
+  /* モーダルもスマホ幅に完全フィット */
+  .modal-backdrop {
+    padding: 8px;
+  }
+  .modal-sheet {
+    max-height: 92dvh;
+  }
+  .modal-header {
+    padding: 11px 13px;
+  }
+  .modal-header h3 {
+    font-size: 0.9rem;
+  }
+  .modal-body {
+    padding: 11px 12px;
+    gap: 11px;
   }
   .health-metrics-row {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .swe-sets-grid {
+    grid-template-columns: 1fr;
+  }
+  .quick-rec-btn {
+    min-width: 100%;
+  }
+}
+
+/* 超小型スマホ（〜355px幅）ではステッパーを縦2段にして押し間違い防止 */
+@media (max-width: 355px) and (orientation: portrait) {
+  .twin-stepper-grid {
+    grid-template-columns: 1fr;
+  }
+  #locToggle,
+  #durToggle {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    display: flex;
+  }
+  #locToggle .loc-btn,
+  #durToggle .loc-btn {
+    flex: 1;
+    text-align: center;
+  }
+  #durToggle {
+    grid-row: 3;
+  }
+  .topbar-center {
+    grid-row: 4;
   }
 }
