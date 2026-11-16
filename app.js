@@ -1,13 +1,14 @@
 // ============================================================================
-// 筋トレNOW スタジオ v4.4.1 — 1本目YouTube事前アンロック自動再生 ＆ 新版自動リロード仕様
-// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × セット別記録 × 1本目YouTubeハンズフリー再生）
+// 筋トレNOW スタジオ v4.4.2 — Chrome全端末WebAudioショウコ音声即時再生 ＆ 自動音量ダッキング仕様
+// （建設NOWニュースUI × 厳密図解 × ショウコWebAudio即時再生 × 発話中YouTube自動減衰 × 自動リロード）
 // ============================================================================
 
 (function () {
   'use strict';
 
-  const APP_VERSION = '4.4.1';
-  const APP_BUILD_ID = '20261117-v441';
+  const APP_VERSION = '4.4.2';
+  const APP_BUILD_ID = '20261117-v442';
+  const SHOKO_DUCK_VOLUME = 18; // ショウコさん発話中のYouTube背景音量（発話終了で100/85へ自動復帰）
 
   const DATA = window.WORKOUT_DATA;
   const STATIC_VOICES = window.SHOKO_AUDIO_MANIFEST || {};
@@ -194,6 +195,12 @@
     videoMonitorHandle: null,
     wakeLock: null,
     audioCtx: null,
+    webAudioPrimed: false,
+    shokoSourceNode: null,
+    shokoSpeakSeq: 0,
+    isShokoSpeaking: false,
+    ytVolumeRampTimer: null,
+    duckSafetyTimer: null,
     shokoAudio: new Audio(),
     ytPlayer: null,
     ytReady: false,
@@ -1085,23 +1092,247 @@
     return steps;
   }
 
-  // -------------------- ショウコさん音声 --------------------
+  // -------------------- ショウコさん音声（WebAudio即時再生 ＆ YouTube自動音量ダッキング） --------------------
+  const rawAudioBytesCache = new Map();
+  const decodedAudioBufferCache = new Map();
+
+  function getNormalYouTubeVolumeForStep(step) {
+    return step && step.themePhase === 'MEDITATION' ? 85 : 100;
+  }
+
+  function stepWillHaveShokoVoice(step) {
+    return Boolean(state.voiceEnabled && step && step.speechText && String(step.speechText).trim());
+  }
+
+  function resolveShokoAudioUrl(cleanText) {
+    if (!cleanText) return null;
+    const staticMp3 = STATIC_VOICES[cleanText];
+    if (staticMp3) return staticMp3;
+    const isStaticHost = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+    return !isStaticHost ? `/api/tts?text=${encodeURIComponent(cleanText)}` : null;
+  }
+
+  function fetchAudioBytes(url) {
+    if (!url || window.location.protocol === 'file:') return Promise.resolve(null);
+    if (rawAudioBytesCache.has(url)) return rawAudioBytesCache.get(url);
+    const p = fetch(url)
+      .then((res) => (res.ok ? res.arrayBuffer() : null))
+      .catch(() => null)
+      .then((buf) => {
+        if (!buf || !buf.byteLength) {
+          rawAudioBytesCache.delete(url);
+          return null;
+        }
+        return buf;
+      });
+    rawAudioBytesCache.set(url, p);
+    return p;
+  }
+
+  async function getOrDecodeAudioBuffer(url) {
+    if (!url || !state.audioCtx) return null;
+    if (decodedAudioBufferCache.has(url)) {
+      return decodedAudioBufferCache.get(url);
+    }
+    const rawBuf = await fetchAudioBytes(url);
+    if (!rawBuf) return null;
+    try {
+      const decoded = await state.audioCtx.decodeAudioData(rawBuf.slice(0));
+      if (decoded) {
+        decodedAudioBufferCache.set(url, decoded);
+      }
+      return decoded;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function prefetchUpcomingStepAudioBuffers(fromIdx = state.currentIndex) {
+    if (window.location.protocol === 'file:') return;
+    const endIdx = Math.min(state.steps.length, Math.max(0, fromIdx) + 4);
+    const queueUrl = (txt) => {
+      const url = resolveShokoAudioUrl((txt || '').trim());
+      if (url) {
+        fetchAudioBytes(url).then(() => {
+          if (state.audioCtx) getOrDecodeAudioBuffer(url);
+        });
+      }
+    };
+    for (let i = Math.max(0, fromIdx); i < endIdx; i++) {
+      const stepItem = state.steps[i];
+      queueUrl(stepItem?.speechText);
+      if (stepItem?.switchHalfway) {
+        queueUrl('はい、ここで左右の手を入れ替えましょう！反対側も丁寧に効かせていきますよ！');
+      }
+    }
+    if (endIdx >= state.steps.length) {
+      queueUrl('瞑想まで含めたフルセッション完走、本当にお疲れ様でした！体も心もスッキリ整いましたね。最後に今日の記録も残しておきましょう！');
+    }
+  }
+
+  // ショウコさんが喋っている間だけYouTube音量を下げ（18%）、発話終了後（または発話なし時）は本来の音量へ戻す
+  function applyActiveYouTubeVolume({ smooth = false } = {}) {
+    clearInterval(state.ytVolumeRampTimer);
+    const curStep = state.steps[state.currentIndex];
+    if (
+      !curStep ||
+      curStep.kind !== 'video' ||
+      !state.ytReady ||
+      !state.ytPlayer ||
+      typeof state.ytPlayer.setVolume !== 'function'
+    ) {
+      return;
+    }
+
+    const fullVol = getNormalYouTubeVolumeForStep(curStep);
+    if (state.isShokoSpeaking) {
+      try {
+        state.ytPlayer.unMute();
+        state.ytPlayer.setVolume(SHOKO_DUCK_VOLUME);
+      } catch (_) {}
+      return;
+    }
+
+    if (!smooth) {
+      try {
+        state.ytPlayer.unMute();
+        state.ytPlayer.setVolume(fullVol);
+      } catch (_) {}
+      return;
+    }
+
+    const stages = [38, 60, 82, fullVol].filter((v, idx, arr) => v <= fullVol && arr.indexOf(v) === idx);
+    if (!stages.includes(fullVol)) stages.push(fullVol);
+    let idx = 0;
+    state.ytVolumeRampTimer = setInterval(() => {
+      if (state.isShokoSpeaking) {
+        clearInterval(state.ytVolumeRampTimer);
+        return;
+      }
+      const latestStep = state.steps[state.currentIndex];
+      if (!latestStep || latestStep.kind !== 'video' || !state.ytPlayer) {
+        clearInterval(state.ytVolumeRampTimer);
+        return;
+      }
+      const v = stages[idx++];
+      try {
+        state.ytPlayer.setVolume(v);
+      } catch (_) {}
+      if (idx >= stages.length) {
+        clearInterval(state.ytVolumeRampTimer);
+      }
+    }, 125);
+  }
+
+  function onShokoSpeechStart() {
+    state.isShokoSpeaking = true;
+    el.shokoAvatar?.classList.add('speaking');
+    applyActiveYouTubeVolume({ smooth: false });
+    clearTimeout(state.duckSafetyTimer);
+    state.duckSafetyTimer = setTimeout(() => {
+      if (state.isShokoSpeaking) {
+        onShokoSpeechEnd();
+      }
+    }, 15000);
+  }
+
+  function onShokoSpeechEnd({ smoothRestore = true } = {}) {
+    clearTimeout(state.duckSafetyTimer);
+    state.isShokoSpeaking = false;
+    el.shokoAvatar?.classList.remove('speaking');
+
+    const curStep = state.steps[state.currentIndex];
+    if (
+      state.isRunning &&
+      curStep &&
+      curStep.kind === 'video' &&
+      state.ytReady &&
+      state.ytPlayer &&
+      !state.ytStepFailed &&
+      window.YT &&
+      window.YT.PlayerState &&
+      typeof state.ytPlayer.getPlayerState === 'function'
+    ) {
+      const ps = state.ytPlayer.getPlayerState();
+      if (ps === window.YT.PlayerState.PAUSED || ps === window.YT.PlayerState.CUED) {
+        try {
+          state.ytPlayer.playVideo();
+        } catch (_) {}
+      }
+      applyActiveYouTubeVolume({ smooth: smoothRestore });
+    }
+  }
+
+  function stopShokoSpeech({ restoreYoutube = true } = {}) {
+    state.shokoSpeakSeq += 1;
+    clearTimeout(state.duckSafetyTimer);
+    if (state.shokoSourceNode) {
+      try {
+        state.shokoSourceNode.onended = null;
+        state.shokoSourceNode.stop(0);
+        state.shokoSourceNode.disconnect();
+      } catch (_) {}
+      state.shokoSourceNode = null;
+    }
+    try {
+      state.shokoAudio.onended = null;
+      state.shokoAudio.pause();
+    } catch (_) {}
+    try {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    } catch (_) {}
+
+    state.isShokoSpeaking = false;
+    el.shokoAvatar?.classList.remove('speaking');
+    if (restoreYoutube) {
+      applyActiveYouTubeVolume({ smooth: false });
+    }
+  }
+
   function ensureAudioUnlocked() {
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (AC && !state.audioCtx) {
         state.audioCtx = new AC();
+        state.audioCtx.onstatechange = () => {
+          if (
+            (state.isRunning || state.isShokoSpeaking) &&
+            state.audioCtx &&
+            state.audioCtx.state !== 'running'
+          ) {
+            state.audioCtx.resume().catch(() => {});
+          }
+        };
       }
-      if (state.audioCtx && state.audioCtx.state === 'suspended') {
-        state.audioCtx.resume();
+      if (state.audioCtx) {
+        if (state.audioCtx.state !== 'running') {
+          state.audioCtx.resume().catch(() => {});
+        }
+        // iPad/iPhone/Android 全端末の Chrome で WebAudio 出力を確実に有効化する無音1フレーム再生
+        if (!state.webAudioPrimed) {
+          const silentBuf = state.audioCtx.createBuffer(1, 1, 22050);
+          const silentSrc = state.audioCtx.createBufferSource();
+          silentSrc.buffer = silentBuf;
+          silentSrc.connect(state.audioCtx.destination);
+          silentSrc.start(0);
+          state.webAudioPrimed = true;
+        }
       }
       state.shokoAudio.muted = false;
+      const curSp = (state.steps[state.currentIndex]?.speechText || '').trim();
+      const curUrl = resolveShokoAudioUrl(curSp);
+      if (curUrl && state.audioCtx) {
+        getOrDecodeAudioBuffer(curUrl);
+      }
     } catch (_) {}
   }
 
   function playBeep(freq = 880, durationMs = 110, gainVal = 0.12) {
     if (!state.voiceEnabled || !state.audioCtx) return;
     try {
+      if (state.audioCtx.state !== 'running') {
+        state.audioCtx.resume().catch(() => {});
+      }
       const osc = state.audioCtx.createOscillator();
       const gain = state.audioCtx.createGain();
       osc.type = 'sine';
@@ -1122,76 +1353,133 @@
     });
   }
 
-  function speakShoko(text) {
-    if (!state.voiceEnabled || !text) return;
-    const clean = text.trim();
-    if (!clean) return;
-
+  function playViaHtmlAudioFallback(audioSrc, cleanText, mySeq) {
+    if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
     try {
-      state.shokoAudio.pause();
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-
-      const staticMp3 = STATIC_VOICES[clean];
-      const isStaticHost = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
-      const audioSrc = staticMp3 || (!isStaticHost ? `/api/tts?text=${encodeURIComponent(clean)}` : null);
-
-      if (!audioSrc) {
-        fallbackBrowserSpeech(clean);
-        return;
-      }
-
       state.shokoAudio.src = audioSrc;
-      el.shokoAvatar?.classList.add('speaking');
-
       state.shokoAudio.onended = () => {
-        el.shokoAvatar?.classList.remove('speaking');
-        const curStep = state.steps[state.currentIndex];
-        if (
-          state.isRunning &&
-          curStep &&
-          curStep.kind === 'video' &&
-          state.ytReady &&
-          state.ytPlayer &&
-          !state.ytStepFailed &&
-          window.YT &&
-          window.YT.PlayerState &&
-          typeof state.ytPlayer.getPlayerState === 'function'
-        ) {
-          const ps = state.ytPlayer.getPlayerState();
-          if (ps === window.YT.PlayerState.PAUSED || ps === window.YT.PlayerState.CUED) {
-            try {
-              state.ytPlayer.playVideo();
-            } catch (_) {}
-          }
-        }
+        if (mySeq === state.shokoSpeakSeq) onShokoSpeechEnd({ smoothRestore: true });
       };
       state.shokoAudio.onerror = () => {
-        el.shokoAvatar?.classList.remove('speaking');
-        fallbackBrowserSpeech(clean);
+        if (mySeq === state.shokoSpeakSeq) fallbackBrowserSpeech(cleanText, mySeq);
       };
-
       const p = state.shokoAudio.play();
       if (p && typeof p.catch === 'function') {
         p.catch(() => {
-          el.shokoAvatar?.classList.remove('speaking');
+          if (mySeq === state.shokoSpeakSeq) fallbackBrowserSpeech(cleanText, mySeq);
         });
       }
     } catch (_) {
-      fallbackBrowserSpeech(clean);
+      if (mySeq === state.shokoSpeakSeq) fallbackBrowserSpeech(cleanText, mySeq);
     }
   }
 
-  function fallbackBrowserSpeech(text) {
-    if (!state.voiceEnabled || !('speechSynthesis' in window)) return;
+  async function speakShoko(text, { delayMs = 0 } = {}) {
+    const clean = String(text || '').trim();
+    if (!state.voiceEnabled || !clean) {
+      onShokoSpeechEnd({ smoothRestore: false });
+      return;
+    }
+
+    stopShokoSpeech({ restoreYoutube: false });
+    const mySeq = state.shokoSpeakSeq;
+    onShokoSpeechStart();
+
+    const audioSrc = resolveShokoAudioUrl(clean);
+    if (!audioSrc) {
+      fallbackBrowserSpeech(clean, mySeq);
+      return;
+    }
+
+    // 1) WebAudio API（AudioBufferSourceNode）：YouTubeプレイヤーとの競合・中断が一切起きずChrome全端末で確実に鳴る本命経路
+    if (state.audioCtx && window.location.protocol !== 'file:') {
+      try {
+        const audioBuf = await getOrDecodeAudioBuffer(audioSrc);
+        if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+
+        if (audioBuf) {
+          if (delayMs > 0) {
+            await new Promise((r) => setTimeout(r, delayMs));
+            if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+          }
+          if (state.audioCtx.state !== 'running') {
+            await state.audioCtx.resume().catch(() => {});
+          }
+
+          const srcNode = state.audioCtx.createBufferSource();
+          const gainNode = state.audioCtx.createGain();
+          gainNode.gain.value = 1.05;
+          srcNode.buffer = audioBuf;
+          srcNode.connect(gainNode);
+          gainNode.connect(state.audioCtx.destination);
+          state.shokoSourceNode = srcNode;
+
+          srcNode.onended = () => {
+            if (state.shokoSourceNode === srcNode) {
+              state.shokoSourceNode = null;
+            }
+            if (mySeq === state.shokoSpeakSeq) {
+              onShokoSpeechEnd({ smoothRestore: true });
+            }
+          };
+
+          srcNode.start(0);
+
+          // 万一ブラウザの省電力等でAudioContextがsuspendedのままだった場合の自動復旧＆フォールバック監視
+          setTimeout(() => {
+            if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+            if (state.audioCtx && state.audioCtx.state !== 'running') {
+              state.audioCtx
+                .resume()
+                .catch(() => {})
+                .finally(() => {
+                  if (mySeq === state.shokoSpeakSeq && state.audioCtx.state !== 'running') {
+                    try {
+                      srcNode.onended = null;
+                      srcNode.stop(0);
+                    } catch (_) {}
+                    playViaHtmlAudioFallback(audioSrc, clean, mySeq);
+                  }
+                });
+            }
+          }, 220);
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // 2) HTMLAudioElement フォールバック
+    playViaHtmlAudioFallback(audioSrc, clean, mySeq);
+  }
+
+  function fallbackBrowserSpeech(text, expectedSeq) {
+    if (!state.voiceEnabled || !('speechSynthesis' in window)) {
+      onShokoSpeechEnd({ smoothRestore: true });
+      return;
+    }
     try {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'ja-JP';
       u.rate = 1.05;
+      u.onend = () => {
+        if (!expectedSeq || expectedSeq === state.shokoSpeakSeq) {
+          onShokoSpeechEnd({ smoothRestore: true });
+        }
+      };
+      u.onerror = () => {
+        if (!expectedSeq || expectedSeq === state.shokoSpeakSeq) {
+          onShokoSpeechEnd({ smoothRestore: true });
+        }
+      };
       window.speechSynthesis.speak(u);
-    } catch (_) {}
+    } catch (_) {
+      onShokoSpeechEnd({ smoothRestore: true });
+    }
   }
 
   function prefetchSessionVoices() {
+    prefetchUpcomingStepAudioBuffers(state.currentIndex);
+
     if (
       !window.location.protocol.startsWith('http') ||
       window.location.hostname.endsWith('github.io')
@@ -1475,6 +1763,9 @@
       state.ytAudioUnlocked = true;
       state.ytPrimedVideoId = targetVid || getLoadedYouTubeVideoId();
       state.ytLastPrimedAtMs = Date.now();
+      if ((state.isRunning || state.isShokoSpeaking) && state.audioCtx && state.audioCtx.state !== 'running') {
+        state.audioCtx.resume().catch(() => {});
+      }
       setTimeout(() => {
         const latestStep = state.steps[state.currentIndex];
         if (
@@ -1529,7 +1820,7 @@
         });
       }
       state.ytPlayer.unMute();
-      state.ytPlayer.setVolume(1);
+      state.ytPlayer.setVolume(0);
       state.ytPlayer.playVideo();
 
       clearTimeout(state.ytPrimeTimer);
@@ -1667,6 +1958,7 @@
             state.ytStepFailed = false;
             if (step.kind === 'video') {
               state.ytAudioUnlocked = true;
+              applyActiveYouTubeVolume({ smooth: false });
               monitorActiveVideoStep(step, state.videoLoadSeq);
             }
           }
@@ -1706,14 +1998,14 @@
       if (step.kind === 'video') {
         cancelYouTubePriming();
         const startSec = step.startSeconds || 0;
-        const targetVol = step.themePhase === 'MEDITATION' ? 85 : 100;
+        const initialVol = state.isShokoSpeaking ? SHOKO_DUCK_VOLUME : getNormalYouTubeVolumeForStep(step);
         state.videoStepLoadedAtMs = Date.now();
 
         if (autoPlayNow) {
           const loadedVid = getLoadedYouTubeVideoId();
           const pState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
 
-          // 既に同一動画IDで事前アンロック＆待機済みの場合はストリームを破棄せずそのまま再生再開（iPadOS Safari自動再生に最強）
+          // 既に同一動画IDで事前アンロック＆待機済みの場合はストリームを破棄せずそのまま再生再開
           if (
             loadedVid === step.videoId &&
             (state.ytPrimedVideoId === step.videoId ||
@@ -1728,7 +2020,7 @@
               }
             } catch (_) {}
             state.ytPlayer.unMute();
-            state.ytPlayer.setVolume(targetVol);
+            state.ytPlayer.setVolume(initialVol);
             state.ytPlayer.playVideo();
           } else {
             state.ytPrimedVideoId = '';
@@ -1737,7 +2029,7 @@
               startSeconds: startSec
             });
             state.ytPlayer.unMute();
-            state.ytPlayer.setVolume(targetVol);
+            state.ytPlayer.setVolume(initialVol);
             state.ytPlayer.playVideo();
           }
 
@@ -2503,6 +2795,7 @@
 
   function loadStep(index, autoPlay) {
     if (index < 0 || index >= state.steps.length) return;
+    stopShokoSpeech({ restoreYoutube: false });
     state.currentIndex = index;
     state.editingSetOverride = null;
     state.editingSetExId = null;
@@ -2510,6 +2803,7 @@
     const step = state.steps[index];
     state.stepTotalSec = step.durationSeconds;
     state.remainingSec = step.durationSeconds;
+    prefetchUpcomingStepAudioBuffers(index);
 
     // 本番セット突入時：直前セットの枚数/負荷Lvを自動引き継ぎ（Set1は前回の最高値から開始）
     if (step.kind === 'work' && step.exerciseId) {
@@ -2524,6 +2818,9 @@
       localStorage.setItem(STORAGE_KEYS.lastMeditationId, step.meditationId);
     }
 
+    const willSpeak = autoPlay && stepWillHaveShokoVoice(step);
+    state.isShokoSpeaking = willSpeak;
+
     renderCurrentStep();
     syncYouTubeForStep(step, autoPlay);
 
@@ -2531,9 +2828,11 @@
       if (step.themePhase === 'MEDITATION') {
         playBeep(528, 300, 0.08);
       } else {
-        playBeep(1174.66, 140, 0.12);
+        playBeep(1174.66, 130, 0.12);
       }
-      speakShoko(step.speechText);
+      if (willSpeak) {
+        speakShoko(step.speechText, { delayMs: 140 });
+      }
     }
   }
 
@@ -2547,7 +2846,7 @@
     state.isRunning = true;
 
     const step = state.steps[state.currentIndex];
-    // スタートタップの同期ジェスチャー内で本日1本目のYouTube動画を事前アンロック＆プリロード
+    // スタートタップの同期ジェスチャー内で本日1本目のYouTube動画を無音事前アンロック＆プリロード
     if (step && step.kind !== 'video') {
       primeYouTubeOnUserGesture();
     }
@@ -2559,9 +2858,13 @@
     renderCurrentStep();
 
     if (firstLaunch) {
-      playBeep(1046.5, 140, 0.12);
-      speakShoko(step.speechText);
+      const willSpeak = stepWillHaveShokoVoice(step);
+      state.isShokoSpeaking = willSpeak;
+      playBeep(1046.5, 130, 0.12);
       syncYouTubeForStep(step, true);
+      if (willSpeak) {
+        speakShoko(step.speechText, { delayMs: 165 });
+      }
       prefetchSessionVoices();
     } else if (step.kind === 'video' && state.ytReady && state.ytPlayer) {
       const pState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
@@ -2571,6 +2874,7 @@
         (pState === window.YT.PlayerState.PAUSED || pState === window.YT.PlayerState.BUFFERING)
       ) {
         state.ytPlayer.unMute();
+        applyActiveYouTubeVolume({ smooth: false });
         state.ytPlayer.playVideo();
         clearInterval(state.videoMonitorHandle);
         const seq = state.videoLoadSeq;
@@ -2592,8 +2896,7 @@
     state.isRunning = false;
     clearInterval(state.timerHandle);
     clearInterval(state.videoMonitorHandle);
-    state.shokoAudio.pause();
-    el.shokoAvatar?.classList.remove('speaking');
+    stopShokoSpeech({ restoreYoutube: true });
     if (state.ytPlayer && state.ytPlayer.pauseVideo) {
       try {
         state.ytPlayer.pauseVideo();
@@ -3913,6 +4216,13 @@
       });
     }
 
+    // Chrome全端末（iPad/iPhone/Android）での初回タップ音声を確実化するため pointerdown / touchstart 時点でもAudioContextを先行ウォームアップ
+    [el.heroStartBtn, el.playPauseBtn, el.replayVoiceBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.addEventListener('pointerdown', () => ensureAudioUnlocked(), { passive: true });
+      btn.addEventListener('touchstart', () => ensureAudioUnlocked(), { passive: true });
+    });
+
     el.heroStartBtn.addEventListener('click', () => startSession());
     el.playPauseBtn.addEventListener('click', () => {
       if (state.isRunning) pauseSession();
@@ -4020,10 +4330,9 @@
       el.ytUnblockBtn.classList.add('hidden');
       state.ytAudioUnlocked = true;
       state.ytLastPrimedAtMs = Date.now();
-      const curStep = state.steps[state.currentIndex];
       if (state.ytPlayer && state.ytPlayer.playVideo) {
         state.ytPlayer.unMute();
-        state.ytPlayer.setVolume(curStep && curStep.themePhase === 'MEDITATION' ? 85 : 100);
+        applyActiveYouTubeVolume({ smooth: false });
         state.ytPlayer.playVideo();
       }
     });
@@ -4039,6 +4348,7 @@
         state.stepTotalSec = step.durationSeconds;
         updateTimerUI();
         if (state.ytReady && state.ytPlayer && state.ytPlayer.seekTo) {
+          applyActiveYouTubeVolume({ smooth: false });
           state.ytPlayer.seekTo(step.startSeconds || 0, true);
           if (state.isRunning) state.ytPlayer.playVideo();
         }
@@ -4050,9 +4360,9 @@
       localStorage.setItem(STORAGE_KEYS.voiceEnabled, String(state.voiceEnabled));
       updateVoiceBtnUI();
       if (!state.voiceEnabled) {
-        state.shokoAudio.pause();
-        el.shokoAvatar?.classList.remove('speaking');
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        stopShokoSpeech({ restoreYoutube: true });
+      } else {
+        ensureAudioUnlocked();
       }
     });
 
