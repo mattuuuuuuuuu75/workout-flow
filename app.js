@@ -1,10 +1,13 @@
 // ============================================================================
-// 筋トレNOW スタジオ v4.3 — iPad ＆ スマホ完全レスポンシブ × 出張ホテル負荷選択・セット別記録仕様
-// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × 自宅枚数＆出張負荷Lvセット別記録 × 動画タイマー完全ロック）
+// 筋トレNOW スタジオ v4.4 — 自動アップデートリロード ＆ 全17本YouTube動画秒数・切替完全ロック仕様
+// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × 自宅枚数＆出張負荷Lvセット別記録 × 新版自動リロード）
 // ============================================================================
 
 (function () {
   'use strict';
+
+  const APP_VERSION = '4.4.0';
+  const APP_BUILD_ID = '20261117-v440';
 
   const DATA = window.WORKOUT_DATA;
   const STATIC_VOICES = window.SHOKO_AUDIO_MANIFEST || {};
@@ -27,7 +30,8 @@
     voiceEnabled: 'flow40_voice_enabled_v1',
     syncKey: 'flow40_sync_key_v1',
     pendingQueue: 'flow40_sync_pending_v1',
-    lastSyncedAt: 'flow40_last_synced_at_v1'
+    lastSyncedAt: 'flow40_last_synced_at_v1',
+    updateGuard: 'flow40_update_guard_v1'
   };
 
   // 出張ホテル・自重種目用の5段階負荷レベル定義
@@ -60,6 +64,8 @@
     });
   });
 
+  let bootedFromAutoUpdate = false;
+
   function consumeSyncKeyFromUrl() {
     let foundKey = '';
     try {
@@ -71,10 +77,17 @@
       if (!foundKey) {
         foundKey = (sp.get('key') || sp.get('syncKey') || '').trim();
       }
+      const hadAutoUpdateParam = sp.has('_v');
+      if (hadAutoUpdateParam) {
+        bootedFromAutoUpdate = true;
+        sp.delete('_v');
+      }
       if (foundKey) {
         localStorage.setItem(STORAGE_KEYS.syncKey, foundKey);
         sp.delete('key');
         sp.delete('syncKey');
+      }
+      if (foundKey || hadAutoUpdateParam) {
         const qs = sp.toString();
         const cleanUrl = window.location.pathname + (qs ? '?' + qs : '');
         window.history.replaceState(null, '', cleanUrl);
@@ -168,16 +181,28 @@
     syncStatus: 'unconfigured',
     lastSyncedAt: localStorage.getItem(STORAGE_KEYS.lastSyncedAt) || '',
     lastPullMs: 0,
+    bootDateJst: getTodayJst(),
+    sessionCompleted: false,
+    pendingAppUpdate: null,
+    lastUpdateCheckMs: 0,
+    isCheckingUpdate: false,
+    toastTimer: null,
     plateSyncTimers: {},
+    plateSyncFns: {},
     timerHandle: null,
     demoLoopHandle: null,
+    videoMonitorHandle: null,
     wakeLock: null,
     audioCtx: null,
     shokoAudio: new Audio(),
     ytPlayer: null,
     ytReady: false,
     ytStepFailed: false,
+    videoLoadSeq: 0,
+    videoStepLoadedAtMs: 0,
     videoStepSeekVerified: false,
+    videoStepConfirmedPlaying: false,
+    videoEffectiveEndSec: 0,
     lastAutoAdvancedStep: null,
     pendingVideoLoad: null
   };
@@ -187,6 +212,9 @@
   // -------------------- DOM Elements --------------------
   const el = {
     body: document.body,
+    appUpdateToast: document.getElementById('appUpdateToast'),
+    appUpdateToastText: document.getElementById('appUpdateToastText'),
+    appVersionBadge: document.getElementById('appVersionBadge'),
     locHomeBtn: document.getElementById('locHomeBtn'),
     locHotelBtn: document.getElementById('locHotelBtn'),
     durFullBtn: document.getElementById('durFullBtn'),
@@ -1110,6 +1138,25 @@
 
       state.shokoAudio.onended = () => {
         el.shokoAvatar?.classList.remove('speaking');
+        const curStep = state.steps[state.currentIndex];
+        if (
+          state.isRunning &&
+          curStep &&
+          curStep.kind === 'video' &&
+          state.ytReady &&
+          state.ytPlayer &&
+          !state.ytStepFailed &&
+          window.YT &&
+          window.YT.PlayerState &&
+          typeof state.ytPlayer.getPlayerState === 'function'
+        ) {
+          const ps = state.ytPlayer.getPlayerState();
+          if (ps === window.YT.PlayerState.PAUSED || ps === window.YT.PlayerState.CUED) {
+            try {
+              state.ytPlayer.playVideo();
+            } catch (_) {}
+          }
+        }
       };
       state.shokoAudio.onerror = () => {
         el.shokoAvatar?.classList.remove('speaking');
@@ -1186,11 +1233,192 @@
     }
   }
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && state.isRunning) {
-      requestWakeLock();
+  // -------------------- 自動アップデート検知・自動リロード ＆ 翌朝自動切り替え --------------------
+  function showAppToast(message, durationMs = 2800) {
+    if (!el.appUpdateToast || !el.appUpdateToastText) return;
+    el.appUpdateToastText.textContent = message;
+    el.appUpdateToast.classList.remove('hidden');
+    clearTimeout(state.toastTimer);
+    if (durationMs > 0) {
+      state.toastTimer = setTimeout(() => {
+        el.appUpdateToast.classList.add('hidden');
+      }, durationMs);
     }
-  });
+  }
+
+  function flushAllDebounceTimers() {
+    Object.keys(state.plateSyncTimers || {}).forEach((exId) => {
+      clearTimeout(state.plateSyncTimers[exId]);
+      delete state.plateSyncTimers[exId];
+      const fn = state.plateSyncFns?.[exId];
+      if (typeof fn === 'function') {
+        delete state.plateSyncFns[exId];
+        try {
+          fn();
+        } catch (_) {}
+      }
+    });
+  }
+
+  function isSafeForImmediateAutoReload() {
+    if (state.isRunning) return false;
+    if (state.syncStatus === 'syncing') return false;
+    const isSameDay = state.bootDateJst === getTodayJst();
+    if (isSameDay) {
+      if (state.hasStartedOnce && !state.sessionCompleted) return false;
+      if (el.logModal && !el.logModal.classList.contains('hidden')) return false;
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return false;
+    }
+    return true;
+  }
+
+  function canAttemptUpdateReload(targetBuildId) {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEYS.updateGuard);
+      const guard = raw ? JSON.parse(raw) : null;
+      const now = Date.now();
+      if (guard && guard.buildId === targetBuildId) {
+        if (guard.count >= 2 && now - guard.firstAt < 5 * 60 * 1000) {
+          return false;
+        }
+        if (guard.count >= 1 && now - guard.lastAt < 12000) {
+          return false;
+        }
+        const nextCount = now - guard.firstAt >= 5 * 60 * 1000 ? 1 : (guard.count || 0) + 1;
+        sessionStorage.setItem(
+          STORAGE_KEYS.updateGuard,
+          JSON.stringify({
+            buildId: targetBuildId,
+            count: nextCount,
+            firstAt: nextCount === 1 ? now : guard.firstAt,
+            lastAt: now
+          })
+        );
+        return true;
+      }
+      sessionStorage.setItem(
+        STORAGE_KEYS.updateGuard,
+        JSON.stringify({
+          buildId: targetBuildId,
+          count: 1,
+          firstAt: now,
+          lastAt: now
+        })
+      );
+      return true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  function performAutoUpdateReload(remoteMeta) {
+    if (!remoteMeta) return;
+    const targetId = String(remoteMeta.buildId || remoteMeta.version || Date.now());
+    if (!canAttemptUpdateReload(targetId)) return;
+
+    flushAllDebounceTimers();
+    const verLabel = remoteMeta.version ? `v${remoteMeta.version}` : '最新版';
+    showAppToast(`🔄 新バージョン (${verLabel}) を検知しました。最新画面へ自動更新します...`, 0);
+
+    setTimeout(() => {
+      try {
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set('_v', targetId);
+        window.location.replace(nextUrl.toString());
+      } catch (_) {
+        window.location.reload();
+      }
+    }, 350);
+  }
+
+  async function checkForAppUpdate({ force = false } = {}) {
+    if (window.location.protocol === 'file:') return false;
+    if (state.isCheckingUpdate) return false;
+    const now = Date.now();
+    if (!force && now - state.lastUpdateCheckMs < 15000) return false;
+
+    state.isCheckingUpdate = true;
+    state.lastUpdateCheckMs = now;
+    try {
+      const resp = await fetch(`./version.json?_cb=${now}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache'
+        }
+      });
+      if (!resp.ok) return false;
+      const meta = await resp.json();
+      if (!meta || (!meta.buildId && !meta.version)) return false;
+
+      const isDifferent =
+        (meta.buildId && meta.buildId !== APP_BUILD_ID) ||
+        (meta.version && meta.version !== APP_VERSION);
+
+      if (!isDifferent) {
+        state.pendingAppUpdate = null;
+        return false;
+      }
+
+      if (isSafeForImmediateAutoReload()) {
+        performAutoUpdateReload(meta);
+        return true;
+      }
+
+      // セッション実行中の場合は中断せず保留し、終了・モーダル閉鎖後に自動適用
+      state.pendingAppUpdate = meta;
+      return false;
+    } catch (_) {
+      return false;
+    } finally {
+      state.isCheckingUpdate = false;
+    }
+  }
+
+  function applyPendingUpdateIfIdle() {
+    if (state.pendingAppUpdate && isSafeForImmediateAutoReload()) {
+      const pending = state.pendingAppUpdate;
+      state.pendingAppUpdate = null;
+      performAutoUpdateReload(pending);
+      return true;
+    }
+    return false;
+  }
+
+  async function handleScreenWakeUp({ forceCheck = false } = {}) {
+    if (document.visibilityState === 'hidden') return;
+    if (state.isRunning) {
+      requestWakeLock();
+      return;
+    }
+
+    // 1) まず最新バージョンがあれば自動でキャッシュ破棄リロード
+    const reloading = await checkForAppUpdate({ force: forceCheck });
+    if (reloading) return;
+
+    // 2) タブを開きっぱなしで翌朝になった場合、自動で今日の曜日・初期状態へ切り替え
+    const todayIso = getTodayJst();
+    if (state.bootDateJst !== todayIso && state.syncStatus !== 'syncing') {
+      state.bootDateJst = todayIso;
+      state.sessionCompleted = false;
+      state.hasStartedOnce = false;
+      state.todaySets = loadTodaySessionSets(state.plateMap);
+      state.durationMode = resolveInitialDurationMode();
+      [el.timelineModal, el.poolModal, el.logModal, el.syncModal].forEach((m) => m?.classList.add('hidden'));
+      selectDay(resolveInitialDay());
+      showAppToast('🌅 おはようございます！本日の朝一メニューへ自動更新しました', 3000);
+      if (state.syncKey) {
+        pullCloudState({ silent: true });
+      }
+      return;
+    }
+
+    // 3) 同日内の復帰でもクラウド最新データを取り込み
+    if (state.syncKey && Date.now() - state.lastPullMs > 30000) {
+      pullCloudState({ silent: true });
+    }
+  }
 
   // -------------------- YouTube IFrame API & Locked Timer Sync --------------------
   function initYouTubeApi() {
@@ -1199,12 +1427,88 @@
     document.head.appendChild(tag);
   }
 
+  function getLoadedYouTubeVideoId() {
+    try {
+      const vd =
+        state.ytPlayer && typeof state.ytPlayer.getVideoData === 'function'
+          ? state.ytPlayer.getVideoData()
+          : null;
+      return vd && vd.video_id ? String(vd.video_id) : '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   function autoAdvanceFromVideo(stepRef) {
     if (!state.isRunning) return;
     if (state.steps[state.currentIndex] !== stepRef) return;
     if (state.lastAutoAdvancedStep === stepRef) return;
     state.lastAutoAdvancedStep = stepRef;
+    clearInterval(state.videoMonitorHandle);
     advanceStep(1);
+  }
+
+  function monitorActiveVideoStep(step, expectedSeq) {
+    if (!state.isRunning) return;
+    if (expectedSeq !== state.videoLoadSeq) return;
+    if (state.steps[state.currentIndex] !== step || !step || step.kind !== 'video') return;
+    if (
+      !state.ytReady ||
+      !state.ytPlayer ||
+      state.ytStepFailed ||
+      !window.YT ||
+      !window.YT.PlayerState ||
+      typeof state.ytPlayer.getPlayerState !== 'function'
+    ) {
+      return;
+    }
+
+    // 連続する動画ステップ切替直後（900ms未満）は前動画のキャッシュ時刻・ENDED誤検知を厳密ブロック
+    const elapsedSinceLoad = Date.now() - state.videoStepLoadedAtMs;
+    if (elapsedSinceLoad < 900) return;
+
+    const loadedVid = getLoadedYouTubeVideoId();
+    if (loadedVid && loadedVid !== step.videoId) return;
+
+    const pState = state.ytPlayer.getPlayerState();
+    const startSec = step.startSeconds || 0;
+    const endSec = state.videoEffectiveEndSec || step.endSeconds || startSec + step.durationSeconds;
+
+    if (pState === window.YT.PlayerState.PLAYING) {
+      el.ytUnblockBtn.classList.add('hidden');
+      const cur = typeof state.ytPlayer.getCurrentTime === 'function' ? state.ytPlayer.getCurrentTime() : startSec;
+
+      if (!state.videoStepSeekVerified) {
+        state.videoStepSeekVerified = true;
+        if (cur < startSec - 2 || cur > startSec + 10) {
+          try {
+            state.ytPlayer.seekTo(startSec, true);
+          } catch (_) {}
+          return;
+        }
+      }
+
+      if (!state.videoStepConfirmedPlaying) {
+        if (cur >= Math.max(0, startSec - 2.5) && cur < endSec - 2) {
+          state.videoStepConfirmedPlaying = true;
+        } else {
+          return;
+        }
+      }
+
+      if (cur >= endSec - 0.15) {
+        autoAdvanceFromVideo(step);
+      }
+      return;
+    }
+
+    if (
+      pState === window.YT.PlayerState.ENDED &&
+      state.videoStepConfirmedPlaying &&
+      elapsedSinceLoad >= 3000
+    ) {
+      autoAdvanceFromVideo(step);
+    }
   }
 
   window.onYouTubeIframeAPIReady = function () {
@@ -1239,21 +1543,13 @@
           if (ev.data === window.YT.PlayerState.PLAYING) {
             el.ytUnblockBtn.classList.add('hidden');
             state.ytStepFailed = false;
-
-            if (step.kind === 'video' && !state.videoStepSeekVerified) {
-              state.videoStepSeekVerified = true;
-              const expectedStart = step.startSeconds || 0;
-              const cur = state.ytPlayer.getCurrentTime ? state.ytPlayer.getCurrentTime() : expectedStart;
-              if (cur < expectedStart - 1.5 || cur > expectedStart + 6) {
-                try {
-                  state.ytPlayer.seekTo(expectedStart, true);
-                } catch (_) {}
-              }
+            if (step.kind === 'video') {
+              monitorActiveVideoStep(step, state.videoLoadSeq);
             }
           }
 
           if (ev.data === window.YT.PlayerState.ENDED && step.kind === 'video' && state.isRunning) {
-            autoAdvanceFromVideo(step);
+            monitorActiveVideoStep(step, state.videoLoadSeq);
           }
         },
         onError: () => {
@@ -1266,38 +1562,51 @@
 
   function syncYouTubeForStep(step, autoPlayNow) {
     clearInterval(state.demoLoopHandle);
+    clearInterval(state.videoMonitorHandle);
     el.ytUnblockBtn.classList.add('hidden');
     state.ytStepFailed = false;
+    state.videoLoadSeq += 1;
+    const seq = state.videoLoadSeq;
+    state.videoStepLoadedAtMs = Date.now();
     state.videoStepSeekVerified = false;
+    state.videoStepConfirmedPlaying = false;
+    state.videoEffectiveEndSec =
+      step && step.kind === 'video'
+        ? step.endSeconds || (step.startSeconds || 0) + step.durationSeconds
+        : 0;
 
     const run = () => {
+      if (seq !== state.videoLoadSeq) return;
       if (!state.ytPlayer || typeof state.ytPlayer.loadVideoById !== 'function') return;
 
       if (step.kind === 'video') {
         const startSec = step.startSeconds || 0;
-        const endSec = step.endSeconds || startSec + step.durationSeconds;
+        state.videoStepLoadedAtMs = Date.now();
         if (autoPlayNow) {
+          // YouTube内部のendSecondsによる早期停止・関連動画被りを避け、アプリ側の高精度タイマーで終端制御
           state.ytPlayer.loadVideoById({
             videoId: step.videoId,
-            startSeconds: startSec,
-            endSeconds: endSec
+            startSeconds: startSec
           });
           state.ytPlayer.unMute();
           state.ytPlayer.setVolume(step.themePhase === 'MEDITATION' ? 85 : 100);
           state.ytPlayer.playVideo();
 
+          state.videoMonitorHandle = setInterval(() => {
+            monitorActiveVideoStep(step, seq);
+          }, 250);
+
           setTimeout(() => {
-            if (!state.isRunning || state.steps[state.currentIndex] !== step) return;
+            if (seq !== state.videoLoadSeq || !state.isRunning || state.steps[state.currentIndex] !== step) return;
             const pState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
             if (pState !== window.YT.PlayerState.PLAYING && pState !== window.YT.PlayerState.BUFFERING) {
               el.ytUnblockBtn.classList.remove('hidden');
             }
-          }, 2400);
+          }, 2600);
         } else {
           state.ytPlayer.cueVideoById({
             videoId: step.videoId,
-            startSeconds: startSec,
-            endSeconds: endSec
+            startSeconds: startSec
           });
         }
       } else {
@@ -2058,6 +2367,7 @@
     requestWakeLock();
 
     const firstLaunch = !state.hasStartedOnce;
+    state.sessionCompleted = false;
     state.hasStartedOnce = true;
     state.isRunning = true;
 
@@ -2075,9 +2385,18 @@
       prefetchSessionVoices();
     } else if (step.kind === 'video' && state.ytReady && state.ytPlayer) {
       const pState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
-      if (pState === window.YT.PlayerState.PAUSED || pState === window.YT.PlayerState.BUFFERING) {
+      const loadedVid = getLoadedYouTubeVideoId();
+      if (
+        loadedVid === step.videoId &&
+        (pState === window.YT.PlayerState.PAUSED || pState === window.YT.PlayerState.BUFFERING)
+      ) {
         state.ytPlayer.unMute();
         state.ytPlayer.playVideo();
+        clearInterval(state.videoMonitorHandle);
+        const seq = state.videoLoadSeq;
+        state.videoMonitorHandle = setInterval(() => {
+          monitorActiveVideoStep(step, seq);
+        }, 250);
       } else {
         syncYouTubeForStep(step, true);
       }
@@ -2092,6 +2411,7 @@
   function pauseSession() {
     state.isRunning = false;
     clearInterval(state.timerHandle);
+    clearInterval(state.videoMonitorHandle);
     state.shokoAudio.pause();
     el.shokoAvatar?.classList.remove('speaking');
     if (state.ytPlayer && state.ytPlayer.pauseVideo) {
@@ -2107,47 +2427,46 @@
     const step = state.steps[state.currentIndex];
     if (!step) return;
 
-    if (
-      step.kind === 'video' &&
-      state.ytReady &&
-      state.ytPlayer &&
-      !state.ytStepFailed &&
-      window.YT &&
-      window.YT.PlayerState &&
-      typeof state.ytPlayer.getPlayerState === 'function'
-    ) {
-      const pState = state.ytPlayer.getPlayerState();
-      const startSec = step.startSeconds || 0;
-      const endSec = step.endSeconds || startSec + step.durationSeconds;
-
-      if (pState === window.YT.PlayerState.PLAYING) {
-        const cur = typeof state.ytPlayer.getCurrentTime === 'function' ? state.ytPlayer.getCurrentTime() : startSec;
-        if (cur >= endSec - 0.3) {
-          autoAdvanceFromVideo(step);
+    if (step.kind === 'video' && !state.ytStepFailed) {
+      // YouTube API 初期化待ちの間は残り秒数を勝手に減らさず待機（最大10秒）
+      if (
+        !state.ytReady ||
+        !state.ytPlayer ||
+        !window.YT ||
+        !window.YT.PlayerState ||
+        typeof state.ytPlayer.getPlayerState !== 'function'
+      ) {
+        if (Date.now() - state.videoStepLoadedAtMs < 10000) {
+          updateTimerUI();
           return;
         }
-        const nextRemain = Math.max(1, Math.ceil(endSec - cur));
-        if (
-          step.themePhase !== 'MEDITATION' &&
-          nextRemain !== state.remainingSec &&
-          nextRemain > 0 &&
-          nextRemain <= 3
-        ) {
-          playBeep(880, 95, 0.07);
+        state.ytStepFailed = true;
+      } else {
+        monitorActiveVideoStep(step, state.videoLoadSeq);
+        if (state.steps[state.currentIndex] !== step) return;
+
+        const pState = state.ytPlayer.getPlayerState();
+        const startSec = step.startSeconds || 0;
+        const endSec = state.videoEffectiveEndSec || step.endSeconds || startSec + step.durationSeconds;
+
+        if (pState === window.YT.PlayerState.PLAYING && state.videoStepConfirmedPlaying) {
+          const cur = typeof state.ytPlayer.getCurrentTime === 'function' ? state.ytPlayer.getCurrentTime() : startSec;
+          const nextRemain = Math.max(1, Math.ceil(endSec - cur));
+          if (
+            step.themePhase !== 'MEDITATION' &&
+            nextRemain !== state.remainingSec &&
+            nextRemain > 0 &&
+            nextRemain <= 3
+          ) {
+            playBeep(880, 95, 0.07);
+          }
+          state.remainingSec = nextRemain;
+          state.stepTotalSec = Math.max(state.stepTotalSec, endSec - startSec);
         }
-        state.remainingSec = nextRemain;
-        state.stepTotalSec = Math.max(state.stepTotalSec, endSec - startSec);
+
         updateTimerUI();
         return;
       }
-
-      if (pState === window.YT.PlayerState.ENDED) {
-        autoAdvanceFromVideo(step);
-        return;
-      }
-
-      updateTimerUI();
-      return;
     }
 
     state.remainingSec -= 1;
@@ -2676,6 +2995,7 @@
   }
 
   function completeWorkoutSession() {
+    state.sessionCompleted = true;
     pauseSession();
     playCalmChime();
     speakShoko('瞑想まで含めたフルセッション完走、本当にお疲れ様でした！体も心もスッキリ整いましたね。最後に今日の記録も残しておきましょう！');
@@ -2789,9 +3109,15 @@
 
     clearTimeout(state.plateSyncTimers[exId]);
     if (immediate) {
+      delete state.plateSyncFns[exId];
       sendFn();
     } else {
-      state.plateSyncTimers[exId] = setTimeout(sendFn, 500);
+      state.plateSyncFns[exId] = sendFn;
+      state.plateSyncTimers[exId] = setTimeout(() => {
+        delete state.plateSyncTimers[exId];
+        delete state.plateSyncFns[exId];
+        sendFn();
+      }, 500);
     }
   }
 
@@ -3427,10 +3753,11 @@
         !state.ytStepFailed &&
         typeof state.ytPlayer.getCurrentTime === 'function'
       ) {
-        const endSec = step.endSeconds || (step.startSeconds || 0) + step.durationSeconds;
+        const endSec = state.videoEffectiveEndSec || step.endSeconds || (step.startSeconds || 0) + step.durationSeconds;
         const cur = state.ytPlayer.getCurrentTime() || step.startSeconds || 0;
         const target = Math.min(endSec - 1, cur + 10);
         state.videoStepSeekVerified = true;
+        state.videoStepConfirmedPlaying = true;
         state.ytPlayer.seekTo(target, true);
         state.remainingSec = Math.max(1, Math.ceil(endSec - target));
         updateTimerUI();
@@ -3450,10 +3777,11 @@
         !state.ytStepFailed &&
         typeof state.ytPlayer.getCurrentTime === 'function'
       ) {
-        const endSec = step.endSeconds || (step.startSeconds || 0) + step.durationSeconds;
+        const endSec = state.videoEffectiveEndSec || step.endSeconds || (step.startSeconds || 0) + step.durationSeconds;
         const cur = state.ytPlayer.getCurrentTime() || step.startSeconds || 0;
         const target = Math.max(0, cur - 15);
         state.videoStepSeekVerified = true;
+        state.videoStepConfirmedPlaying = true;
         state.ytPlayer.seekTo(target, true);
         state.remainingSec = Math.max(1, Math.ceil(endSec - target));
         state.stepTotalSec = Math.max(state.stepTotalSec, state.remainingSec);
@@ -3506,7 +3834,9 @@
     el.replayStepVideoBtn.addEventListener('click', () => {
       const step = state.steps[state.currentIndex];
       if (step && step.kind === 'video') {
+        state.videoEffectiveEndSec = step.endSeconds || (step.startSeconds || 0) + step.durationSeconds;
         state.videoStepSeekVerified = true;
+        state.videoStepConfirmedPlaying = true;
         state.remainingSec = step.durationSeconds;
         state.stepTotalSec = step.durationSeconds;
         updateTimerUI();
@@ -3554,8 +3884,9 @@
       el.syncModal.classList.remove('hidden');
     });
 
-    el.syncNowBtn.addEventListener('click', () => {
-      pullCloudState({ silent: false });
+    el.syncNowBtn.addEventListener('click', async () => {
+      await pullCloudState({ silent: false });
+      checkForAppUpdate({ force: true });
     });
 
     el.syncKeyForm.addEventListener('submit', (e) => {
@@ -3582,25 +3913,48 @@
     });
 
     window.addEventListener('online', () => {
-      if (state.syncKey) pullCloudState({ silent: true });
+      handleScreenWakeUp({ forceCheck: true });
     });
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && state.syncKey && Date.now() - state.lastPullMs > 45000) {
-        pullCloudState({ silent: true });
+      if (document.visibilityState === 'visible') {
+        handleScreenWakeUp({ forceCheck: false });
       }
     });
+
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) {
+        handleScreenWakeUp({ forceCheck: true });
+      } else {
+        handleScreenWakeUp({ forceCheck: false });
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      handleScreenWakeUp({ forceCheck: false });
+    });
+
+    // 待機中のバックグラウンド定期バージョン＆日付チェック（3分間隔）
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && !state.isRunning) {
+        handleScreenWakeUp({ forceCheck: false });
+      }
+    }, 180000);
 
     document.querySelectorAll('.close-modal-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const target = document.getElementById(btn.dataset.close);
         if (target) target.classList.add('hidden');
+        setTimeout(applyPendingUpdateIfIdle, 200);
       });
     });
 
     document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
       backdrop.addEventListener('click', (e) => {
-        if (e.target === backdrop) backdrop.classList.add('hidden');
+        if (e.target === backdrop) {
+          backdrop.classList.add('hidden');
+          setTimeout(applyPendingUpdateIfIdle, 200);
+        }
       });
     });
 
@@ -3680,6 +4034,9 @@
 
   // -------------------- Boot --------------------
   function init() {
+    if (el.appVersionBadge) {
+      el.appVersionBadge.textContent = `v${APP_VERSION} (自動更新ON)`;
+    }
     updateVoiceBtnUI();
     updateSyncUI();
     updateStreakBadge();
@@ -3687,9 +4044,16 @@
     bindEvents();
     initYouTubeApi();
     selectDay(state.selectedDay);
+    if (bootedFromAutoUpdate) {
+      showAppToast(`✨ 最新バージョン (v${APP_VERSION}) に自動更新しました`, 3000);
+    }
     if (state.syncKey) {
       pullCloudState({ silent: true });
     }
+    // 初回表示時にも最新バージョンを確認（キャッシュ残存対策）
+    setTimeout(() => {
+      checkForAppUpdate({ force: true });
+    }, 600);
   }
 
   init();

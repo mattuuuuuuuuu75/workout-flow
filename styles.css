@@ -91,6 +91,28 @@ button {
   display: none !important;
 }
 
+/* 自動アップデート＆朝一リフレッシュ通知トースト */
+.app-update-toast {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  max-width: calc(100vw - 24px);
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.96);
+  color: #f8fafc;
+  border: 2px solid var(--brand-orange);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
 /* ==================== 2段サイトヘッダー（建設NOWニュース完全踏襲） ==================== */
 .site-header {
   display: flex;

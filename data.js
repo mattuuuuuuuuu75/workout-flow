@@ -1,5 +1,5 @@
 // ============================================================================
-// 筋トレNOW スタジオ v4.1 - 自宅IROTEC ＆ 出張ホテル対応 × 重量・回数記録 × 全18動画チャプター最適化
+// 筋トレNOW スタジオ v4.4 - 自宅IROTEC ＆ 出張ホテル対応 × 全17本YouTube動画フレーム単位秒数最適化
 // ============================================================================
 
 window.WORKOUT_DATA = {
@@ -15,10 +15,10 @@ window.WORKOUT_DATA = {
       "title": "オガトレ｜2週間で開脚ベターっになるストレッチ",
       "channel": "オガトレ",
       "videoId": "Re5FPU5_37g",
-      "startSeconds": 12,
-      "durationSeconds": 820,
+      "startSeconds": 10,
+      "durationSeconds": 823,
       "focus": "内転筋・裏もも・股関節をバランスよく開き、骨盤を立てて前屈する王道ルーティンです。",
-      "endSeconds": 832,
+      "endSeconds": 833,
       "shortEndSeconds": 407
     },
     {
@@ -28,11 +28,11 @@ window.WORKOUT_DATA = {
       "title": "オガトレ｜股関節が『超』硬い人向け！体が柔らかくなるストレッチ",
       "channel": "オガトレ",
       "videoId": "0jhnX8BPzes",
-      "startSeconds": 16,
-      "durationSeconds": 672,
+      "startSeconds": 14,
+      "durationSeconds": 677,
       "focus": "股関節の詰まりを全方位から解消し、膝関節への普段のねじれストレスも軽減します。",
-      "endSeconds": 688,
-      "shortEndSeconds": 368
+      "endSeconds": 691,
+      "shortEndSeconds": 373
     },
     {
       "id": "split_road_3",
@@ -41,11 +41,11 @@ window.WORKOUT_DATA = {
       "title": "GronG 前田｜お尻・股関節が硬い人向け深層ストレッチ",
       "channel": "前田のまいにちセルフケア (GronG)",
       "videoId": "KKLblqmPbKA",
-      "startSeconds": 6,
-      "durationSeconds": 431,
+      "startSeconds": 5,
+      "durationSeconds": 433,
       "focus": "開脚で足が開かない隠れ原因「お尻の深層筋」をほぐし、膝のお皿の引っ張りも緩めます。",
-      "endSeconds": 437,
-      "shortEndSeconds": 315
+      "endSeconds": 438,
+      "shortEndSeconds": 350
     },
     {
       "id": "split_road_4",
@@ -54,11 +54,11 @@ window.WORKOUT_DATA = {
       "title": "B-Flow｜【毎日10分】2週間でベターっと開脚できる魔法のストレッチ #510",
       "channel": "B-Flow (Mariko)",
       "videoId": "hS_BRoS5euw",
-      "startSeconds": 91,
-      "durationSeconds": 644,
+      "startSeconds": 90,
+      "durationSeconds": 648,
       "focus": "マットやベッドの上でカエル足・内もも伸ばしを呼吸に合わせてキープします。",
-      "endSeconds": 735,
-      "shortEndSeconds": 460
+      "endSeconds": 738,
+      "shortEndSeconds": 346
     },
     {
       "id": "split_road_5",
@@ -67,10 +67,10 @@ window.WORKOUT_DATA = {
       "title": "走りの学校｜【10分間】運動が苦手でも一緒にできる全身＆裏ももストレッチ",
       "channel": "走りの学校",
       "videoId": "nqeuZ7-pMZU",
-      "startSeconds": 25,
-      "durationSeconds": 621,
+      "startSeconds": 20,
+      "durationSeconds": 631,
       "focus": "肩甲骨から股関節・ハムストリングスまで全身連動で伸ばします（片足バランスは壁添え・座位アレンジOK）。",
-      "endSeconds": 646,
+      "endSeconds": 651,
       "shortEndSeconds": 385
     },
     {
@@ -80,11 +80,11 @@ window.WORKOUT_DATA = {
       "title": "Marina Takewaki｜【6分集中】足の付け根＆内ももストレッチ",
       "channel": "Marina Takewaki",
       "videoId": "w1xZucczKrE",
-      "startSeconds": 14,
-      "durationSeconds": 364,
+      "startSeconds": 13,
+      "durationSeconds": 369,
       "focus": "足の付け根と内転筋をテンポよく緩めるショート集中プログラムです。",
-      "endSeconds": 378,
-      "shortEndSeconds": 378
+      "endSeconds": 382,
+      "shortEndSeconds": 382
     }
   ],
   "meditationPool": [
@@ -151,12 +151,12 @@ window.WORKOUT_DATA = {
           "title": "オガトレ｜股関節が『超』硬い人向け！体が柔らかくなるストレッチ",
           "channel": "オガトレ",
           "videoId": "0jhnX8BPzes",
-          "startSeconds": 16,
-          "durationSeconds": 672,
+          "startSeconds": 14,
+          "durationSeconds": 677,
           "note": "股関節がスムーズに動くほど、膝関節への日常の負担が減っていきます。",
           "speech": "まずは股関節をじっくり解放する11分間です。痛くない範囲で気持ちよく動かしていきましょう。",
-          "endSeconds": 688,
-          "shortEndSeconds": 368
+          "endSeconds": 691,
+          "shortEndSeconds": 373
         },
         {
           "type": "transition",
@@ -183,12 +183,12 @@ window.WORKOUT_DATA = {
           "title": "GronG 前田｜お尻・股関節が硬い人向け深層ストレッチ",
           "channel": "前田のまいにちセルフケア (GronG)",
           "videoId": "KKLblqmPbKA",
-          "startSeconds": 6,
-          "durationSeconds": 431,
+          "startSeconds": 5,
+          "durationSeconds": 433,
           "note": "お尻の深層筋をほぐして開脚と膝ケアを同時に進めます。",
           "speech": "7分間のお尻ストレッチ、スタートです！呼吸を止めずにじんわり伸ばしていきましょう。",
-          "endSeconds": 437,
-          "shortEndSeconds": 315
+          "endSeconds": 438,
+          "shortEndSeconds": 350
         },
         {
           "type": "transition",
@@ -217,10 +217,10 @@ window.WORKOUT_DATA = {
           "channel": "B-Flow (Mariko)",
           "videoId": "fJJrJ2dd1U4",
           "startSeconds": 36,
-          "durationSeconds": 880,
+          "durationSeconds": 882,
           "note": "深く穏やかな呼吸で心拍を整え、最高の回復モードへ入ります。",
           "speech": "それではリラックスヨガ、スタートです。今日も1日、本当にお疲れ様でした。",
-          "endSeconds": 916,
+          "endSeconds": 918,
           "shortEndSeconds": 396
         },
         {
@@ -428,11 +428,11 @@ window.WORKOUT_DATA = {
           "title": "【8分完全版】腹筋サーキット（仰向け中心・ジャンプなし）",
           "channel": "uFit (林ケイスケ)",
           "videoId": "GoxIQp8VtTg",
-          "startSeconds": 2,
-          "durationSeconds": 483,
+          "startSeconds": 4,
+          "durationSeconds": 488,
           "note": "胸トレ後の脂肪燃焼を着火！首が疲れたら頭を床に置いたままお腹だけ丸めてもOKです。",
           "speech": "ここからは8分間の腹筋サーキットです！動画に合わせて、無理のないペースで一緒にお腹を引き締めていきましょう！",
-          "endSeconds": 485
+          "endSeconds": 492
         },
         {
           "type": "transition",
@@ -661,11 +661,11 @@ window.WORKOUT_DATA = {
           "title": "【3分下腹】腰が痛くならない！寝たまま下腹撃退トレーニング",
           "channel": "Marina Takewaki",
           "videoId": "kcj40PNGgbQ",
-          "startSeconds": 16,
+          "startSeconds": 18,
           "durationSeconds": 185,
           "note": "寝たまま腰と膝を守りつつ下腹部を集中刺激！終わると自動で2本目へ進みます。",
           "speech": "まずは1本目、寝たままでできる3分間の下腹トレーニングです！腰を床につけたまま丁寧にいきましょう！",
-          "endSeconds": 201
+          "endSeconds": 203
         },
         {
           "type": "video",
@@ -674,11 +674,11 @@ window.WORKOUT_DATA = {
           "title": "【地獄の3分】ノリノリな音楽にのせて腹筋を鍛えまくる！",
           "channel": "Marina Takewaki",
           "videoId": "ygR8sxmBHPc",
-          "startSeconds": 12,
-          "durationSeconds": 195,
+          "startSeconds": 14,
+          "durationSeconds": 196,
           "note": "音楽に合わせてお腹全体を燃焼させます！",
           "speech": "続いて2本目！音楽に合わせて楽しくお腹全体を燃やしていきましょう！",
-          "endSeconds": 207
+          "endSeconds": 210
         },
         {
           "type": "video",
@@ -688,10 +688,10 @@ window.WORKOUT_DATA = {
           "channel": "Marina Takewaki",
           "videoId": "DpANRK3AldY",
           "startSeconds": 10,
-          "durationSeconds": 165,
+          "durationSeconds": 167,
           "note": "⚠️ 屈伸動作が出たら膝は曲げず、上半身のひねりとパンチ連打だけでOK！",
           "speech": "ラスト3本目は3分ボクシングです！膝は曲げずに、上半身のひねりとシャープなパンチで汗をかきましょう！",
-          "endSeconds": 175
+          "endSeconds": 177
         },
         {
           "type": "transition",
@@ -776,11 +776,11 @@ window.WORKOUT_DATA = {
           "title": "【マンションOK】飛ばない有酸素運動で効率よく体脂肪を燃やそう！",
           "channel": "Marina Takewaki",
           "videoId": "hXyamPHNhkk",
-          "startSeconds": 13,
-          "durationSeconds": 873,
+          "startSeconds": 12,
+          "durationSeconds": 877,
           "note": "ジャンプ一切なし！脚に負荷がかかる動きはウエストひねりやジャブにアレンジしてOK！",
           "speech": "それでは前半15分の飛ばない有酸素、スタートです！マイペースで気持ちよく体を動かしていきましょう！",
-          "endSeconds": 886,
+          "endSeconds": 889,
           "shortEndSeconds": 373
         },
         {
@@ -810,10 +810,10 @@ window.WORKOUT_DATA = {
           "channel": "Marina Takewaki",
           "videoId": "DpANRK3AldY",
           "startSeconds": 10,
-          "durationSeconds": 165,
+          "durationSeconds": 167,
           "note": "肩甲骨からパンチを繰り出すと背中の血流も一気に良くなります！",
           "speech": "さあ、3分間のボクシングパートです！肩甲骨からパンチを繰り出して、お腹まわりを引き締めていきましょう！",
-          "endSeconds": 175
+          "endSeconds": 177
         },
         {
           "type": "transition",
@@ -845,12 +845,12 @@ window.WORKOUT_DATA = {
           "title": "【6分集中】内もも・足の付け根を引き締める簡単ストレッチ",
           "channel": "Marina Takewaki",
           "videoId": "w1xZucczKrE",
-          "startSeconds": 14,
-          "durationSeconds": 364,
+          "startSeconds": 13,
+          "durationSeconds": 369,
           "note": "仕上げに足の付け根までスッキリ伸ばして40分コース完了です！",
           "speech": "仕上げの6分間は、足の付け根と内もものストレッチです。リラックスして最後まで気持ちよく伸ばしましょう！",
-          "endSeconds": 378,
-          "shortEndSeconds": 378
+          "endSeconds": 382,
+          "shortEndSeconds": 382
         },
         {
           "type": "transition",
@@ -1055,11 +1055,11 @@ window.WORKOUT_DATA = {
           "title": "【8分完全版】腹筋サーキット（フロア集中）",
           "channel": "uFit (林ケイスケ)",
           "videoId": "GoxIQp8VtTg",
-          "startSeconds": 2,
-          "durationSeconds": 483,
+          "startSeconds": 4,
+          "durationSeconds": 488,
           "note": "おへそを覗き込む意識で丁寧にお腹を縮めましょう！",
           "speech": "8分間の腹筋サーキット、スタートです！腰が反らないようにおへそを床に近づけて、丁寧にお腹に効かせていきましょう！",
-          "endSeconds": 485
+          "endSeconds": 492
         },
         {
           "type": "transition",
@@ -1286,10 +1286,10 @@ window.WORKOUT_DATA = {
           "channel": "Marina Takewaki",
           "videoId": "DpANRK3AldY",
           "startSeconds": 10,
-          "durationSeconds": 165,
+          "durationSeconds": 167,
           "note": "膝の屈伸は入れず、シャープなパンチ連打で心拍数を上げます！",
           "speech": "華金コンボ1本目、3分ボクシングスタートです！気持ちよくパンチを打ち込んでいきましょう！",
-          "endSeconds": 175
+          "endSeconds": 177
         },
         {
           "type": "video",
@@ -1298,11 +1298,11 @@ window.WORKOUT_DATA = {
           "title": "【3分下腹】寝たまま下腹のお肉をごっそり落とす簡単筋トレ",
           "channel": "Marina Takewaki",
           "videoId": "kcj40PNGgbQ",
-          "startSeconds": 16,
+          "startSeconds": 18,
           "durationSeconds": 185,
           "note": "マットに仰向けになり、下腹部をさらに引き締めます！",
           "speech": "そのままヨガマットに仰向けになって、2本目は寝たまま下腹トレーニングです！",
-          "endSeconds": 201
+          "endSeconds": 203
         },
         {
           "type": "video",
@@ -1311,11 +1311,11 @@ window.WORKOUT_DATA = {
           "title": "【毎日2分】もっと！腹筋を割るフィニッシャー",
           "channel": "のがちゃんねる",
           "videoId": "ygeKbuKSk30",
-          "startSeconds": 4,
-          "durationSeconds": 129,
+          "startSeconds": 2,
+          "durationSeconds": 133,
           "note": "ラスト2分！これを乗り切れば最高に気持ちいい週末ストレッチです！",
           "speech": "ラスト2分間の腹筋フィニッシャーです！ここを乗り切れば気持ちいいストレッチが待っていますよ、ファイトです！",
-          "endSeconds": 133
+          "endSeconds": 135
         },
         {
           "type": "transition",
@@ -1400,11 +1400,11 @@ window.WORKOUT_DATA = {
           "title": "B-life｜肩甲骨をほぐすヨガ 肩こり・腰痛さようなら！ #62",
           "channel": "B-Flow (Mariko)",
           "videoId": "IaO7CKkB8d8",
-          "startSeconds": 46,
-          "durationSeconds": 1052,
+          "startSeconds": 45,
+          "durationSeconds": 1057,
           "note": "平日の筋トレやデスクワークで張った胸・背中・肩甲骨まわりが驚くほど軽くなります。",
           "speech": "前半は肩甲骨をほぐすヨガです。深い呼吸に合わせて、上半身の張りをじんわりほどいていきましょう。",
-          "endSeconds": 1098,
+          "endSeconds": 1102,
           "shortEndSeconds": 406
         },
         {
@@ -1429,16 +1429,16 @@ window.WORKOUT_DATA = {
         {
           "type": "video",
           "phase": "PART 2: DEEP SPLIT & FULL BODY",
-          "badge": "後半20分：全身＆股関節ディープ開脚",
-          "title": "オガトレ｜体が硬い人のための全身ディープストレッチ（20分セクション）",
+          "badge": "後半23分：お尻・股関節・内ももディープ開脚",
+          "title": "オガトレ｜お尻・股関節〜内もも深層ディープ開脚セクション（全18種目）",
           "channel": "オガトレ",
           "videoId": "sQNv7j0N0sw",
-          "startSeconds": 12,
-          "durationSeconds": 1201,
+          "startSeconds": 89,
+          "durationSeconds": 1364,
           "note": "普段の12分では届かない深層筋膜までじんわり緩みます。",
           "speech": "それではディープストレッチ、スタートです。無理に押さず、重力と呼吸に身を任せてゆっくり伸ばしてくださいね。",
-          "endSeconds": 1213,
-          "shortEndSeconds": 373
+          "endSeconds": 1453,
+          "shortEndSeconds": 422
         },
         {
           "type": "transition",
@@ -1633,11 +1633,11 @@ window.WORKOUT_DATA = {
           "title": "【8分完全版】腹筋サーキット（仰向け・足音ゼロ）",
           "channel": "uFit (林ケイスケ)",
           "videoId": "GoxIQp8VtTg",
-          "startSeconds": 2,
-          "durationSeconds": 483,
+          "startSeconds": 4,
+          "durationSeconds": 488,
           "note": "ホテルの床やベッドの上でも静かに追い込める8分間です！",
           "speech": "8分間の静音腹筋サーキット、スタートです！反動を使わずお腹の力だけでじっくり効かせていきましょう！",
-          "endSeconds": 485
+          "endSeconds": 492
         },
         {
           "type": "transition",
@@ -1851,11 +1851,11 @@ window.WORKOUT_DATA = {
           "title": "【3分下腹】腰が痛くならない！寝たまま下腹撃退トレーニング",
           "channel": "Marina Takewaki",
           "videoId": "kcj40PNGgbQ",
-          "startSeconds": 16,
+          "startSeconds": 18,
           "durationSeconds": 185,
           "note": "ベッドやバスタオルの上で静かに下腹を追い込みます。",
           "speech": "1本目は寝たまま3分間の下腹トレーニングです！静かに効かせていきましょう！",
-          "endSeconds": 201
+          "endSeconds": 203
         },
         {
           "type": "video",
@@ -1864,11 +1864,11 @@ window.WORKOUT_DATA = {
           "title": "【地獄の3分】ノリノリな音楽にのせて腹筋を鍛えまくる！",
           "channel": "Marina Takewaki",
           "videoId": "ygR8sxmBHPc",
-          "startSeconds": 12,
-          "durationSeconds": 195,
+          "startSeconds": 14,
+          "durationSeconds": 196,
           "note": "イヤホンまたは控えめ音量でも画面に合わせてしっかり燃えます！",
           "speech": "続いて2本目、音楽に合わせてお腹全体を引き締めていきますよ！",
-          "endSeconds": 207
+          "endSeconds": 210
         },
         {
           "type": "video",
@@ -1878,10 +1878,10 @@ window.WORKOUT_DATA = {
           "channel": "Marina Takewaki",
           "videoId": "DpANRK3AldY",
           "startSeconds": 10,
-          "durationSeconds": 165,
+          "durationSeconds": 167,
           "note": "足は床に固定したまま（またはベッドに座ったまま）上半身パンチで完全静音燃焼！",
           "speech": "ラスト3本目はボクシングです！足は動かさず、座ったままか立ったまま上半身のパンチだけで静かに燃やしましょう！",
-          "endSeconds": 175
+          "endSeconds": 177
         },
         {
           "type": "transition",
@@ -1966,11 +1966,11 @@ window.WORKOUT_DATA = {
           "title": "【マンションOK】飛ばない有酸素運動で効率よく体脂肪を燃やそう！",
           "channel": "Marina Takewaki",
           "videoId": "hXyamPHNhkk",
-          "startSeconds": 13,
-          "durationSeconds": 873,
+          "startSeconds": 12,
+          "durationSeconds": 877,
           "note": "足音が鳴りそうな動きや膝屈伸は、その場でのウエストひねりやジャブ連打に変えてOK！",
           "speech": "それでは15分間の飛ばない有酸素、スタートです！足音が出ないよう上半身を大きく使って汗をかいていきましょう！",
-          "endSeconds": 886,
+          "endSeconds": 889,
           "shortEndSeconds": 373
         },
         {
@@ -2000,10 +2000,10 @@ window.WORKOUT_DATA = {
           "channel": "Marina Takewaki",
           "videoId": "DpANRK3AldY",
           "startSeconds": 10,
-          "durationSeconds": 165,
+          "durationSeconds": 167,
           "note": "肩甲骨からシャープにパンチを繰り出しましょう！",
           "speech": "3分ボクシング、スタートです！リズミカルにパンチを繰り出していきましょう！",
-          "endSeconds": 175
+          "endSeconds": 177
         },
         {
           "type": "transition",
@@ -2035,12 +2035,12 @@ window.WORKOUT_DATA = {
           "title": "【6分集中】内もも・足の付け根を引き締める簡単ストレッチ",
           "channel": "Marina Takewaki",
           "videoId": "w1xZucczKrE",
-          "startSeconds": 14,
-          "durationSeconds": 364,
+          "startSeconds": 13,
+          "durationSeconds": 369,
           "note": "歩き疲れ・座り疲れの股関節がスッキリ軽くなります！",
           "speech": "仕上げの6分間は足の付け根のストレッチです。最後まで気持ちよく伸ばしていきましょう！",
-          "endSeconds": 378,
-          "shortEndSeconds": 378
+          "endSeconds": 382,
+          "shortEndSeconds": 382
         },
         {
           "type": "transition",
@@ -2231,11 +2231,11 @@ window.WORKOUT_DATA = {
           "title": "【8分完全版】腹筋サーキット（フロア集中）",
           "channel": "uFit (林ケイスケ)",
           "videoId": "GoxIQp8VtTg",
-          "startSeconds": 2,
-          "durationSeconds": 483,
+          "startSeconds": 4,
+          "durationSeconds": 488,
           "note": "腰を痛めないようおへそを覗き込みながらお腹を丸めましょう！",
           "speech": "8分間の腹筋サーキット、スタートです！呼吸に合わせてお腹を引き締めていきましょう！",
-          "endSeconds": 485
+          "endSeconds": 492
         },
         {
           "type": "transition",
@@ -2450,10 +2450,10 @@ window.WORKOUT_DATA = {
           "channel": "Marina Takewaki",
           "videoId": "DpANRK3AldY",
           "startSeconds": 10,
-          "durationSeconds": 165,
+          "durationSeconds": 167,
           "note": "足は固定（またはベッド端座り）で上半身パンチ連打！",
           "speech": "華金コンボ1本目、3分ボクシングスタートです！足音を出さずにシャープなパンチを繰り出しましょう！",
-          "endSeconds": 175
+          "endSeconds": 177
         },
         {
           "type": "video",
@@ -2462,11 +2462,11 @@ window.WORKOUT_DATA = {
           "title": "【3分下腹】寝たまま下腹のお肉をごっそり落とす簡単筋トレ",
           "channel": "Marina Takewaki",
           "videoId": "kcj40PNGgbQ",
-          "startSeconds": 16,
+          "startSeconds": 18,
           "durationSeconds": 185,
           "note": "そのまま仰向けになって下腹部を追い込みます！",
           "speech": "2本目は仰向けになって、寝たまま3分間の下腹トレーニングです！",
-          "endSeconds": 201
+          "endSeconds": 203
         },
         {
           "type": "video",
@@ -2475,11 +2475,11 @@ window.WORKOUT_DATA = {
           "title": "【毎日2分】もっと！腹筋を割るフィニッシャー",
           "channel": "のがちゃんねる",
           "videoId": "ygeKbuKSk30",
-          "startSeconds": 4,
-          "durationSeconds": 129,
+          "startSeconds": 2,
+          "durationSeconds": 133,
           "note": "ラスト2分を乗り切れば極上のストレッチタイムです！",
           "speech": "ラスト2分間の腹筋フィニッシャーです！あと少し、一緒に頑張りましょう！",
-          "endSeconds": 133
+          "endSeconds": 135
         },
         {
           "type": "transition",
