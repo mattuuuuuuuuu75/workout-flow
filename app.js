@@ -1,13 +1,13 @@
 // ============================================================================
-// 筋トレNOW スタジオ v4.4 — 自動アップデートリロード ＆ 全17本YouTube動画秒数・切替完全ロック仕様
-// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × 自宅枚数＆出張負荷Lvセット別記録 × 新版自動リロード）
+// 筋トレNOW スタジオ v4.4.1 — 1本目YouTube事前アンロック自動再生 ＆ 新版自動リロード仕様
+// （建設NOWニュースUI × 厳密図解 × ショウコ音声 × 5分瞑想 × セット別記録 × 1本目YouTubeハンズフリー再生）
 // ============================================================================
 
 (function () {
   'use strict';
 
-  const APP_VERSION = '4.4.0';
-  const APP_BUILD_ID = '20261117-v440';
+  const APP_VERSION = '4.4.1';
+  const APP_BUILD_ID = '20261117-v441';
 
   const DATA = window.WORKOUT_DATA;
   const STATIC_VOICES = window.SHOKO_AUDIO_MANIFEST || {};
@@ -198,6 +198,13 @@
     ytPlayer: null,
     ytReady: false,
     ytStepFailed: false,
+    ytAudioUnlocked: false,
+    ytPrimingInFlight: false,
+    ytPrimeTimer: null,
+    ytPrimedVideoId: '',
+    ytPrimeTargetId: '',
+    ytPrimeTargetStart: 0,
+    ytLastPrimedAtMs: 0,
     videoLoadSeq: 0,
     videoStepLoadedAtMs: 0,
     videoStepSeekVerified: false,
@@ -1439,6 +1446,101 @@
     }
   }
 
+  function findNextUpcomingVideoStep(fromIndex = state.currentIndex) {
+    for (let i = Math.max(0, fromIndex); i < state.steps.length; i++) {
+      if (state.steps[i] && state.steps[i].kind === 'video' && state.steps[i].videoId) {
+        return state.steps[i];
+      }
+    }
+    return null;
+  }
+
+  function cancelYouTubePriming() {
+    state.ytPrimingInFlight = false;
+    clearTimeout(state.ytPrimeTimer);
+  }
+
+  function finishYouTubePriming(targetVid, targetStartSec) {
+    if (!state.ytPrimingInFlight) return;
+    state.ytPrimingInFlight = false;
+    clearTimeout(state.ytPrimeTimer);
+    const curStep = state.steps[state.currentIndex];
+    if (!curStep || curStep.kind === 'video') return;
+    if (state.showDemoPip && state.locationMode === 'home') return;
+    try {
+      if (typeof targetStartSec === 'number') {
+        state.ytPlayer.seekTo(targetStartSec, true);
+      }
+      state.ytPlayer.pauseVideo();
+      state.ytAudioUnlocked = true;
+      state.ytPrimedVideoId = targetVid || getLoadedYouTubeVideoId();
+      state.ytLastPrimedAtMs = Date.now();
+      setTimeout(() => {
+        const latestStep = state.steps[state.currentIndex];
+        if (
+          !state.ytPrimingInFlight &&
+          latestStep &&
+          latestStep.kind !== 'video' &&
+          !(state.showDemoPip && state.locationMode === 'home')
+        ) {
+          try {
+            state.ytPlayer.pauseVideo();
+          } catch (_) {}
+        }
+      }, 200);
+    } catch (_) {}
+  }
+
+  // セッション開始タップ（および筋トレ中のボタン操作）の同期クリックイベント内で、
+  // 本日1本目のYouTube動画を一瞬だけ極小音量で起動→一時停止待機させ、iPad/iPhoneでも1本目から完全自動再生を実現する
+  function primeYouTubeOnUserGesture() {
+    if (!state.ytReady || !state.ytPlayer || typeof state.ytPlayer.playVideo !== 'function') return;
+    const curStep = state.steps[state.currentIndex];
+    if (!curStep || curStep.kind === 'video') {
+      state.ytAudioUnlocked = true;
+      state.ytLastPrimedAtMs = Date.now();
+      return;
+    }
+    if (state.showDemoPip && state.locationMode === 'home') return;
+
+    const upcomingVid = findNextUpcomingVideoStep(state.currentIndex);
+    if (!upcomingVid) return;
+
+    if (
+      state.ytAudioUnlocked &&
+      state.ytPrimedVideoId === upcomingVid.videoId &&
+      Date.now() - (state.ytLastPrimedAtMs || 0) < 180000
+    ) {
+      return;
+    }
+    if (state.ytPrimingInFlight) return;
+
+    try {
+      const startSec = upcomingVid.startSeconds || 0;
+      const loadedVid = getLoadedYouTubeVideoId();
+      state.ytPrimingInFlight = true;
+      state.ytPrimeTargetId = upcomingVid.videoId;
+      state.ytPrimeTargetStart = startSec;
+
+      if (loadedVid && loadedVid !== upcomingVid.videoId) {
+        state.ytPlayer.loadVideoById({
+          videoId: upcomingVid.videoId,
+          startSeconds: startSec
+        });
+      }
+      state.ytPlayer.unMute();
+      state.ytPlayer.setVolume(1);
+      state.ytPlayer.playVideo();
+
+      clearTimeout(state.ytPrimeTimer);
+      state.ytPrimeTimer = setTimeout(() => {
+        finishYouTubePriming(upcomingVid.videoId, startSec);
+      }, 950);
+    } catch (_) {
+      state.ytPrimingInFlight = false;
+    }
+  }
+
   function autoAdvanceFromVideo(stepRef) {
     if (!state.isRunning) return;
     if (state.steps[state.currentIndex] !== stepRef) return;
@@ -1512,6 +1614,8 @@
   }
 
   window.onYouTubeIframeAPIReady = function () {
+    const firstUpcoming = findNextUpcomingVideoStep(0);
+    const initialVideoId = firstUpcoming ? firstUpcoming.videoId : DATA.irotecDemoVideoId;
     const vars = {
       playsinline: 1,
       rel: 0,
@@ -1519,17 +1623,28 @@
       controls: 1,
       enablejsapi: 1
     };
+    if (firstUpcoming && Number(firstUpcoming.startSeconds) > 0) {
+      vars.start = Math.round(Number(firstUpcoming.startSeconds));
+    }
     if (window.location.protocol.startsWith('http')) {
       vars.origin = window.location.origin;
     }
 
     state.ytPlayer = new window.YT.Player('ytPlayer', {
-      videoId: DATA.irotecDemoVideoId,
+      videoId: initialVideoId,
       playerVars: vars,
       events: {
         onReady: () => {
           state.ytReady = true;
-          state.ytPlayer.mute();
+          try {
+            const ifr = state.ytPlayer.getIframe && state.ytPlayer.getIframe();
+            if (ifr) {
+              const curAllow = String(ifr.getAttribute('allow') || '');
+              if (!curAllow.includes('autoplay')) {
+                ifr.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
+              }
+            }
+          } catch (_) {}
           if (state.pendingVideoLoad) {
             const fn = state.pendingVideoLoad;
             state.pendingVideoLoad = null;
@@ -1540,10 +1655,18 @@
           const step = state.steps[state.currentIndex];
           if (!step) return;
 
+          if (ev.data === window.YT.PlayerState.PLAYING && state.ytPrimingInFlight) {
+            setTimeout(() => {
+              finishYouTubePriming(state.ytPrimeTargetId, state.ytPrimeTargetStart);
+            }, 140);
+            return;
+          }
+
           if (ev.data === window.YT.PlayerState.PLAYING) {
             el.ytUnblockBtn.classList.add('hidden');
             state.ytStepFailed = false;
             if (step.kind === 'video') {
+              state.ytAudioUnlocked = true;
               monitorActiveVideoStep(step, state.videoLoadSeq);
             }
           }
@@ -1553,6 +1676,7 @@
           }
         },
         onError: () => {
+          cancelYouTubePriming();
           state.ytStepFailed = true;
           el.ytUnblockBtn.classList.add('hidden');
         }
@@ -1580,17 +1704,42 @@
       if (!state.ytPlayer || typeof state.ytPlayer.loadVideoById !== 'function') return;
 
       if (step.kind === 'video') {
+        cancelYouTubePriming();
         const startSec = step.startSeconds || 0;
+        const targetVol = step.themePhase === 'MEDITATION' ? 85 : 100;
         state.videoStepLoadedAtMs = Date.now();
+
         if (autoPlayNow) {
-          // YouTube内部のendSecondsによる早期停止・関連動画被りを避け、アプリ側の高精度タイマーで終端制御
-          state.ytPlayer.loadVideoById({
-            videoId: step.videoId,
-            startSeconds: startSec
-          });
-          state.ytPlayer.unMute();
-          state.ytPlayer.setVolume(step.themePhase === 'MEDITATION' ? 85 : 100);
-          state.ytPlayer.playVideo();
+          const loadedVid = getLoadedYouTubeVideoId();
+          const pState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
+
+          // 既に同一動画IDで事前アンロック＆待機済みの場合はストリームを破棄せずそのまま再生再開（iPadOS Safari自動再生に最強）
+          if (
+            loadedVid === step.videoId &&
+            (state.ytPrimedVideoId === step.videoId ||
+              pState === window.YT.PlayerState.PAUSED ||
+              pState === window.YT.PlayerState.CUED)
+          ) {
+            state.ytPrimedVideoId = '';
+            try {
+              const cur = state.ytPlayer.getCurrentTime ? state.ytPlayer.getCurrentTime() : startSec;
+              if (Math.abs(cur - startSec) > 1.5) {
+                state.ytPlayer.seekTo(startSec, true);
+              }
+            } catch (_) {}
+            state.ytPlayer.unMute();
+            state.ytPlayer.setVolume(targetVol);
+            state.ytPlayer.playVideo();
+          } else {
+            state.ytPrimedVideoId = '';
+            state.ytPlayer.loadVideoById({
+              videoId: step.videoId,
+              startSeconds: startSec
+            });
+            state.ytPlayer.unMute();
+            state.ytPlayer.setVolume(targetVol);
+            state.ytPlayer.playVideo();
+          }
 
           state.videoMonitorHandle = setInterval(() => {
             monitorActiveVideoStep(step, seq);
@@ -1598,20 +1747,26 @@
 
           setTimeout(() => {
             if (seq !== state.videoLoadSeq || !state.isRunning || state.steps[state.currentIndex] !== step) return;
-            const pState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
-            if (pState !== window.YT.PlayerState.PLAYING && pState !== window.YT.PlayerState.BUFFERING) {
+            const curState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
+            if (curState !== window.YT.PlayerState.PLAYING && curState !== window.YT.PlayerState.BUFFERING) {
               el.ytUnblockBtn.classList.remove('hidden');
             }
           }, 2600);
         } else {
-          state.ytPlayer.cueVideoById({
-            videoId: step.videoId,
-            startSeconds: startSec
-          });
+          const loadedVid = getLoadedYouTubeVideoId();
+          if (loadedVid !== step.videoId) {
+            state.ytPrimedVideoId = '';
+            state.ytPlayer.cueVideoById({
+              videoId: step.videoId,
+              startSeconds: startSec
+            });
+          }
         }
       } else {
         const [dStart, dEnd] = step.demoRange || [122, 132];
         if (state.showDemoPip && state.locationMode === 'home') {
+          cancelYouTubePriming();
+          state.ytPrimedVideoId = '';
           state.ytPlayer.mute();
           state.ytPlayer.loadVideoById({
             videoId: DATA.irotecDemoVideoId,
@@ -1626,9 +1781,29 @@
             }
           }, 500);
         } else {
+          // 事前アンロック処理中は停止させず完了を待つ
+          if (state.ytPrimingInFlight) return;
+          const upcomingVid = findNextUpcomingVideoStep(state.currentIndex);
           try {
-            state.ytPlayer.mute();
-            state.ytPlayer.pauseVideo();
+            if (upcomingVid) {
+              const loadedVid = getLoadedYouTubeVideoId();
+              const pState = state.ytPlayer.getPlayerState ? state.ytPlayer.getPlayerState() : -1;
+              if (loadedVid && loadedVid !== upcomingVid.videoId) {
+                state.ytPrimedVideoId = '';
+                state.ytPlayer.cueVideoById({
+                  videoId: upcomingVid.videoId,
+                  startSeconds: upcomingVid.startSeconds || 0
+                });
+              } else if (
+                window.YT &&
+                window.YT.PlayerState &&
+                (pState === window.YT.PlayerState.PLAYING || pState === window.YT.PlayerState.BUFFERING)
+              ) {
+                state.ytPlayer.pauseVideo();
+              }
+            } else {
+              state.ytPlayer.pauseVideo();
+            }
           } catch (_) {}
         }
       }
@@ -2372,6 +2547,11 @@
     state.isRunning = true;
 
     const step = state.steps[state.currentIndex];
+    // スタートタップの同期ジェスチャー内で本日1本目のYouTube動画を事前アンロック＆プリロード
+    if (step && step.kind !== 'video') {
+      primeYouTubeOnUserGesture();
+    }
+
     if (step && step.kind === 'work' && step.exerciseId) {
       const isWeightEx = !step.hidePlates && state.locationMode === 'home' && Boolean(HOME_PLATE_EXERCISES[step.exerciseId]);
       ensureSetLoadInitialized(step.exerciseId, step.setIndex || 1, step.defaultPlates, isWeightEx);
@@ -3122,6 +3302,7 @@
   }
 
   function adjustPlates(delta) {
+    primeYouTubeOnUserGesture();
     const step = state.steps[state.currentIndex];
     const target = resolveActiveExerciseTarget(step);
     if (!target) return;
@@ -3151,6 +3332,7 @@
   }
 
   function adjustReps(delta) {
+    primeYouTubeOnUserGesture();
     const step = state.steps[state.currentIndex];
     const target = resolveActiveExerciseTarget(step);
     if (!target) return;
@@ -3174,6 +3356,7 @@
   }
 
   function recordQuickSetReps(repsNum) {
+    primeYouTubeOnUserGesture();
     if (!el.rpeFeedbackBox) return;
     const exId = el.rpeFeedbackBox.dataset.exerciseId;
     const exName = el.rpeFeedbackBox.dataset.exerciseName || exId;
@@ -3195,6 +3378,7 @@
   }
 
   function acceptOverloadUpgrade() {
+    primeYouTubeOnUserGesture();
     if (!el.overloadBanner) return;
     const exId = el.overloadBanner.dataset.exerciseId;
     const nextVal = Number(el.overloadBanner.dataset.nextPlates);
@@ -3241,6 +3425,7 @@
   }
 
   function recordExerciseRpe(rpeValue) {
+    primeYouTubeOnUserGesture();
     if (!el.rpeFeedbackBox || !['easy', 'good', 'hard'].includes(rpeValue)) return;
     const exId = el.rpeFeedbackBox.dataset.exerciseId;
     const exName = el.rpeFeedbackBox.dataset.exerciseName || exId;
@@ -3736,12 +3921,19 @@
 
     el.replayVoiceBtn.addEventListener('click', () => {
       ensureAudioUnlocked();
+      primeYouTubeOnUserGesture();
       const step = state.steps[state.currentIndex];
       if (step && step.speechText) speakShoko(step.speechText);
     });
 
-    el.prevStepBtn.addEventListener('click', () => advanceStep(-1));
-    el.nextStepBtn.addEventListener('click', () => advanceStep(1));
+    el.prevStepBtn.addEventListener('click', () => {
+      primeYouTubeOnUserGesture();
+      advanceStep(-1);
+    });
+    el.nextStepBtn.addEventListener('click', () => {
+      primeYouTubeOnUserGesture();
+      advanceStep(1);
+    });
 
     el.minus10Btn.addEventListener('click', () => {
       const step = state.steps[state.currentIndex];
@@ -3819,13 +4011,19 @@
       state.showDemoPip = !state.showDemoPip;
       renderCurrentStep();
       syncYouTubeForStep(state.steps[state.currentIndex], state.isRunning);
+      if (!state.showDemoPip) {
+        primeYouTubeOnUserGesture();
+      }
     });
 
     el.ytUnblockBtn.addEventListener('click', () => {
       el.ytUnblockBtn.classList.add('hidden');
+      state.ytAudioUnlocked = true;
+      state.ytLastPrimedAtMs = Date.now();
+      const curStep = state.steps[state.currentIndex];
       if (state.ytPlayer && state.ytPlayer.playVideo) {
         state.ytPlayer.unMute();
-        state.ytPlayer.setVolume(100);
+        state.ytPlayer.setVolume(curStep && curStep.themePhase === 'MEDITATION' ? 85 : 100);
         state.ytPlayer.playVideo();
       }
     });
@@ -4042,8 +4240,8 @@
     updateStreakBadge();
     renderMorningCondition();
     bindEvents();
-    initYouTubeApi();
     selectDay(state.selectedDay);
+    initYouTubeApi();
     if (bootedFromAutoUpdate) {
       showAppToast(`✨ 最新バージョン (v${APP_VERSION}) に自動更新しました`, 3000);
     }
