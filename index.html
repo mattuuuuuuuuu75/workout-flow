@@ -9,7 +9,7 @@
   <title>筋トレNOW スタジオ｜自宅IROTEC ＆ 出張ホテル対応</title>
   <link rel="icon" type="image/png" href="./images/shoko_avatar.png" />
   <link rel="manifest" href="./manifest.json" />
-  <link rel="stylesheet" href="./styles.css?v=4.1" />
+  <link rel="stylesheet" href="./styles.css?v=4.2" />
 </head>
 <body data-phase="IDLE">
   <!-- ==================== 建設NOWニュース風 2段ヘッダー ==================== -->
@@ -200,6 +200,7 @@
             <span class="overload-text" id="overloadText">🚀 前回2連続「余裕😊」！＋1枚UP候補です</span>
             <button type="button" class="overload-accept-btn" id="overloadAcceptBtn">＋1枚挑戦</button>
           </div>
+          <div class="set-log-strip hidden" id="setLogStrip" role="tablist" aria-label="セットごとの重量と回数"></div>
           <div class="twin-stepper-grid" id="twinStepperGrid">
             <div class="plate-stepper-row" id="plateStepperWrap">
               <button class="stepper-btn" id="plateMinusBtn" aria-label="1枚軽くする">－</button>
@@ -367,8 +368,8 @@
           </div>
           <div class="session-weights-editor hidden" id="sessionWeightsEditor">
             <div class="swe-header">
-              <span>🏋️ 本日の種目別 重量 ＆ 回数メモ（あとから微調整もOK）</span>
-              <span class="swe-sub">10回未満の種目は次回も現重量を維持して回数UPをナビ</span>
+              <span>🏋️ 本日の種目・セット別「重量 × 回数」記録（微調整OK）</span>
+              <span class="swe-sub">次回は各セット中の「最高枚数」が自動で初期セットされます</span>
             </div>
             <div class="swe-list" id="sessionWeightsList"></div>
           </div>
@@ -459,8 +460,8 @@
     </div>
   </div>
 
-  <script src="./data.js?v=4.1"></script>
-  <script src="./audio_manifest.js?v=4.1"></script>
-  <script src="./app.js?v=4.1"></script>
+  <script src="./data.js?v=4.2"></script>
+  <script src="./audio_manifest.js?v=4.2"></script>
+  <script src="./app.js?v=4.2"></script>
 </body>
 </html>

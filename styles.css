@@ -851,6 +851,44 @@ body[data-phase="WORK"] .visual-guide-frame {
   font-weight: 900;
 }
 
+.set-log-strip {
+  display: grid;
+  grid-template-columns: repeat(var(--set-cols, 4), minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.set-log-chip {
+  padding: 4px 3px;
+  border-radius: 6px;
+  border: 1px solid var(--border-card);
+  background: var(--bg-canvas);
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.12s ease;
+}
+.set-log-chip:hover {
+  border-color: var(--brand-orange);
+}
+.set-log-chip.recorded {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+.set-log-chip.editing {
+  background: #fff7ed;
+  border-color: var(--brand-orange);
+  color: var(--brand-orange-dark);
+  box-shadow: 0 0 0 1.5px rgba(234, 88, 12, 0.22);
+  font-weight: 900;
+}
+
 .twin-stepper-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1443,25 +1481,35 @@ body[data-phase="WORK"] .visual-guide-frame {
 .swe-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
-.swe-row {
+.swe-ex-card {
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+}
+.swe-ex-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 6px 9px;
-  background: #ffffff;
-  border: 1px solid var(--border-card);
-  border-radius: 7px;
+  gap: 6px;
 }
 .swe-title {
-  font-size: 0.78rem;
-  font-weight: 800;
+  font-size: 0.79rem;
+  font-weight: 900;
   color: var(--text-primary);
-  min-width: 140px;
-  flex: 1;
+}
+.swe-badge-max {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: var(--brand-blue-bg);
+  color: #1d4ed8;
+  border: 1px solid var(--brand-blue-border);
 }
 .swe-badge-hold {
   display: inline-block;
@@ -1474,29 +1522,50 @@ body[data-phase="WORK"] .visual-guide-frame {
   color: #9a3412;
   border: 1px solid #fdba74;
 }
-.swe-controls {
+.swe-sets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 6px;
+  margin-top: 7px;
+}
+.swe-set-card {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 5px 7px;
+  border-radius: 7px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-card);
+}
+.swe-set-lbl {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: var(--text-secondary);
+  min-width: 32px;
+}
+.swe-set-ctrls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 .swe-mini-step {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: var(--bg-canvas);
+  gap: 2px;
+  background: #ffffff;
   border: 1px solid var(--border-card);
-  border-radius: 6px;
-  padding: 2px 4px;
+  border-radius: 5px;
+  padding: 1px 3px;
 }
 .swe-mini-btn {
-  width: 25px;
-  height: 24px;
-  border-radius: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
   background: var(--bg-subtle);
   border: 1px solid var(--border-strong);
   font-weight: 900;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: var(--text-primary);
   display: grid;
   place-items: center;
@@ -1510,26 +1579,15 @@ body[data-phase="WORK"] .visual-guide-frame {
   border-color: var(--brand-orange);
 }
 .swe-mini-val {
-  min-width: 66px;
+  min-width: 36px;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
 }
 .swe-mini-val.reps-val {
-  min-width: 46px;
-}
-.swe-set-input {
-  width: 86px;
-  padding: 3px 6px;
-  border-radius: 5px;
-  border: 1px solid var(--border-strong);
-  background: #ffffff;
-  font-size: 0.71rem;
-  font-weight: 800;
-  color: var(--text-secondary);
-  text-align: center;
+  min-width: 34px;
 }
 .quick-rec-btn {
   flex: 1;
@@ -1878,6 +1936,14 @@ body[data-phase="WORK"] .visual-guide-frame {
   }
   .context-panel {
     padding: 5px 8px;
+  }
+  .set-log-strip {
+    gap: 3px;
+    margin-bottom: 3px;
+  }
+  .set-log-chip {
+    padding: 2px 2px;
+    font-size: 0.61rem;
   }
   .stepper-btn {
     height: 25px;
