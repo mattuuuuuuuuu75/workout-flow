@@ -6,9 +6,10 @@
 (function () {
   'use strict';
 
-  const APP_VERSION = '4.6.0';
-  const APP_BUILD_ID = '20261124-v460';
+  const APP_VERSION = '4.6.1';
+  const APP_BUILD_ID = '20261124-v461';
   const SHOKO_DUCK_VOLUME = 18; // ショウコさん発話中のYouTube背景音量（発話終了で100/85へ自動復帰）
+  const PUBLIC_CDN_BASE = 'https://mattuuuuuuuuu75.github.io/workout-flow/';
   const HOTEL_CLOUD_META_ID = '_hotel_load_state';
 
   function configurePlaybackAudioSession() {
@@ -1446,15 +1447,33 @@
     });
   }
 
-  async function playViaWebAudioBuffer(audioSrc, cleanText, mySeq, delayMs = 0, { allowHtmlFallback = true } = {}) {
+  function resolveShokoFallbackCdnUrl(audioSrc) {
+    if (!audioSrc || typeof audioSrc !== 'string') return null;
+    if (audioSrc.startsWith('./audio/')) {
+      const isGithubPages = window.location.hostname.endsWith('github.io');
+      if (!isGithubPages) {
+        return PUBLIC_CDN_BASE + audioSrc.slice(2);
+      }
+      return `${audioSrc}?r=${Date.now()}`;
+    }
+    return null;
+  }
+
+  async function playViaWebAudioBuffer(audioSrc, cleanText, mySeq, delayMs = 0, { allowHtmlFallback = true, retriedCdn = false } = {}) {
     if (!state.audioCtx || window.location.protocol === 'file:') {
-      if (allowHtmlFallback) playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback: false });
-      else fallbackBrowserSpeech(cleanText, mySeq);
+      if (allowHtmlFallback) playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback: false, retriedCdn });
+      else onShokoSpeechEnd({ smoothRestore: true });
       return;
     }
 
     try {
-      const audioBuf = await getOrDecodeAudioBuffer(audioSrc);
+      let audioBuf = await getOrDecodeAudioBuffer(audioSrc);
+      if (!audioBuf && !retriedCdn) {
+        const altUrl = resolveShokoFallbackCdnUrl(audioSrc);
+        if (altUrl) {
+          audioBuf = await getOrDecodeAudioBuffer(altUrl);
+        }
+      }
       if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
 
       if (audioBuf) {
@@ -1490,14 +1509,36 @@
     } catch (_) {}
 
     if (allowHtmlFallback) {
-      playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback: false });
-    } else {
+      playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback: false, retriedCdn });
+    } else if (!STATIC_VOICES[cleanText]) {
       fallbackBrowserSpeech(cleanText, mySeq);
+    } else {
+      // ショウコさんのMP3が登録されているセリフでは絶対にOS標準の別人の機械音声（speechSynthesis）へフォールバックさせない
+      onShokoSpeechEnd({ smoothRestore: true });
     }
   }
 
-  function playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback = true } = {}) {
+  function playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback = true, retriedCdn = false } = {}) {
     if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+    const handleHtmlFailure = () => {
+      state.htmlAudioActivePlay = false;
+      if (mySeq !== state.shokoSpeakSeq) return;
+      if (!retriedCdn) {
+        const altUrl = resolveShokoFallbackCdnUrl(audioSrc);
+        if (altUrl) {
+          playViaHtmlAudioPrimary(altUrl, cleanText, mySeq, { allowWebAudioFallback, retriedCdn: true });
+          return;
+        }
+      }
+      if (allowWebAudioFallback) {
+        playViaWebAudioBuffer(audioSrc, cleanText, mySeq, 0, { allowHtmlFallback: false, retriedCdn: true });
+      } else if (!STATIC_VOICES[cleanText]) {
+        fallbackBrowserSpeech(cleanText, mySeq);
+      } else {
+        onShokoSpeechEnd({ smoothRestore: true });
+      }
+    };
+
     try {
       configurePlaybackAudioSession();
       state.htmlAudioActivePlay = true;
@@ -1517,39 +1558,16 @@
         state.htmlAudioBlessed = true;
         if (mySeq === state.shokoSpeakSeq) onShokoSpeechEnd({ smoothRestore: true });
       };
-      state.shokoAudio.onerror = () => {
-        state.htmlAudioActivePlay = false;
-        if (mySeq !== state.shokoSpeakSeq) return;
-        if (allowWebAudioFallback) {
-          playViaWebAudioBuffer(audioSrc, cleanText, mySeq, 0, { allowHtmlFallback: false });
-        } else {
-          fallbackBrowserSpeech(cleanText, mySeq);
-        }
-      };
+      state.shokoAudio.onerror = handleHtmlFailure;
 
       const p = state.shokoAudio.play();
       if (p && typeof p.then === 'function') {
         p.then(() => {
           state.htmlAudioBlessed = true;
-        }).catch(() => {
-          state.htmlAudioActivePlay = false;
-          if (mySeq !== state.shokoSpeakSeq) return;
-          if (allowWebAudioFallback) {
-            playViaWebAudioBuffer(audioSrc, cleanText, mySeq, 0, { allowHtmlFallback: false });
-          } else {
-            fallbackBrowserSpeech(cleanText, mySeq);
-          }
-        });
+        }).catch(handleHtmlFailure);
       }
     } catch (_) {
-      state.htmlAudioActivePlay = false;
-      if (mySeq === state.shokoSpeakSeq) {
-        if (allowWebAudioFallback) {
-          playViaWebAudioBuffer(audioSrc, cleanText, mySeq, 0, { allowHtmlFallback: false });
-        } else {
-          fallbackBrowserSpeech(cleanText, mySeq);
-        }
-      }
+      handleHtmlFailure();
     }
   }
 
@@ -1580,8 +1598,31 @@
     }
 
     // B) 非YouTubeステップ（ウォームアップ・マシン本番・休憩・準備・完走）：
-    //    iPad/iPhone 消音モード(Silent Mode)でも 100% Playback カテゴリでスピーカー出力される HTMLAudioElement で再生！
-    //    （初回スタート時にYouTube無音プライミングが走っている場合は完了まで ~250ms 待ってから再生し競合を完全回避）
+    //    遅延待機前に同期タップイベント内で HTMLAudioElement を確実にアンロック保持しておく（stopShokoSpeech 後のため中断されない）
+    if (!state.htmlAudioBlessed && (state.ytPrimingInFlight || delayMs > 0)) {
+      try {
+        state.shokoAudio.muted = false;
+        state.shokoAudio.volume = 0.01;
+        if (state.shokoAudio.getAttribute('data-loaded-src') !== audioSrc) {
+          state.shokoAudio.src = audioSrc;
+          state.shokoAudio.setAttribute('data-loaded-src', audioSrc);
+        }
+        const bp = state.shokoAudio.play();
+        if (bp && typeof bp.then === 'function') {
+          bp.then(() => {
+            state.htmlAudioBlessed = true;
+            if (!state.htmlAudioActivePlay) {
+              state.shokoAudio.pause();
+              try {
+                state.shokoAudio.currentTime = 0;
+              } catch (_) {}
+              state.shokoAudio.volume = 1;
+            }
+          }).catch(() => {});
+        }
+      } catch (_) {}
+    }
+
     if (state.ytPrimingInFlight && state.ytPrimingPromise) {
       await state.ytPrimingPromise;
       if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
