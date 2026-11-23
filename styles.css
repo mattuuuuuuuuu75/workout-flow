@@ -580,8 +580,30 @@ body[data-phase="WORK"] .visual-guide-frame {
   bottom: 12px;
   z-index: 4;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   pointer-events: none;
+}
+.hero-reset-btn {
+  pointer-events: auto;
+  padding: 10px 13px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #f8fafc;
+  font-weight: 800;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+.hero-reset-btn:hover {
+  background: #0f172a;
+}
+.hero-reset-btn:active {
+  transform: scale(0.96);
 }
 .hero-start-btn {
   pointer-events: auto;
@@ -937,7 +959,8 @@ body[data-phase="WORK"] .visual-guide-frame {
   grid-template-columns: 1fr 1fr;
   gap: 7px;
 }
-.twin-stepper-grid.reps-only {
+.twin-stepper-grid.reps-only,
+.twin-stepper-grid.load-only {
   grid-template-columns: 1fr;
 }
 .plate-stepper-row {
@@ -1787,11 +1810,60 @@ body[data-phase="WORK"] .visual-guide-frame {
   background: var(--brand-orange-dark);
 }
 
-/* 😊👍🔥 セット別回数ワンタップ ＆ 手応えワンタップ */
+/* 😊👍🔥 セット別回数ワンタップ ＆ 手応えワンタップ（休憩中は最上段表示） */
 .rpe-feedback-box {
-  margin-top: 7px;
-  padding-top: 7px;
-  border-top: 1px dashed var(--border-card);
+  margin: 0;
+  padding: 0;
+}
+.rpe-feedback-box:not(.hidden) + .plate-selector:not(.hidden) {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-strong);
+}
+.rpe-top-row {
+  margin-bottom: 5px;
+}
+.rpe-inline-reps {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+.rpe-rep-step-btn {
+  width: 24px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+.rpe-rep-step-btn:hover {
+  background: #e2e8f0;
+}
+.rpe-rep-step-btn:active {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  color: #ffffff;
+}
+.rpe-rep-step-val {
+  min-width: 38px;
+  text-align: center;
+  font-size: 0.76rem;
+  font-weight: 900;
+  color: var(--brand-orange-dark);
+  font-variant-numeric: tabular-nums;
+}
+.rpe-footer-hint {
+  margin-top: 5px;
+  display: flex;
+  justify-content: flex-end;
 }
 .rpe-streak-hint {
   font-size: 0.68rem;
@@ -2311,32 +2383,83 @@ body[data-phase="WORK"] .visual-guide-frame {
     padding: 4px 7px;
   }
 
+  /* スマホ縦画面：16:9（1280×720）図解イラストを被りゼロ・等倍比率でフル表示 */
   .visual-guide-frame {
-    aspect-ratio: 16 / 10;
-    max-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    aspect-ratio: auto;
+    max-height: none;
+    overflow: visible;
+    border: none;
+    background: transparent;
+    gap: 6px;
+  }
+  body[data-phase="WORK"] .visual-guide-frame {
+    box-shadow: none;
+  }
+  .visual-hw-chips {
+    order: 1;
+    position: static;
+    pointer-events: auto;
+    gap: 5px;
+  }
+  .exercise-guide-img {
+    order: 2;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1.5px solid var(--border-card);
+    background: #ffffff;
+  }
+  body[data-phase="WORK"] .exercise-guide-img {
+    border-color: var(--brand-orange);
+    box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.16);
   }
   .stage-pane.mode-video {
     aspect-ratio: 16 / 9;
-    min-height: 210px;
+    min-height: 205px;
+  }
+  .yt-top-overlay {
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    gap: 5px;
+  }
+  .yt-badge {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
+  .yt-safety-tip {
+    font-size: 0.64rem;
+    padding: 3px 8px;
   }
   .stage-pane.show-demo-pip .yt-stage-container {
     inset: 44px 8px auto auto;
     width: 48%;
   }
   .vhw-chip {
-    font-size: 0.67rem;
-    padding: 3px 7px;
+    font-size: 0.69rem;
+    padding: 4px 8px;
   }
   .idle-floating-cta {
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    justify-content: center;
+    order: 3;
+    position: static;
+    justify-content: stretch;
+    gap: 6px;
+    pointer-events: auto;
+  }
+  .hero-reset-btn {
+    padding: 10px 12px;
+    font-size: 0.76rem;
   }
   .hero-start-btn {
-    width: 100%;
-    padding: 9px 12px;
-    font-size: 0.78rem;
+    flex: 1;
+    width: auto;
+    padding: 11px 12px;
+    font-size: 0.8rem;
   }
 
   .action-steps-row {

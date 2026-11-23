@@ -4,7 +4,7 @@
   "description": "自宅IROTEC ＆ 出張ホテル対応・厳密フォーム図解・ショウコさん音声ガイド付き40分自動進行ワークアウト",
   "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#F8FAFC",
   "theme_color": "#0B0F19",
   "icons": [

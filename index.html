@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>筋トレNOW スタジオ｜自宅IROTEC ＆ 出張ホテル対応</title>
   <link rel="icon" type="image/png" href="./images/shoko_avatar.png" />
-  <link rel="manifest" href="./manifest.json?v=4.5.0" />
-  <link rel="stylesheet" href="./styles.css?v=4.5.0" />
+  <link rel="manifest" href="./manifest.json?v=4.6.0" />
+  <link rel="stylesheet" href="./styles.css?v=4.6.0" />
 </head>
 <body data-phase="IDLE">
   <!-- 自動アップデート＆朝一リフレッシュ通知トースト -->
@@ -65,7 +65,7 @@
         <button class="icon-btn" id="openLogModalBtn" title="達成ログ＆股割り記録" aria-label="記録">
           🏆 <span class="btn-sublabel" id="streakBadge">0回</span>
         </button>
-        <button class="icon-btn" id="fullscreenBtn" title="全画面表示（スマホ横画面固定におすすめ）" aria-label="全画面">
+        <button class="icon-btn" id="fullscreenBtn" title="全画面表示切り替え" aria-label="全画面">
           ⛶
         </button>
       </div>
@@ -124,9 +124,12 @@
             <span class="vhw-chip vhw-pin" id="hwPinDisplay">ピン：6枚目 (27kg)</span>
           </div>
 
-          <!-- 開始前のみ右下に重なるクイックスタートボタン -->
+          <!-- 開始前・途中再開時に表示されるクイックスタートボタン -->
           <div class="idle-floating-cta" id="idleHeroBanner">
-            <button class="hero-start-btn" id="heroStartBtn">
+            <button type="button" class="hero-reset-btn hidden" id="heroResetBtn" title="STEP 1からやり直す">
+              ↺ 最初から
+            </button>
+            <button type="button" class="hero-start-btn" id="heroStartBtn">
               ▶ セッション開始（筋トレ・股割り・5分瞑想）
             </button>
           </div>
@@ -197,45 +200,17 @@
 
       <!-- ② サイドバー小見出し付き白カード（左5pxオレンジ縦線） -->
       <div class="context-panel">
-        <!-- 自宅IROTEC 重量（ピン枚数）＆ 回数（レップ数）メモ ＋ 漸進性過負荷ナビ -->
-        <div class="plate-selector" id="plateSelector">
-          <div class="widget-heading-row">
-            <span class="widget-heading-title" id="plateHeadingTitle">重量 ＆ 回数メモ（Notion同期）</span>
-            <span class="plate-kg-hint" id="plateKgHint">27.0 kg × 10回</span>
-          </div>
-          <div class="overload-banner hidden" id="overloadBanner">
-            <span class="overload-text" id="overloadText">🚀 前回2連続「余裕😊」！＋1枚UP候補です</span>
-            <button type="button" class="overload-accept-btn" id="overloadAcceptBtn">＋1枚挑戦</button>
-          </div>
-          <div class="set-log-strip hidden" id="setLogStrip" role="tablist" aria-label="セットごとの重量と回数"></div>
-          <div class="twin-stepper-grid" id="twinStepperGrid">
-            <div class="plate-stepper-row" id="plateStepperWrap">
-              <button class="stepper-btn" id="plateMinusBtn" aria-label="負荷を1段階下げる">－</button>
-              <div class="plate-count-box">
-                <span class="plate-num" id="plateCountNum">6</span>
-                <span class="plate-unit" id="plateUnitLabel">枚目</span>
-              </div>
-              <button class="stepper-btn" id="platePlusBtn" aria-label="負荷を1段階上げる">＋</button>
-            </div>
-            <div class="plate-stepper-row reps-stepper-row" id="repsStepperWrap">
-              <button class="stepper-btn" id="repsMinusBtn" aria-label="回数を1回減らす">－</button>
-              <div class="plate-count-box">
-                <span class="plate-num" id="repsCountNum">10</span>
-                <span class="plate-unit">回</span>
-              </div>
-              <button class="stepper-btn" id="repsPlusBtn" aria-label="回数を1回増やす">＋</button>
-            </div>
-          </div>
-          <p class="hotel-inline-cue hidden" id="hotelInlineCue"></p>
-        </div>
-
-        <!-- セット回数1タップ ＆ 手応えワンタップ（休憩中・セット完了直後に表示 → 次回ウェイト自動提案） -->
+        <!-- ① 休憩中・種目完了直後に最上段表示：直前セットの回数ワンタップ ＆ 手応え記録 -->
         <div class="rpe-feedback-box hidden" id="rpeFeedbackBox">
-          <div class="widget-heading-row">
-            <span class="widget-heading-title" id="rpeHeadingTitle">回数 ＆ 手応えワンタップ</span>
-            <span class="rpe-streak-hint" id="rpeStreakHint"></span>
+          <div class="widget-heading-row rpe-top-row">
+            <span class="widget-heading-title" id="rpeHeadingTitle">✅ 直前 Set 1：回数 ＆ 手応え</span>
+            <div class="rpe-inline-reps" aria-label="回数の1回単位微調整">
+              <button type="button" class="rpe-rep-step-btn" id="rpeRepsMinusBtn" aria-label="直前セットの回数を1減らす">－</button>
+              <span class="rpe-rep-step-val" id="rpeRepsValueText">10回</span>
+              <button type="button" class="rpe-rep-step-btn" id="rpeRepsPlusBtn" aria-label="直前セットの回数を1増やす">＋</button>
+            </div>
           </div>
-          <div class="rep-quick-row" id="repQuickRow" role="group" aria-label="このセットの回数ワンタップ記録">
+          <div class="rep-quick-row" id="repQuickRow" role="group" aria-label="直前セットの回数ワンタップ記録">
             <button type="button" class="rep-pill" data-reps="5">5回</button>
             <button type="button" class="rep-pill" data-reps="6">6回</button>
             <button type="button" class="rep-pill" data-reps="7">7回</button>
@@ -250,6 +225,41 @@
             <button type="button" class="rpe-btn good" data-rpe="good">👍 適正</button>
             <button type="button" class="rpe-btn hard" data-rpe="hard">🔥 限界</button>
           </div>
+          <div class="rpe-footer-hint">
+            <span class="rpe-streak-hint" id="rpeStreakHint"></span>
+          </div>
+        </div>
+
+        <!-- ② 本番中の現在ピン枚数 ／ 休憩中の「次セット」ピン・負荷Lv準備 ＋ 漸進性過負荷ナビ -->
+        <div class="plate-selector" id="plateSelector">
+          <div class="widget-heading-row">
+            <span class="widget-heading-title" id="plateHeadingTitle">ピン枚数（Notion同期）</span>
+            <span class="plate-kg-hint" id="plateKgHint">約27 kg</span>
+          </div>
+          <div class="overload-banner hidden" id="overloadBanner">
+            <span class="overload-text" id="overloadText">🚀 前回2連続「余裕😊」！＋1枚UP候補です</span>
+            <button type="button" class="overload-accept-btn" id="overloadAcceptBtn">＋1枚挑戦</button>
+          </div>
+          <div class="set-log-strip hidden" id="setLogStrip" role="tablist" aria-label="セットごとの重量と回数"></div>
+          <div class="twin-stepper-grid load-only" id="twinStepperGrid">
+            <div class="plate-stepper-row" id="plateStepperWrap">
+              <button type="button" class="stepper-btn" id="plateMinusBtn" aria-label="負荷を1段階下げる">－</button>
+              <div class="plate-count-box">
+                <span class="plate-num" id="plateCountNum">6</span>
+                <span class="plate-unit" id="plateUnitLabel">枚目</span>
+              </div>
+              <button type="button" class="stepper-btn" id="platePlusBtn" aria-label="負荷を1段階上げる">＋</button>
+            </div>
+            <div class="plate-stepper-row reps-stepper-row hidden" id="repsStepperWrap">
+              <button type="button" class="stepper-btn" id="repsMinusBtn" aria-label="回数を1回減らす">－</button>
+              <div class="plate-count-box">
+                <span class="plate-num" id="repsCountNum">10</span>
+                <span class="plate-unit">回</span>
+              </div>
+              <button type="button" class="stepper-btn" id="repsPlusBtn" aria-label="回数を1回増やす">＋</button>
+            </div>
+          </div>
+          <p class="hotel-inline-cue hidden" id="hotelInlineCue"></p>
         </div>
 
         <!-- 出張ホテルモード時の負荷調整ワンポイント -->
@@ -441,7 +451,7 @@
       <div class="modal-body">
         <div class="health-summary-box">
           <div class="sync-summary-header">
-            <h4>📡 現在の同期ステータス <small id="appVersionBadge" style="font-weight:700;color:#64748b;margin-left:6px;">v4.5.0 (自動更新ON)</small></h4>
+            <h4>📡 現在の同期ステータス <small id="appVersionBadge" style="font-weight:700;color:#64748b;margin-left:6px;">v4.6.0 (自動更新ON)</small></h4>
             <span class="sync-pill-badge" id="syncModalBadge">未連携</span>
           </div>
           <p class="sync-feedback-msg" id="syncModalDetail">
@@ -468,8 +478,8 @@
     </div>
   </div>
 
-  <script src="./data.js?v=4.5.0"></script>
-  <script src="./audio_manifest.js?v=4.5.0"></script>
-  <script src="./app.js?v=4.5.0"></script>
+  <script src="./data.js?v=4.6.0"></script>
+  <script src="./audio_manifest.js?v=4.6.0"></script>
+  <script src="./app.js?v=4.6.0"></script>
 </body>
 </html>
