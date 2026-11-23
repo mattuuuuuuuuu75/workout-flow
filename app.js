@@ -1,14 +1,23 @@
 // ============================================================================
-// 筋トレNOW スタジオ v4.4.2 — Chrome全端末WebAudioショウコ音声即時再生 ＆ 自動音量ダッキング仕様
-// （建設NOWニュースUI × 厳密図解 × ショウコWebAudio即時再生 × 発話中YouTube自動減衰 × 自動リロード）
+// 筋トレNOW スタジオ v4.5.0 — iPad消音モード対応ハイブリッド音声再生 ＆ YouTube字幕完全OFF仕様
+// （建設NOWニュースUI × 初回〜マシン音声100%再生 × 発話中YouTube自動減衰 × YouTube字幕OFF × 自動更新）
 // ============================================================================
 
 (function () {
   'use strict';
 
-  const APP_VERSION = '4.4.2';
-  const APP_BUILD_ID = '20261117-v442';
+  const APP_VERSION = '4.5.0';
+  const APP_BUILD_ID = '20261124-v450';
   const SHOKO_DUCK_VOLUME = 18; // ショウコさん発話中のYouTube背景音量（発話終了で100/85へ自動復帰）
+
+  function configurePlaybackAudioSession() {
+    try {
+      if (navigator.audioSession && navigator.audioSession.type !== 'playback') {
+        navigator.audioSession.type = 'playback';
+      }
+    } catch (_) {}
+  }
+  configurePlaybackAudioSession();
 
   const DATA = window.WORKOUT_DATA;
   const STATIC_VOICES = window.SHOKO_AUDIO_MANIFEST || {};
@@ -196,6 +205,8 @@
     wakeLock: null,
     audioCtx: null,
     webAudioPrimed: false,
+    htmlAudioBlessed: false,
+    htmlAudioActivePlay: false,
     shokoSourceNode: null,
     shokoSpeakSeq: 0,
     isShokoSpeaking: false,
@@ -207,6 +218,8 @@
     ytStepFailed: false,
     ytAudioUnlocked: false,
     ytPrimingInFlight: false,
+    ytPrimingPromise: null,
+    ytPrimingResolve: null,
     ytPrimeTimer: null,
     ytPrimedVideoId: '',
     ytPrimeTargetId: '',
@@ -222,6 +235,11 @@
   };
 
   state.shokoAudio.preload = 'auto';
+  state.shokoAudio.playsInline = true;
+  try {
+    state.shokoAudio.setAttribute('playsinline', '');
+    state.shokoAudio.setAttribute('webkit-playsinline', '');
+  } catch (_) {}
 
   // -------------------- DOM Elements --------------------
   const el = {
@@ -1168,6 +1186,21 @@
     if (endIdx >= state.steps.length) {
       queueUrl('瞑想まで含めたフルセッション完走、本当にお疲れ様でした！体も心もスッキリ整いましたね。最後に今日の記録も残しておきましょう！');
     }
+
+    // 非YouTubeステップ待機中は HTMLAudioElement にも現在のMP3を事前セットして即時再生可能にしておく
+    if (!state.htmlAudioActivePlay && !state.isShokoSpeaking) {
+      const curStep = state.steps[Math.max(0, fromIdx)];
+      if (curStep && curStep.kind !== 'video') {
+        const curUrl = resolveShokoAudioUrl((curStep.speechText || '').trim());
+        if (curUrl && state.shokoAudio.getAttribute('data-loaded-src') !== curUrl) {
+          try {
+            state.shokoAudio.src = curUrl;
+            state.shokoAudio.setAttribute('data-loaded-src', curUrl);
+            state.shokoAudio.load();
+          } catch (_) {}
+        }
+      }
+    }
   }
 
   // ショウコさんが喋っている間だけYouTube音量を下げ（18%）、発話終了後（または発話なし時）は本来の音量へ戻す
@@ -1265,6 +1298,7 @@
 
   function stopShokoSpeech({ restoreYoutube = true } = {}) {
     state.shokoSpeakSeq += 1;
+    state.htmlAudioActivePlay = false;
     clearTimeout(state.duckSafetyTimer);
     if (state.shokoSourceNode) {
       try {
@@ -1276,6 +1310,7 @@
     }
     try {
       state.shokoAudio.onended = null;
+      state.shokoAudio.onerror = null;
       state.shokoAudio.pause();
     } catch (_) {}
     try {
@@ -1289,8 +1324,10 @@
     }
   }
 
-  function ensureAudioUnlocked() {
+  // ※ iOS/iPadOS WebKit (Chrome含む) では pointerdown/touchstart は音声アンロック対象外のため、必ず click / touchend 内で呼ぶ
+  function ensureAudioUnlocked({ blessHtmlAudio = true } = {}) {
     try {
+      configurePlaybackAudioSession();
       const AC = window.AudioContext || window.webkitAudioContext;
       if (AC && !state.audioCtx) {
         state.audioCtx = new AC();
@@ -1305,20 +1342,63 @@
         };
       }
       if (state.audioCtx) {
+        const playSilentWebAudioFrame = () => {
+          try {
+            const silentBuf = state.audioCtx.createBuffer(1, 1, 22050);
+            const silentSrc = state.audioCtx.createBufferSource();
+            silentSrc.buffer = silentBuf;
+            silentSrc.connect(state.audioCtx.destination);
+            silentSrc.start(0);
+            if (state.audioCtx.state === 'running') {
+              state.webAudioPrimed = true;
+            }
+          } catch (_) {}
+        };
+
         if (state.audioCtx.state !== 'running') {
-          state.audioCtx.resume().catch(() => {});
+          const rp = state.audioCtx.resume();
+          if (rp && typeof rp.then === 'function') {
+            rp.then(() => {
+              state.webAudioPrimed = true;
+            }).catch(() => {});
+          }
         }
-        // iPad/iPhone/Android 全端末の Chrome で WebAudio 出力を確実に有効化する無音1フレーム再生
         if (!state.webAudioPrimed) {
-          const silentBuf = state.audioCtx.createBuffer(1, 1, 22050);
-          const silentSrc = state.audioCtx.createBufferSource();
-          silentSrc.buffer = silentBuf;
-          silentSrc.connect(state.audioCtx.destination);
-          silentSrc.start(0);
-          state.webAudioPrimed = true;
+          playSilentWebAudioFrame();
         }
       }
+
+      // iPad/iPhone 消音モード(Silent Mode)でもマシンパート(非YouTubeステップ)で確実にスピーカー再生させるため、
+      // 同期クリックイベント内で HTMLAudioElement (Playbackカテゴリ) も事前アンロックしておく
       state.shokoAudio.muted = false;
+      if (blessHtmlAudio && !state.htmlAudioBlessed && !state.htmlAudioActivePlay) {
+        const curSp = (state.steps[state.currentIndex]?.speechText || '').trim();
+        const blessUrl = resolveShokoAudioUrl(curSp) || Object.values(STATIC_VOICES)[0];
+        if (blessUrl) {
+          if (state.shokoAudio.getAttribute('data-loaded-src') !== blessUrl) {
+            state.shokoAudio.src = blessUrl;
+            state.shokoAudio.setAttribute('data-loaded-src', blessUrl);
+          }
+          state.shokoAudio.volume = 0.01;
+          state.htmlAudioBlessed = true;
+          const p = state.shokoAudio.play();
+          if (p && typeof p.then === 'function') {
+            p.then(() => {
+              if (!state.htmlAudioActivePlay) {
+                state.shokoAudio.pause();
+                try {
+                  state.shokoAudio.currentTime = 0;
+                } catch (_) {}
+                state.shokoAudio.volume = 1;
+              }
+            }).catch(() => {
+              state.htmlAudioBlessed = false;
+              state.shokoAudio.volume = 1;
+            });
+          }
+        }
+      }
+
       const curSp = (state.steps[state.currentIndex]?.speechText || '').trim();
       const curUrl = resolveShokoAudioUrl(curSp);
       if (curUrl && state.audioCtx) {
@@ -1330,6 +1410,7 @@
   function playBeep(freq = 880, durationMs = 110, gainVal = 0.12) {
     if (!state.voiceEnabled || !state.audioCtx) return;
     try {
+      configurePlaybackAudioSession();
       if (state.audioCtx.state !== 'running') {
         state.audioCtx.resume().catch(() => {});
       }
@@ -1353,24 +1434,110 @@
     });
   }
 
-  function playViaHtmlAudioFallback(audioSrc, cleanText, mySeq) {
+  async function playViaWebAudioBuffer(audioSrc, cleanText, mySeq, delayMs = 0, { allowHtmlFallback = true } = {}) {
+    if (!state.audioCtx || window.location.protocol === 'file:') {
+      if (allowHtmlFallback) playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback: false });
+      else fallbackBrowserSpeech(cleanText, mySeq);
+      return;
+    }
+
+    try {
+      const audioBuf = await getOrDecodeAudioBuffer(audioSrc);
+      if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+
+      if (audioBuf) {
+        if (delayMs > 0) {
+          await new Promise((r) => setTimeout(r, delayMs));
+          if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+        }
+        configurePlaybackAudioSession();
+        if (state.audioCtx.state !== 'running') {
+          await state.audioCtx.resume().catch(() => {});
+        }
+
+        const srcNode = state.audioCtx.createBufferSource();
+        const gainNode = state.audioCtx.createGain();
+        gainNode.gain.value = 1.05;
+        srcNode.buffer = audioBuf;
+        srcNode.connect(gainNode);
+        gainNode.connect(state.audioCtx.destination);
+        state.shokoSourceNode = srcNode;
+
+        srcNode.onended = () => {
+          if (state.shokoSourceNode === srcNode) {
+            state.shokoSourceNode = null;
+          }
+          if (mySeq === state.shokoSpeakSeq) {
+            onShokoSpeechEnd({ smoothRestore: true });
+          }
+        };
+
+        srcNode.start(0);
+        return;
+      }
+    } catch (_) {}
+
+    if (allowHtmlFallback) {
+      playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback: false });
+    } else {
+      fallbackBrowserSpeech(cleanText, mySeq);
+    }
+  }
+
+  function playViaHtmlAudioPrimary(audioSrc, cleanText, mySeq, { allowWebAudioFallback = true } = {}) {
     if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
     try {
-      state.shokoAudio.src = audioSrc;
+      configurePlaybackAudioSession();
+      state.htmlAudioActivePlay = true;
+      state.shokoAudio.muted = false;
+      state.shokoAudio.volume = 1;
+      if (state.shokoAudio.getAttribute('data-loaded-src') !== audioSrc) {
+        state.shokoAudio.src = audioSrc;
+        state.shokoAudio.setAttribute('data-loaded-src', audioSrc);
+      } else {
+        try {
+          state.shokoAudio.currentTime = 0;
+        } catch (_) {}
+      }
+
       state.shokoAudio.onended = () => {
+        state.htmlAudioActivePlay = false;
+        state.htmlAudioBlessed = true;
         if (mySeq === state.shokoSpeakSeq) onShokoSpeechEnd({ smoothRestore: true });
       };
       state.shokoAudio.onerror = () => {
-        if (mySeq === state.shokoSpeakSeq) fallbackBrowserSpeech(cleanText, mySeq);
+        state.htmlAudioActivePlay = false;
+        if (mySeq !== state.shokoSpeakSeq) return;
+        if (allowWebAudioFallback) {
+          playViaWebAudioBuffer(audioSrc, cleanText, mySeq, 0, { allowHtmlFallback: false });
+        } else {
+          fallbackBrowserSpeech(cleanText, mySeq);
+        }
       };
+
       const p = state.shokoAudio.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(() => {
-          if (mySeq === state.shokoSpeakSeq) fallbackBrowserSpeech(cleanText, mySeq);
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          state.htmlAudioBlessed = true;
+        }).catch(() => {
+          state.htmlAudioActivePlay = false;
+          if (mySeq !== state.shokoSpeakSeq) return;
+          if (allowWebAudioFallback) {
+            playViaWebAudioBuffer(audioSrc, cleanText, mySeq, 0, { allowHtmlFallback: false });
+          } else {
+            fallbackBrowserSpeech(cleanText, mySeq);
+          }
         });
       }
     } catch (_) {
-      if (mySeq === state.shokoSpeakSeq) fallbackBrowserSpeech(cleanText, mySeq);
+      state.htmlAudioActivePlay = false;
+      if (mySeq === state.shokoSpeakSeq) {
+        if (allowWebAudioFallback) {
+          playViaWebAudioBuffer(audioSrc, cleanText, mySeq, 0, { allowHtmlFallback: false });
+        } else {
+          fallbackBrowserSpeech(cleanText, mySeq);
+        }
+      }
     }
   }
 
@@ -1391,65 +1558,27 @@
       return;
     }
 
-    // 1) WebAudio API（AudioBufferSourceNode）：YouTubeプレイヤーとの競合・中断が一切起きずChrome全端末で確実に鳴る本命経路
-    if (state.audioCtx && window.location.protocol !== 'file:') {
-      try {
-        const audioBuf = await getOrDecodeAudioBuffer(audioSrc);
-        if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+    const curStep = state.steps[state.currentIndex];
+    const isVideoStep = Boolean(curStep && curStep.kind === 'video');
 
-        if (audioBuf) {
-          if (delayMs > 0) {
-            await new Promise((r) => setTimeout(r, delayMs));
-            if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
-          }
-          if (state.audioCtx.state !== 'running') {
-            await state.audioCtx.resume().catch(() => {});
-          }
-
-          const srcNode = state.audioCtx.createBufferSource();
-          const gainNode = state.audioCtx.createGain();
-          gainNode.gain.value = 1.05;
-          srcNode.buffer = audioBuf;
-          srcNode.connect(gainNode);
-          gainNode.connect(state.audioCtx.destination);
-          state.shokoSourceNode = srcNode;
-
-          srcNode.onended = () => {
-            if (state.shokoSourceNode === srcNode) {
-              state.shokoSourceNode = null;
-            }
-            if (mySeq === state.shokoSpeakSeq) {
-              onShokoSpeechEnd({ smoothRestore: true });
-            }
-          };
-
-          srcNode.start(0);
-
-          // 万一ブラウザの省電力等でAudioContextがsuspendedのままだった場合の自動復旧＆フォールバック監視
-          setTimeout(() => {
-            if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
-            if (state.audioCtx && state.audioCtx.state !== 'running') {
-              state.audioCtx
-                .resume()
-                .catch(() => {})
-                .finally(() => {
-                  if (mySeq === state.shokoSpeakSeq && state.audioCtx.state !== 'running') {
-                    try {
-                      srcNode.onended = null;
-                      srcNode.stop(0);
-                    } catch (_) {}
-                    playViaHtmlAudioFallback(audioSrc, clean, mySeq);
-                  }
-                });
-            }
-          }, 220);
-          return;
-        }
-      } catch (_) {}
+    // A) YouTube動画ステップ中：YouTube(<video>)と一切競合しない WebAudio で重ねて再生し、YouTube音量を18%に減衰
+    if (isVideoStep) {
+      await playViaWebAudioBuffer(audioSrc, clean, mySeq, delayMs, { allowHtmlFallback: true });
+      return;
     }
 
-    // 2) HTMLAudioElement フォールバック
-    playViaHtmlAudioFallback(audioSrc, clean, mySeq);
+    // B) 非YouTubeステップ（ウォームアップ・マシン本番・休憩・準備・完走）：
+    //    iPad/iPhone 消音モード(Silent Mode)でも 100% Playback カテゴリでスピーカー出力される HTMLAudioElement で再生！
+    //    （初回スタート時にYouTube無音プライミングが走っている場合は完了まで ~250ms 待ってから再生し競合を完全回避）
+    if (state.ytPrimingInFlight && state.ytPrimingPromise) {
+      await state.ytPrimingPromise;
+      if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+    } else if (delayMs > 0) {
+      await new Promise((r) => setTimeout(r, delayMs));
+      if (mySeq !== state.shokoSpeakSeq || !state.voiceEnabled) return;
+    }
+
+    playViaHtmlAudioPrimary(audioSrc, clean, mySeq, { allowWebAudioFallback: true });
   }
 
   function fallbackBrowserSpeech(text, expectedSeq) {
@@ -1743,23 +1872,60 @@
     return null;
   }
 
+  // YouTube側の自動字幕・CC字幕モジュールを完全にアンロード＆無効化する
+  function forceDisableYouTubeCaptions() {
+    if (!state.ytPlayer) return;
+    try {
+      if (typeof state.ytPlayer.setOption === 'function') {
+        state.ytPlayer.setOption('captions', 'track', {});
+        state.ytPlayer.setOption('cc', 'track', {});
+      }
+    } catch (_) {}
+    try {
+      if (typeof state.ytPlayer.unloadModule === 'function') {
+        state.ytPlayer.unloadModule('captions');
+        state.ytPlayer.unloadModule('cc');
+      }
+    } catch (_) {}
+  }
+
+  function resolvePrimingWaiter() {
+    if (typeof state.ytPrimingResolve === 'function') {
+      const fn = state.ytPrimingResolve;
+      state.ytPrimingResolve = null;
+      state.ytPrimingPromise = null;
+      try {
+        fn();
+      } catch (_) {}
+    } else {
+      state.ytPrimingPromise = null;
+    }
+  }
+
   function cancelYouTubePriming() {
     state.ytPrimingInFlight = false;
     clearTimeout(state.ytPrimeTimer);
+    resolvePrimingWaiter();
   }
 
   function finishYouTubePriming(targetVid, targetStartSec) {
-    if (!state.ytPrimingInFlight) return;
+    if (!state.ytPrimingInFlight) {
+      resolvePrimingWaiter();
+      return;
+    }
     state.ytPrimingInFlight = false;
     clearTimeout(state.ytPrimeTimer);
     const curStep = state.steps[state.currentIndex];
-    if (!curStep || curStep.kind === 'video') return;
-    if (state.showDemoPip && state.locationMode === 'home') return;
+    if (!curStep || curStep.kind === 'video' || (state.showDemoPip && state.locationMode === 'home')) {
+      resolvePrimingWaiter();
+      return;
+    }
     try {
       if (typeof targetStartSec === 'number') {
         state.ytPlayer.seekTo(targetStartSec, true);
       }
       state.ytPlayer.pauseVideo();
+      forceDisableYouTubeCaptions();
       state.ytAudioUnlocked = true;
       state.ytPrimedVideoId = targetVid || getLoadedYouTubeVideoId();
       state.ytLastPrimedAtMs = Date.now();
@@ -1780,10 +1946,11 @@
         }
       }, 200);
     } catch (_) {}
+    resolvePrimingWaiter();
   }
 
   // セッション開始タップ（および筋トレ中のボタン操作）の同期クリックイベント内で、
-  // 本日1本目のYouTube動画を一瞬だけ極小音量で起動→一時停止待機させ、iPad/iPhoneでも1本目から完全自動再生を実現する
+  // 本日1本目のYouTube動画を一瞬だけ無音で起動→一時停止待機させ、iPad/iPhoneでも1本目から完全自動再生を実現する
   function primeYouTubeOnUserGesture() {
     if (!state.ytReady || !state.ytPlayer || typeof state.ytPlayer.playVideo !== 'function') return;
     const curStep = state.steps[state.currentIndex];
@@ -1793,6 +1960,8 @@
       return;
     }
     if (state.showDemoPip && state.locationMode === 'home') return;
+    // 既に初回アンロック済みでショウコさんが発話中のときは発話を邪魔しない
+    if (state.ytAudioUnlocked && state.isShokoSpeaking) return;
 
     const upcomingVid = findNextUpcomingVideoStep(state.currentIndex);
     if (!upcomingVid) return;
@@ -1812,6 +1981,9 @@
       state.ytPrimingInFlight = true;
       state.ytPrimeTargetId = upcomingVid.videoId;
       state.ytPrimeTargetStart = startSec;
+      state.ytPrimingPromise = new Promise((resolve) => {
+        state.ytPrimingResolve = resolve;
+      });
 
       if (loadedVid && loadedVid !== upcomingVid.videoId) {
         state.ytPlayer.loadVideoById({
@@ -1826,9 +1998,9 @@
       clearTimeout(state.ytPrimeTimer);
       state.ytPrimeTimer = setTimeout(() => {
         finishYouTubePriming(upcomingVid.videoId, startSec);
-      }, 950);
+      }, 700);
     } catch (_) {
-      state.ytPrimingInFlight = false;
+      cancelYouTubePriming();
     }
   }
 
@@ -1884,6 +2056,7 @@
       if (!state.videoStepConfirmedPlaying) {
         if (cur >= Math.max(0, startSec - 2.5) && cur < endSec - 2) {
           state.videoStepConfirmedPlaying = true;
+          forceDisableYouTubeCaptions();
         } else {
           return;
         }
@@ -1912,7 +2085,10 @@
       rel: 0,
       modestbranding: 1,
       controls: 1,
-      enablejsapi: 1
+      enablejsapi: 1,
+      cc_load_policy: 0,
+      iv_load_policy: 3,
+      hl: 'ja'
     };
     if (firstUpcoming && Number(firstUpcoming.startSeconds) > 0) {
       vars.start = Math.round(Number(firstUpcoming.startSeconds));
@@ -1927,6 +2103,7 @@
       events: {
         onReady: () => {
           state.ytReady = true;
+          forceDisableYouTubeCaptions();
           try {
             const ifr = state.ytPlayer.getIframe && state.ytPlayer.getIframe();
             if (ifr) {
@@ -1942,7 +2119,18 @@
             fn();
           }
         },
+        onApiChange: () => {
+          forceDisableYouTubeCaptions();
+        },
         onStateChange: (ev) => {
+          if (
+            ev.data === window.YT.PlayerState.PLAYING ||
+            ev.data === window.YT.PlayerState.BUFFERING ||
+            ev.data === window.YT.PlayerState.CUED
+          ) {
+            forceDisableYouTubeCaptions();
+          }
+
           const step = state.steps[state.currentIndex];
           if (!step) return;
 
@@ -1956,6 +2144,8 @@
           if (ev.data === window.YT.PlayerState.PLAYING) {
             el.ytUnblockBtn.classList.add('hidden');
             state.ytStepFailed = false;
+            setTimeout(forceDisableYouTubeCaptions, 600);
+            setTimeout(forceDisableYouTubeCaptions, 1800);
             if (step.kind === 'video') {
               state.ytAudioUnlocked = true;
               applyActiveYouTubeVolume({ smooth: false });
@@ -4216,12 +4406,16 @@
       });
     }
 
-    // Chrome全端末（iPad/iPhone/Android）での初回タップ音声を確実化するため pointerdown / touchstart 時点でもAudioContextを先行ウォームアップ
-    [el.heroStartBtn, el.playPauseBtn, el.replayVoiceBtn].forEach((btn) => {
-      if (!btn) return;
-      btn.addEventListener('pointerdown', () => ensureAudioUnlocked(), { passive: true });
-      btn.addEventListener('touchstart', () => ensureAudioUnlocked(), { passive: true });
-    });
+    // ※ pointerdown / touchstart での先行呼び出しは iOS WebKit で AudioContext 初期化をブロックさせる原因になるため廃止し、
+    //    画面上のあらゆる有効タップ（click / touchend）で確実にオーディオ回路をアンロックする
+    const onGlobalUserActivation = (e) => {
+      if (!state.webAudioPrimed || !state.htmlAudioBlessed) {
+        const isDirectVoiceBtn = Boolean(e?.target?.closest?.('#replayVoiceBtn'));
+        ensureAudioUnlocked({ blessHtmlAudio: !state.isShokoSpeaking && !isDirectVoiceBtn });
+      }
+    };
+    document.addEventListener('touchend', onGlobalUserActivation, { capture: true, passive: true });
+    document.addEventListener('click', onGlobalUserActivation, { capture: true });
 
     el.heroStartBtn.addEventListener('click', () => startSession());
     el.playPauseBtn.addEventListener('click', () => {
@@ -4230,7 +4424,7 @@
     });
 
     el.replayVoiceBtn.addEventListener('click', () => {
-      ensureAudioUnlocked();
+      ensureAudioUnlocked({ blessHtmlAudio: false });
       primeYouTubeOnUserGesture();
       const step = state.steps[state.currentIndex];
       if (step && step.speechText) speakShoko(step.speechText);

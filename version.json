@@ -1,6 +1,6 @@
 {
-  "version": "4.4.2",
-  "buildId": "20261117-v442",
-  "updatedAt": "2026-11-17T06:40:00+09:00",
-  "notes": "Chrome全端末での初回ショウコ音声WebAudio確実再生 ＆ ショウコ発話中のみYouTube音量を自動ダッキング（発話なし時は最初から通常音量）仕様（v4.4.2）"
+  "version": "4.5.0",
+  "buildId": "20261124-v450",
+  "updatedAt": "2026-11-24T05:15:00+09:00",
+  "notes": "iPad/iPhone消音モード時を含む初回〜マシンパート音声の確実再生（HTMLAudio×WebAudioハイブリッド＋Playbackセッション強制）＆YouTube字幕(CC)完全非表示化（v4.5.0）"
 }
