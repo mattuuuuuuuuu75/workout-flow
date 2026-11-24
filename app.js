@@ -6,8 +6,8 @@
 (function () {
   'use strict';
 
-  const APP_VERSION = '4.6.1';
-  const APP_BUILD_ID = '20261124-v461';
+  const APP_VERSION = '4.7.0';
+  const APP_BUILD_ID = '20261125-v470';
   const SHOKO_DUCK_VOLUME = 18; // ショウコさん発話中のYouTube背景音量（発話終了で100/85へ自動復帰）
   const PUBLIC_CDN_BASE = 'https://mattuuuuuuuuu75.github.io/workout-flow/';
   const HOTEL_CLOUD_META_ID = '_hotel_load_state';
@@ -194,6 +194,9 @@
     editingSetExId: null,
     rpeMap: loadJson(STORAGE_KEYS.rpeMap, {}),
     morningCondition: loadJson(STORAGE_KEYS.morningCond, null),
+    morningHealthPollTimer: null,
+    morningHealthPollCount: 0,
+    isRefreshingMorningHealth: false,
     customStretches: loadJson(STORAGE_KEYS.customStretches, []),
     logs: loadJson(STORAGE_KEYS.logs, []),
     syncKey: consumeSyncKeyFromUrl(),
@@ -2496,6 +2499,83 @@
     }
   }
 
+  function isTodayMorningConditionReady(mc = state.morningCondition) {
+    if (!mc || !mc.date) return false;
+    return mc.date === getTodayJst() && mc.isToday !== false && (mc.sleepScore !== null || mc.sleepHours !== null);
+  }
+
+  async function refreshMorningConditionOnly({ manual = false } = {}) {
+    if (!state.syncKey || state.isRefreshingMorningHealth) return false;
+    state.isRefreshingMorningHealth = true;
+    if (manual) renderMorningCondition();
+    try {
+      const resp = await fetch(`${RELAY_BASE_URL}/api/state?scope=morning&forceHealth=1&_t=${Date.now()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Workout-Key': state.syncKey
+        }
+      });
+      if (!resp.ok) return false;
+      const data = await resp.json().catch(() => null);
+      if (data && data.ok && data.morningCondition) {
+        const wasReady = isTodayMorningConditionReady(state.morningCondition);
+        state.morningCondition = data.morningCondition;
+        saveJson(STORAGE_KEYS.morningCond, data.morningCondition);
+        const nowReady = isTodayMorningConditionReady(data.morningCondition);
+        renderMorningCondition();
+        if (nowReady) {
+          stopMorningHealthPolling();
+          if (!wasReady || manual) {
+            const sc = data.morningCondition.sleepScore ? `（睡眠スコア ${data.morningCondition.sleepScore}点）` : '';
+            showAppToast(`🌅 今朝のコンディション${sc}を反映しました！`, 3200);
+          }
+          return true;
+        }
+        if (manual) {
+          showAppToast('⏳ Pixel Watch から今朝の睡眠データがまだ届いていません（自動で再チェックします）', 3000);
+        }
+      }
+      return false;
+    } catch (_) {
+      return false;
+    } finally {
+      state.isRefreshingMorningHealth = false;
+      renderMorningCondition();
+    }
+  }
+
+  function stopMorningHealthPolling() {
+    if (state.morningHealthPollTimer) {
+      clearInterval(state.morningHealthPollTimer);
+      state.morningHealthPollTimer = null;
+    }
+  }
+
+  function ensureMorningHealthPollingIfNeeded() {
+    if (!state.syncKey) return;
+    if (isTodayMorningConditionReady()) {
+      stopMorningHealthPolling();
+      return;
+    }
+    if (state.morningHealthPollTimer) return;
+    state.morningHealthPollCount = 0;
+    // 起床直後でPixel Watchがまだ計算中の場合、セッション実行中も含めて90秒おきに最大10回（約15分間）自動で取りに行く
+    state.morningHealthPollTimer = setInterval(() => {
+      if (isTodayMorningConditionReady()) {
+        stopMorningHealthPolling();
+        return;
+      }
+      if (document.visibilityState === 'hidden') return;
+      state.morningHealthPollCount += 1;
+      if (state.morningHealthPollCount > 10) {
+        stopMorningHealthPolling();
+        return;
+      }
+      refreshMorningConditionOnly({ manual: false });
+    }, 90000);
+  }
+
   function renderMorningCondition() {
     if (!el.morningConditionBar) return;
     const mc = state.morningCondition;
@@ -2504,12 +2584,30 @@
       return;
     }
 
-    el.morningConditionBar.classList.remove('hidden', 'tier-boost', 'tier-recovery');
+    const readyToday = isTodayMorningConditionReady(mc);
+    el.morningConditionBar.classList.remove('hidden', 'tier-boost', 'tier-recovery', 'tier-pending');
+
+    if (!readyToday) {
+      el.morningConditionBar.classList.add('tier-pending');
+      el.mcBadge.textContent = state.isRefreshingMorningHealth
+        ? '🔄 今朝の睡眠スコアを確認中...'
+        : '⏳ 今朝の睡眠スコア同期待ち';
+      const rawVitals = String(mc.vitalsSummary || '').replace(/^(今朝:\s*|前日参考:\s*)/, '');
+      el.mcVitals.textContent = rawVitals ? `前日参考: ${rawVitals}` : '';
+      el.mcMessage.textContent =
+        'Pixel Watch から今朝のデータが上がり次第、自動で本日分へ切り替わります（右ボタンで即時再取得）';
+      el.mcActionBtn.classList.remove('hidden');
+      el.mcActionBtn.textContent = state.isRefreshingMorningHealth ? '確認中...' : '🔄 今すぐ再取得';
+      el.mcActionBtn.dataset.targetMode = 'refresh_health';
+      return;
+    }
+
     if (mc.tier === 'boost') el.morningConditionBar.classList.add('tier-boost');
     if (mc.tier === 'recovery') el.morningConditionBar.classList.add('tier-recovery');
 
     el.mcBadge.textContent = mc.badge;
-    el.mcVitals.textContent = mc.vitalsSummary || '';
+    const cleanVitals = String(mc.vitalsSummary || '');
+    el.mcVitals.textContent = cleanVitals.startsWith('今朝:') ? cleanVitals : `今朝: ${cleanVitals}`;
     el.mcMessage.textContent = mc.message || '';
 
     if (mc.tier === 'recovery' && state.durationMode === 'full') {
@@ -3809,8 +3907,14 @@
     const todayIso = getTodayJst();
 
     if (data.morningCondition) {
+      const wasReady = isTodayMorningConditionReady(state.morningCondition);
       state.morningCondition = data.morningCondition;
       saveJson(STORAGE_KEYS.morningCond, data.morningCondition);
+      ensureMorningHealthPollingIfNeeded();
+      if (!wasReady && isTodayMorningConditionReady(data.morningCondition) && data.morningCondition.liveSyncedNow) {
+        const sc = data.morningCondition.sleepScore ? `（睡眠スコア ${data.morningCondition.sleepScore}点）` : '';
+        showAppToast(`🌅 今朝のコンディション${sc}をリアルタイム取得しました！`, 3200);
+      }
     }
 
     if (data.plates && typeof data.plates === 'object') {
@@ -4879,6 +4983,10 @@
     if (el.mcActionBtn) {
       el.mcActionBtn.addEventListener('click', () => {
         const target = el.mcActionBtn.dataset.targetMode;
+        if (target === 'refresh_health') {
+          refreshMorningConditionOnly({ manual: true });
+          return;
+        }
         if (target) setDurationMode(target);
       });
     }

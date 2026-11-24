@@ -1734,6 +1734,11 @@ body[data-phase="WORK"] .visual-guide-frame {
   border-color: #fed7aa;
   border-left-color: var(--brand-orange);
 }
+.morning-cond-bar.tier-pending {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  border-left-color: #64748b;
+}
 .mc-main-row {
   display: flex;
   align-items: center;
